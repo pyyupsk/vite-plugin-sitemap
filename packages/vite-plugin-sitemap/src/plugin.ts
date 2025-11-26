@@ -15,6 +15,7 @@ import {
   getSitemapFilename,
 } from "./core/loader";
 import { generateSitemap } from "./core/generator";
+import { getSitemapIndexFilename } from "./core/splitter";
 import { formatResultForConsole } from "./validation/errors";
 
 /**
@@ -101,9 +102,13 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
           let totalFiles = 0;
 
           for (const { name, routes } of resolvedRoutes) {
+            const baseFilename =
+              name === "default" ? "sitemap" : `sitemap-${name}`;
             const result = await generateSitemap(routes, {
               pluginOptions: resolvedOptions,
               hostname: resolvedOptions.hostname,
+              baseFilename,
+              enableSplitting: true,
             });
 
             if (!result.success) {
@@ -113,15 +118,45 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
               continue;
             }
 
-            // Write sitemap file
-            const filename =
-              resolvedOptions.filename ?? getSitemapFilename(name);
-            const outputPath = join(outputDir, filename);
+            // Handle split sitemaps
+            if (result.splitResult?.wasSplit) {
+              // Write all sitemap chunks
+              for (const chunk of result.splitResult.sitemaps) {
+                const outputPath = join(outputDir, chunk.filename);
+                await writeFile(outputPath, chunk.xml, "utf-8");
+                totalFiles++;
 
-            await writeFile(outputPath, result.xml!, "utf-8");
+                logger.info(
+                  `[${PLUGIN_NAME}] Generated ${chunk.filename} (${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`,
+                );
+              }
 
-            totalRoutes += result.routeCount ?? 0;
-            totalFiles++;
+              // Write sitemap index
+              const indexFilename = getSitemapIndexFilename(baseFilename);
+              const indexPath = join(outputDir, indexFilename);
+              await writeFile(indexPath, result.splitResult.indexXml!, "utf-8");
+              totalFiles++;
+
+              logger.info(
+                `[${PLUGIN_NAME}] Generated ${indexFilename} (index for ${result.splitResult.sitemaps.length} sitemaps)`,
+              );
+
+              totalRoutes += result.routeCount ?? 0;
+            } else {
+              // Single sitemap file
+              const filename =
+                resolvedOptions.filename ?? getSitemapFilename(name);
+              const outputPath = join(outputDir, filename);
+
+              await writeFile(outputPath, result.xml!, "utf-8");
+
+              totalRoutes += result.routeCount ?? 0;
+              totalFiles++;
+
+              logger.info(
+                `[${PLUGIN_NAME}] Generated ${filename} (${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`,
+              );
+            }
 
             // Log warnings if any
             if (result.warnings.length > 0) {
@@ -129,10 +164,6 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
                 logger.warn(`[${PLUGIN_NAME}] ${warning}`);
               }
             }
-
-            logger.info(
-              `[${PLUGIN_NAME}] Generated ${filename} (${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`,
-            );
           }
 
           const elapsed = Date.now() - startTime;

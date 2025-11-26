@@ -15,6 +15,8 @@ import {
 import { matchesExcludePattern } from "../validation/url";
 import { isFutureDate } from "../validation/date";
 import { buildSitemapXml, calculateByteSize } from "../xml/builder";
+import { splitRoutes } from "./splitter";
+import type { SplitResult } from "./splitter";
 
 /**
  * Result of sitemap generation.
@@ -22,7 +24,7 @@ import { buildSitemapXml, calculateByteSize } from "../xml/builder";
 export interface GenerationResult {
   /** Whether generation was successful */
   success: boolean;
-  /** Generated XML content */
+  /** Generated XML content (single sitemap, or first chunk if split) */
   xml?: string;
   /** Byte size of the generated XML */
   byteSize?: number;
@@ -32,6 +34,8 @@ export interface GenerationResult {
   validation: ValidationResult;
   /** Warnings (non-fatal issues) */
   warnings: string[];
+  /** Split result if sitemap was split into multiple files */
+  splitResult?: SplitResult;
 }
 
 /**
@@ -44,6 +48,10 @@ export interface GenerationOptions {
   skipValidation?: boolean;
   /** Custom hostname to prepend to relative URLs */
   hostname?: string | undefined;
+  /** Base filename for sitemaps (without extension) */
+  baseFilename?: string;
+  /** Enable auto-splitting for large sitemaps */
+  enableSplitting?: boolean;
 }
 
 /**
@@ -128,7 +136,44 @@ export async function generateSitemap(
     warnings.push(`${dupes} duplicate URLs removed`);
   }
 
-  // Step 7: Apply custom serializer or use default XML builder
+  // Step 7: Check if splitting is needed and enabled
+  const enableSplitting = options.enableSplitting !== false; // Default to true
+
+  if (enableSplitting) {
+    const hostname = options.hostname ?? pluginOptions.hostname;
+    const splitResult = splitRoutes(deduplicatedRoutes, {
+      baseFilename: options.baseFilename ?? "sitemap",
+      ...(hostname && { hostname }),
+    });
+
+    if (splitResult.wasSplit) {
+      warnings.push(
+        `Sitemap split into ${splitResult.sitemaps.length} files due to size/URL limits`,
+      );
+
+      return {
+        success: true,
+        xml: splitResult.sitemaps[0]!.xml,
+        byteSize: splitResult.sitemaps.reduce((sum, s) => sum + s.byteSize, 0),
+        routeCount: deduplicatedRoutes.length,
+        validation: createSuccessResult(deduplicatedRoutes.length, warnings),
+        warnings,
+        splitResult,
+      };
+    }
+
+    // Not split - return the single sitemap from split result
+    return {
+      success: true,
+      xml: splitResult.sitemaps[0]!.xml,
+      byteSize: splitResult.sitemaps[0]!.byteSize,
+      routeCount: deduplicatedRoutes.length,
+      validation: createSuccessResult(deduplicatedRoutes.length, warnings),
+      warnings,
+    };
+  }
+
+  // Step 8: Apply custom serializer or use default XML builder (splitting disabled)
   let xml: string;
   if (pluginOptions.serialize) {
     xml = await pluginOptions.serialize(deduplicatedRoutes);
