@@ -114,7 +114,8 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
             }
 
             // Write sitemap file
-            const filename = resolvedOptions.filename ?? getSitemapFilename(name);
+            const filename =
+              resolvedOptions.filename ?? getSitemapFilename(name);
             const outputPath = join(outputDir, filename);
 
             await writeFile(outputPath, result.xml!, "utf-8");
