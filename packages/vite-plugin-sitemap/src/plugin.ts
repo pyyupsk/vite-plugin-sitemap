@@ -183,15 +183,22 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
 
             if (robotsResult.success) {
               if (robotsResult.action === "created") {
-                logger.info(`[${PLUGIN_NAME}] Created robots.txt with Sitemap directive`);
+                logger.info(
+                  `[${PLUGIN_NAME}] Created robots.txt with Sitemap directive`,
+                );
               } else if (robotsResult.action === "updated") {
-                logger.info(`[${PLUGIN_NAME}] Updated robots.txt with Sitemap directive`);
+                logger.info(
+                  `[${PLUGIN_NAME}] Updated robots.txt with Sitemap directive`,
+                );
               }
               // No log for 'unchanged' - sitemap directive already exists
             } else {
               logger.warn(`[${PLUGIN_NAME}] ${robotsResult.error}`);
             }
-          } else if (resolvedOptions.generateRobotsTxt && !resolvedOptions.hostname) {
+          } else if (
+            resolvedOptions.generateRobotsTxt &&
+            !resolvedOptions.hostname
+          ) {
             logger.warn(
               `[${PLUGIN_NAME}] Cannot generate robots.txt: hostname option is required`,
             );

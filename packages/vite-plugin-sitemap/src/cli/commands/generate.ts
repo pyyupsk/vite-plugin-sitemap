@@ -1,0 +1,234 @@
+/**
+ * CLI command: vite-sitemap generate
+ * Generates sitemap files without running a full Vite build.
+ */
+
+import { writeFile, mkdir } from "node:fs/promises";
+import { join, resolve } from "node:path";
+import type { Command } from "commander";
+import {
+  logger,
+  loadRoutesFromSitemap,
+  formatDuration,
+  formatBytes,
+} from "../utils";
+import { generateSitemap } from "../../core/generator";
+import { getSitemapIndexFilename } from "../../core/splitter";
+import { getSitemapFilename } from "../../core/loader";
+import { updateRobotsTxt, buildSitemapUrl } from "../../core/robots";
+import { formatResultForConsole } from "../../validation/errors";
+import type { PluginOptions, ResolvedPluginOptions } from "../../types/config";
+import { resolveOptions } from "../../types/config";
+
+/**
+ * Options for the generate command.
+ */
+interface GenerateOptions {
+  output?: string;
+  hostname?: string;
+  robotsTxt?: boolean;
+  verbose: boolean;
+}
+
+/**
+ * Get CLI options from parent command.
+ */
+function getGlobalOptions(cmd: Command): {
+  config?: string;
+  verbose?: boolean;
+} {
+  const opts = cmd.parent?.opts() ?? {};
+  return {
+    config: opts.config,
+    verbose: opts.verbose,
+  };
+}
+
+/**
+ * Register the generate command.
+ */
+export function registerGenerateCommand(program: Command): void {
+  program
+    .command("generate")
+    .description("Generate sitemap files without running a full Vite build")
+    .option(
+      "-o, --output <dir>",
+      "Output directory for generated files",
+      "dist",
+    )
+    .option("-h, --hostname <url>", "Base hostname for sitemap URLs")
+    .option("--robots-txt", "Generate robots.txt with Sitemap directive")
+    .action(async function (this: Command, options: GenerateOptions) {
+      const globalOpts = getGlobalOptions(this);
+      const verbose = options.verbose ?? globalOpts.verbose ?? false;
+
+      await executeGenerate({
+        ...options,
+        verbose,
+      });
+    });
+}
+
+/**
+ * Execute the generate command.
+ */
+async function executeGenerate(options: GenerateOptions): Promise<void> {
+  const startTime = Date.now();
+  const root = process.cwd();
+
+  logger.info("Generating sitemap...");
+
+  if (options.verbose) {
+    logger.dim(`Working directory: ${root}`);
+    logger.dim(`Output directory: ${options.output ?? "dist"}`);
+  }
+
+  // Load routes from sitemap file
+  const result = await loadRoutesFromSitemap({
+    root,
+    ...(options.verbose && { verbose: options.verbose }),
+  });
+
+  if (!result) {
+    process.exit(1);
+  }
+
+  const { routes: resolvedRoutes, server } = result;
+
+  try {
+    // Resolve options with defaults
+    const outputDir = resolve(root, options.output ?? "dist");
+    const pluginOptions: PluginOptions = {
+      ...(options.hostname && { hostname: options.hostname }),
+      outDir: options.output ?? "dist",
+      generateRobotsTxt: options.robotsTxt ?? false,
+    };
+
+    const resolvedOpts: ResolvedPluginOptions = resolveOptions(
+      pluginOptions,
+      outputDir,
+    );
+
+    // Ensure output directory exists
+    await mkdir(outputDir, { recursive: true });
+
+    let totalRoutes = 0;
+    let totalFiles = 0;
+    const generatedFiles: string[] = [];
+
+    for (const { name, routes } of resolvedRoutes) {
+      const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
+
+      const genResult = await generateSitemap(routes, {
+        pluginOptions: resolvedOpts,
+        hostname: resolvedOpts.hostname,
+        baseFilename,
+        enableSplitting: true,
+      });
+
+      if (!genResult.success) {
+        logger.error(
+          `Validation failed for '${name}':\n${formatResultForConsole(genResult.validation)}`,
+        );
+        continue;
+      }
+
+      // Handle split sitemaps
+      if (genResult.splitResult?.wasSplit) {
+        // Write all sitemap chunks
+        for (const chunk of genResult.splitResult.sitemaps) {
+          const outputPath = join(outputDir, chunk.filename);
+          await writeFile(outputPath, chunk.xml, "utf-8");
+          totalFiles++;
+          generatedFiles.push(chunk.filename);
+
+          if (options.verbose) {
+            logger.info(
+              `Generated ${chunk.filename} (${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`,
+            );
+          }
+        }
+
+        // Write sitemap index
+        const indexFilename = getSitemapIndexFilename(baseFilename);
+        const indexPath = join(outputDir, indexFilename);
+        await writeFile(indexPath, genResult.splitResult.indexXml!, "utf-8");
+        totalFiles++;
+        generatedFiles.push(indexFilename);
+
+        if (options.verbose) {
+          logger.info(
+            `Generated ${indexFilename} (index for ${genResult.splitResult.sitemaps.length} sitemaps)`,
+          );
+        }
+
+        totalRoutes += genResult.routeCount ?? 0;
+      } else {
+        // Single sitemap file
+        const filename = getSitemapFilename(name);
+        const outputPath = join(outputDir, filename);
+
+        await writeFile(outputPath, genResult.xml!, "utf-8");
+
+        totalRoutes += genResult.routeCount ?? 0;
+        totalFiles++;
+        generatedFiles.push(filename);
+
+        if (options.verbose) {
+          logger.info(
+            `Generated ${filename} (${genResult.routeCount} URLs, ${formatBytes(genResult.byteSize ?? 0)})`,
+          );
+        }
+      }
+
+      // Log warnings if any
+      if (genResult.warnings.length > 0) {
+        for (const warning of genResult.warnings) {
+          logger.warn(warning);
+        }
+      }
+    }
+
+    // Generate robots.txt if enabled
+    if (options.robotsTxt && options.hostname) {
+      const primarySitemapFilename =
+        totalFiles > 1 ? "sitemap-index.xml" : "sitemap.xml";
+
+      const sitemapUrl = buildSitemapUrl(
+        options.hostname,
+        primarySitemapFilename,
+      );
+
+      const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
+
+      if (robotsResult.success) {
+        if (robotsResult.action === "created") {
+          logger.success("Created robots.txt with Sitemap directive");
+          generatedFiles.push("robots.txt");
+        } else if (robotsResult.action === "updated") {
+          logger.success("Updated robots.txt with Sitemap directive");
+        }
+      } else {
+        logger.warn(robotsResult.error ?? "Failed to update robots.txt");
+      }
+    } else if (options.robotsTxt && !options.hostname) {
+      logger.warn("Cannot generate robots.txt: --hostname option is required");
+    }
+
+    const elapsed = Date.now() - startTime;
+
+    // Print summary
+    console.log("\n" + "─".repeat(50));
+    logger.success(
+      `Generated ${totalFiles} sitemap(s) with ${totalRoutes} URLs in ${formatDuration(elapsed)}`,
+    );
+
+    console.log("\nGenerated files:");
+    for (const file of generatedFiles) {
+      console.log(`  ${join(options.output ?? "dist", file)}`);
+    }
+  } finally {
+    // Clean up Vite server
+    await server.close();
+  }
+}

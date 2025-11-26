@@ -1,3 +1,9 @@
+/**
+ * Type definitions for @pyyupsk/vite-plugin-sitemap.
+ * Re-exports all public types from the plugin.
+ * @module
+ */
+
 // Core sitemap types
 export type {
   ChangeFrequency,

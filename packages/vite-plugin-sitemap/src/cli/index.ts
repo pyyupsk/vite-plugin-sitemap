@@ -8,6 +8,7 @@
 import { Command } from "commander";
 import { registerValidateCommand } from "./commands/validate";
 import { registerPreviewCommand } from "./commands/preview";
+import { registerGenerateCommand } from "./commands/generate";
 import pkg from "../../package.json";
 
 /**
@@ -29,6 +30,7 @@ function createProgram(): Command {
   // Register commands
   registerValidateCommand(program);
   registerPreviewCommand(program);
+  registerGenerateCommand(program);
 
   return program;
 }
