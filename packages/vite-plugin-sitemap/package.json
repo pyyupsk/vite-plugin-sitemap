@@ -1,35 +1,39 @@
 {
   "name": "@pyyupsk/vite-plugin-sitemap",
   "version": "0.0.1",
-  "description": "A modern Vite plugin for generating XML sitemaps from file-based conventions",
   "type": "module",
+  "description": "A modern Vite plugin for generating XML sitemaps from file-based conventions",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyyupsk/vite-plugin-sitemap"
+  },
+  "homepage": "https://github.com/pyyupsk/vite-plugin-sitemap#readme",
+  "bugs": {
+    "url": "https://github.com/pyyupsk/vite-plugin-sitemap/issues"
+  },
+  "author": "pyyupsk",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "vite-sitemap": "./dist/cli/index.js"
+  },
   "main": "./dist/index.js",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
-  "bin": {
-    "vite-sitemap": "./dist/cli/index.js"
-  },
   "files": [
-    "dist",
     "CHANGELOG.md",
-    "LICENSE",
-    "README.md"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
-  "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch",
-    "test": "vitest run",
-    "test:watch": "vitest --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
-  },
   "keywords": [
     "vite",
     "vite-plugin",
@@ -38,16 +42,18 @@
     "seo",
     "typescript"
   ],
-  "author": "pyyupsk",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pyyupsk/vite-plugin-sitemap"
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "typecheck": "tsc --noEmit"
   },
-  "bugs": {
-    "url": "https://github.com/pyyupsk/vite-plugin-sitemap/issues"
+  "peerDependencies": {
+    "vite": "^7"
   },
-  "homepage": "https://github.com/pyyupsk/vite-plugin-sitemap#readme",
   "dependencies": {
     "commander": "^14.0.2",
     "zod": "^4.1.13"
@@ -59,11 +65,5 @@
     "typescript": "^5.9.3",
     "vite": "^7.2.4",
     "vitest": "^4.0.14"
-  },
-  "peerDependencies": {
-    "vite": "^7"
-  },
-  "engines": {
-    "node": ">=20"
   }
 }
