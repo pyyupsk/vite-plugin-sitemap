@@ -3,21 +3,24 @@
  * Generates sitemap.xml during build using the closeBundle hook.
  */
 
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
 import type { Plugin, ResolvedConfig } from "vite";
+
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import type { PluginOptions } from "./types/config";
-import { resolveOptions } from "./types/config";
+
 import { discoverSitemapFile, formatNotFoundError } from "./core/discovery";
+import { generateSitemap } from "./core/generator";
 import {
+  getSitemapFilename,
   loadSitemapFile,
   resolveRoutes,
-  getSitemapFilename,
 } from "./core/loader";
-import { generateSitemap } from "./core/generator";
+import { buildSitemapUrl, updateRobotsTxt } from "./core/robots";
 import { getSitemapIndexFilename } from "./core/splitter";
+import { resolveOptions } from "./types/config";
 import { formatResultForConsole } from "./validation/errors";
-import { updateRobotsTxt, buildSitemapUrl } from "./core/robots";
 
 /**
  * Plugin name for identification.
@@ -35,14 +38,6 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
   let resolvedOptions: ReturnType<typeof resolveOptions>;
 
   return {
-    name: PLUGIN_NAME,
-
-    // Store resolved config and resolve options with build.outDir
-    configResolved(resolvedConfig) {
-      config = resolvedConfig;
-      resolvedOptions = resolveOptions(userOptions, config.build.outDir);
-    },
-
     // Generate sitemap after build completes
     async closeBundle() {
       // Only run in build mode
@@ -75,8 +70,8 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
         // This allows TypeScript file loading during build
         const { createServer } = await import("vite");
         const tempServer = await createServer({
-          root: config.root,
           logLevel: "silent",
+          root: config.root,
           server: { middlewareMode: true },
         });
 
@@ -106,10 +101,10 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
             const baseFilename =
               name === "default" ? "sitemap" : `sitemap-${name}`;
             const result = await generateSitemap(routes, {
-              pluginOptions: resolvedOptions,
-              hostname: resolvedOptions.hostname,
               baseFilename,
               enableSplitting: true,
+              hostname: resolvedOptions.hostname,
+              pluginOptions: resolvedOptions,
             });
 
             if (!result.success) {
@@ -221,6 +216,14 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
         }
       }
     },
+
+    // Store resolved config and resolve options with build.outDir
+    configResolved(resolvedConfig) {
+      config = resolvedConfig;
+      resolvedOptions = resolveOptions(userOptions, config.build.outDir);
+    },
+
+    name: PLUGIN_NAME,
   };
 }
 

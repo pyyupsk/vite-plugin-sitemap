@@ -22,27 +22,27 @@ export const SITEMAP_FILENAME = "sitemap";
 export const DEFAULT_SRC_DIR = "src";
 
 /**
- * Result of sitemap file discovery.
- */
-export interface DiscoveryResult {
-  /** Whether a sitemap file was found */
-  found: boolean;
-  /** Absolute path to the discovered file */
-  path?: string;
-  /** Extension of the discovered file */
-  extension?: string;
-}
-
-/**
  * Options for sitemap file discovery.
  */
 export interface DiscoveryOptions {
   /** Root directory of the project (defaults to process.cwd()) */
   root?: string;
-  /** Source directory to search in (defaults to 'src') */
-  srcDir?: string;
   /** Custom sitemap file path (overrides automatic discovery) */
   sitemapFile?: string;
+  /** Source directory to search in (defaults to 'src') */
+  srcDir?: string;
+}
+
+/**
+ * Result of sitemap file discovery.
+ */
+export interface DiscoveryResult {
+  /** Extension of the discovered file */
+  extension?: string;
+  /** Whether a sitemap file was found */
+  found: boolean;
+  /** Absolute path to the discovered file */
+  path?: string;
 }
 
 /**
@@ -68,9 +68,9 @@ export function discoverSitemapFile(
     if (existsSync(customPath)) {
       const ext = getExtension(customPath);
       return {
+        extension: ext,
         found: true,
         path: customPath,
-        extension: ext,
       };
     }
     return { found: false };
@@ -84,53 +84,6 @@ export function discoverSitemapFile(
 
   // Fall back to root directory
   return searchInDirectory(root);
-}
-
-/**
- * Search for sitemap file in a specific directory.
- */
-function searchInDirectory(directory: string): DiscoveryResult {
-  for (const ext of SITEMAP_EXTENSIONS) {
-    const filePath = join(directory, `${SITEMAP_FILENAME}${ext}`);
-    if (existsSync(filePath)) {
-      return {
-        found: true,
-        path: filePath,
-        extension: ext,
-      };
-    }
-  }
-  return { found: false };
-}
-
-/**
- * Get file extension from path.
- */
-function getExtension(filePath: string): string {
-  const match = new RegExp(/\.[^.]+$/).exec(filePath);
-  return match ? match[0] : "";
-}
-
-/**
- * Get all possible sitemap file paths for a given root.
- * Useful for error messages showing where we searched.
- */
-export function getPossiblePaths(options: DiscoveryOptions = {}): string[] {
-  const root = options.root ?? process.cwd();
-  const srcDir = options.srcDir ?? DEFAULT_SRC_DIR;
-  const paths: string[] = [];
-
-  // Add src directory paths
-  for (const ext of SITEMAP_EXTENSIONS) {
-    paths.push(join(root, srcDir, `${SITEMAP_FILENAME}${ext}`));
-  }
-
-  // Add root directory paths
-  for (const ext of SITEMAP_EXTENSIONS) {
-    paths.push(join(root, `${SITEMAP_FILENAME}${ext}`));
-  }
-
-  return paths;
 }
 
 /**
@@ -159,4 +112,51 @@ Create a sitemap file to define your routes:
 
 Searched paths:
 ${paths.map((p) => `  - ${p}`).join("\n")}`;
+}
+
+/**
+ * Get all possible sitemap file paths for a given root.
+ * Useful for error messages showing where we searched.
+ */
+export function getPossiblePaths(options: DiscoveryOptions = {}): string[] {
+  const root = options.root ?? process.cwd();
+  const srcDir = options.srcDir ?? DEFAULT_SRC_DIR;
+  const paths: string[] = [];
+
+  // Add src directory paths
+  for (const ext of SITEMAP_EXTENSIONS) {
+    paths.push(join(root, srcDir, `${SITEMAP_FILENAME}${ext}`));
+  }
+
+  // Add root directory paths
+  for (const ext of SITEMAP_EXTENSIONS) {
+    paths.push(join(root, `${SITEMAP_FILENAME}${ext}`));
+  }
+
+  return paths;
+}
+
+/**
+ * Get file extension from path.
+ */
+function getExtension(filePath: string): string {
+  const match = new RegExp(/\.[^.]+$/).exec(filePath);
+  return match ? match[0] : "";
+}
+
+/**
+ * Search for sitemap file in a specific directory.
+ */
+function searchInDirectory(directory: string): DiscoveryResult {
+  for (const ext of SITEMAP_EXTENSIONS) {
+    const filePath = join(directory, `${SITEMAP_FILENAME}${ext}`);
+    if (existsSync(filePath)) {
+      return {
+        extension: ext,
+        found: true,
+        path: filePath,
+      };
+    }
+  }
+  return { found: false };
 }

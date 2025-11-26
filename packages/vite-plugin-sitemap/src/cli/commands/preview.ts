@@ -4,13 +4,14 @@
  */
 
 import type { Command } from "commander";
+
 import { generateSitemap } from "../../core/generator";
 import { formatResultForConsole } from "../../validation/errors";
 import {
-  logger,
-  loadRoutesFromSitemap,
-  formatDuration,
   formatBytes,
+  formatDuration,
+  loadRoutesFromSitemap,
+  logger,
 } from "../utils";
 
 /**
@@ -65,8 +66,8 @@ export function registerPreviewCommand(program: Command): void {
             logger.info(`Preview: ${name} (${routeList.length} routes)\n`);
 
             const genResult = await generateSitemap(routeList, {
-              hostname: options.hostname,
               enableSplitting: false, // Don't split for preview
+              hostname: options.hostname,
             });
 
             if (!genResult.success) {

@@ -4,21 +4,22 @@
  */
 
 import type { ViteDevServer } from "vite";
+
 import type { Route } from "../types/sitemap";
 
 /**
  * Result of loading a sitemap file.
  */
 export interface LoadResult {
-  /** Default export routes (if any) */
-  defaultRoutes: Route[] | (() => Route[] | Promise<Route[]>) | undefined;
-  /** Named exports as separate sitemaps */
-  namedExports: Map<string, Route[] | (() => Route[] | Promise<Route[]>)>;
   /** All route sources combined */
   allSources: Array<{
     name: string;
-    routes: Route[] | (() => Route[] | Promise<Route[]>);
+    routes: (() => Promise<Route[]> | Route[]) | Route[];
   }>;
+  /** Default export routes (if any) */
+  defaultRoutes: (() => Promise<Route[]> | Route[]) | Route[] | undefined;
+  /** Named exports as separate sitemaps */
+  namedExports: Map<string, (() => Promise<Route[]> | Route[]) | Route[]>;
 }
 
 /**
@@ -29,6 +30,23 @@ export interface ResolvedRoutes {
   name: string;
   /** Resolved routes array */
   routes: Route[];
+}
+
+/**
+ * Get the sitemap filename for a named export.
+ *
+ * @param name Export name
+ * @param index Index for multiple sitemaps with same name
+ * @returns Filename like 'sitemap.xml', 'sitemap-pages.xml', etc.
+ */
+export function getSitemapFilename(name: string, index?: number): string {
+  const suffix = index === undefined ? "" : `-${index}`;
+
+  if (name === "default") {
+    return `sitemap${suffix}.xml`;
+  }
+
+  return `sitemap-${name}${suffix}.xml`;
 }
 
 /**
@@ -47,7 +65,7 @@ export async function loadSitemapFile(
 
   const namedExports = new Map<
     string,
-    Route[] | (() => Route[] | Promise<Route[]>)
+    (() => Promise<Route[]> | Route[]) | Route[]
   >();
   const allSources: LoadResult["allSources"] = [];
 
@@ -69,9 +87,9 @@ export async function loadSitemapFile(
   }
 
   return {
+    allSources,
     defaultRoutes,
     namedExports,
-    allSources,
   };
 }
 
@@ -91,7 +109,7 @@ export async function loadSitemapFileDirect(
 
   const namedExports = new Map<
     string,
-    Route[] | (() => Route[] | Promise<Route[]>)
+    (() => Promise<Route[]> | Route[]) | Route[]
   >();
   const allSources: LoadResult["allSources"] = [];
 
@@ -110,10 +128,32 @@ export async function loadSitemapFileDirect(
   }
 
   return {
+    allSources,
     defaultRoutes,
     namedExports,
-    allSources,
   };
+}
+
+/**
+ * Merge multiple route arrays, deduplicating by URL.
+ *
+ * @param routeArrays Arrays of routes to merge
+ * @returns Merged and deduplicated routes
+ */
+export function mergeRoutes(...routeArrays: Route[][]): Route[] {
+  const seen = new Set<string>();
+  const merged: Route[] = [];
+
+  for (const routes of routeArrays) {
+    for (const route of routes) {
+      if (!seen.has(route.url)) {
+        seen.add(route.url);
+        merged.push(route);
+      }
+    }
+  }
+
+  return merged;
 }
 
 /**
@@ -140,23 +180,11 @@ export async function resolveRoutes(
 }
 
 /**
- * Resolve a single routes value (array or function).
- */
-async function resolveRoutesValue(
-  value: Route[] | (() => Route[] | Promise<Route[]>),
-): Promise<Route[]> {
-  if (typeof value === "function") {
-    return await value();
-  }
-  return value;
-}
-
-/**
  * Type guard to check if a value is routes array or a function returning routes.
  */
 function isRoutesOrFunction(
   value: unknown,
-): value is Route[] | (() => Route[] | Promise<Route[]>) {
+): value is (() => Promise<Route[]> | Route[]) | Route[] {
   // Check if it's an array
   if (Array.isArray(value)) {
     // Basic check: if empty array or first element has 'url' property
@@ -175,40 +203,13 @@ function isRoutesOrFunction(
 }
 
 /**
- * Get the sitemap filename for a named export.
- *
- * @param name Export name
- * @param index Index for multiple sitemaps with same name
- * @returns Filename like 'sitemap.xml', 'sitemap-pages.xml', etc.
+ * Resolve a single routes value (array or function).
  */
-export function getSitemapFilename(name: string, index?: number): string {
-  const suffix = index === undefined ? "" : `-${index}`;
-
-  if (name === "default") {
-    return `sitemap${suffix}.xml`;
+async function resolveRoutesValue(
+  value: (() => Promise<Route[]> | Route[]) | Route[],
+): Promise<Route[]> {
+  if (typeof value === "function") {
+    return await value();
   }
-
-  return `sitemap-${name}${suffix}.xml`;
-}
-
-/**
- * Merge multiple route arrays, deduplicating by URL.
- *
- * @param routeArrays Arrays of routes to merge
- * @returns Merged and deduplicated routes
- */
-export function mergeRoutes(...routeArrays: Route[][]): Route[] {
-  const seen = new Set<string>();
-  const merged: Route[] = [];
-
-  for (const routes of routeArrays) {
-    for (const route of routes) {
-      if (!seen.has(route.url)) {
-        seen.add(route.url);
-        merged.push(route);
-      }
-    }
-  }
-
-  return merged;
+  return value;
 }

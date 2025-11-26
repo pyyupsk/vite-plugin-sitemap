@@ -3,14 +3,107 @@
  * Generates well-formed XML strings without external dependencies.
  */
 
+import type { Alternate, Image, News, Video } from "../types/extensions";
 import type { Route } from "../types/sitemap";
-import type { Image, Video, News, Alternate } from "../types/extensions";
-import { escapeXml, encodeUrl } from "./escape";
+
+import { encodeUrl, escapeXml } from "./escape";
 import {
-  XML_DECLARATION,
   buildNamespaceAttrs,
   buildSitemapIndexNsAttr,
+  XML_DECLARATION,
 } from "./namespaces";
+
+/**
+ * Build an <xhtml:link> element for hreflang.
+ */
+export function buildAlternateElement(alternate: Alternate): string {
+  return `  <xhtml:link rel="alternate" hreflang="${escapeXml(alternate.hreflang)}" href="${encodeUrl(alternate.href)}"/>`;
+}
+
+/**
+ * Build an <image:image> element.
+ */
+export function buildImageElement(image: Image): string {
+  const parts: string[] = [];
+  parts.push(`    <image:loc>${encodeUrl(image.loc)}</image:loc>`);
+
+  if (image.caption) {
+    parts.push(
+      `    <image:caption>${escapeXml(image.caption)}</image:caption>`,
+    );
+  }
+  if (image.title) {
+    parts.push(`    <image:title>${escapeXml(image.title)}</image:title>`);
+  }
+  if (image.geo_location) {
+    parts.push(
+      `    <image:geo_location>${escapeXml(image.geo_location)}</image:geo_location>`,
+    );
+  }
+  if (image.license) {
+    parts.push(
+      `    <image:license>${encodeUrl(image.license)}</image:license>`,
+    );
+  }
+
+  return `  <image:image>\n${parts.join("\n")}\n  </image:image>`;
+}
+
+/**
+ * Build a <news:news> element.
+ */
+export function buildNewsElement(news: News): string {
+  const parts: string[] = [];
+
+  parts.push(
+    // Publication info
+    "    <news:publication>",
+    `      <news:name>${escapeXml(news.publication.name)}</news:name>`,
+    `      <news:language>${escapeXml(news.publication.language)}</news:language>`,
+    "    </news:publication>",
+
+    // Required fields
+    `    <news:publication_date>${escapeXml(news.publication_date)}</news:publication_date>`,
+    `    <news:title>${escapeXml(news.title)}</news:title>`,
+  );
+
+  // Optional fields
+  if (news.keywords) {
+    parts.push(
+      `    <news:keywords>${escapeXml(news.keywords)}</news:keywords>`,
+    );
+  }
+  if (news.stock_tickers) {
+    parts.push(
+      `    <news:stock_tickers>${escapeXml(news.stock_tickers)}</news:stock_tickers>`,
+    );
+  }
+
+  return `  <news:news>\n${parts.join("\n")}\n  </news:news>`;
+}
+
+/**
+ * Build a sitemap index XML document.
+ */
+export function buildSitemapIndexXml(
+  sitemaps: Array<{ lastmod?: string; loc: string }>,
+): string {
+  const entries = sitemaps
+    .map((sitemap) => {
+      const parts: string[] = [];
+      parts.push(`  <loc>${encodeUrl(sitemap.loc)}</loc>`);
+      if (sitemap.lastmod) {
+        parts.push(`  <lastmod>${escapeXml(sitemap.lastmod)}</lastmod>`);
+      }
+      return `<sitemap>\n${parts.join("\n")}\n</sitemap>`;
+    })
+    .join("\n");
+
+  return `${XML_DECLARATION}
+<sitemapindex ${buildSitemapIndexNsAttr()}>
+${entries}
+</sitemapindex>`;
+}
 
 /**
  * Build a complete sitemap XML document.
@@ -24,10 +117,10 @@ export function buildSitemapXml(routes: Route[]): string {
   );
 
   const nsAttrs = buildNamespaceAttrs({
-    hasImages,
-    hasVideos,
-    hasNews,
     hasAlternates,
+    hasImages,
+    hasNews,
+    hasVideos,
   });
 
   const urls = routes.map((route) => buildUrlElement(route)).join("\n");
@@ -89,35 +182,6 @@ export function buildUrlElement(route: Route): string {
   }
 
   return `<url>\n${parts.join("\n")}\n</url>`;
-}
-
-/**
- * Build an <image:image> element.
- */
-export function buildImageElement(image: Image): string {
-  const parts: string[] = [];
-  parts.push(`    <image:loc>${encodeUrl(image.loc)}</image:loc>`);
-
-  if (image.caption) {
-    parts.push(
-      `    <image:caption>${escapeXml(image.caption)}</image:caption>`,
-    );
-  }
-  if (image.title) {
-    parts.push(`    <image:title>${escapeXml(image.title)}</image:title>`);
-  }
-  if (image.geo_location) {
-    parts.push(
-      `    <image:geo_location>${escapeXml(image.geo_location)}</image:geo_location>`,
-    );
-  }
-  if (image.license) {
-    parts.push(
-      `    <image:license>${encodeUrl(image.license)}</image:license>`,
-    );
-  }
-
-  return `  <image:image>\n${parts.join("\n")}\n  </image:image>`;
 }
 
 /**
@@ -203,69 +267,6 @@ export function buildVideoElement(video: Video): string {
   }
 
   return `  <video:video>\n${parts.join("\n")}\n  </video:video>`;
-}
-
-/**
- * Build a <news:news> element.
- */
-export function buildNewsElement(news: News): string {
-  const parts: string[] = [];
-
-  parts.push(
-    // Publication info
-    "    <news:publication>",
-    `      <news:name>${escapeXml(news.publication.name)}</news:name>`,
-    `      <news:language>${escapeXml(news.publication.language)}</news:language>`,
-    "    </news:publication>",
-
-    // Required fields
-    `    <news:publication_date>${escapeXml(news.publication_date)}</news:publication_date>`,
-    `    <news:title>${escapeXml(news.title)}</news:title>`,
-  );
-
-  // Optional fields
-  if (news.keywords) {
-    parts.push(
-      `    <news:keywords>${escapeXml(news.keywords)}</news:keywords>`,
-    );
-  }
-  if (news.stock_tickers) {
-    parts.push(
-      `    <news:stock_tickers>${escapeXml(news.stock_tickers)}</news:stock_tickers>`,
-    );
-  }
-
-  return `  <news:news>\n${parts.join("\n")}\n  </news:news>`;
-}
-
-/**
- * Build an <xhtml:link> element for hreflang.
- */
-export function buildAlternateElement(alternate: Alternate): string {
-  return `  <xhtml:link rel="alternate" hreflang="${escapeXml(alternate.hreflang)}" href="${encodeUrl(alternate.href)}"/>`;
-}
-
-/**
- * Build a sitemap index XML document.
- */
-export function buildSitemapIndexXml(
-  sitemaps: Array<{ loc: string; lastmod?: string }>,
-): string {
-  const entries = sitemaps
-    .map((sitemap) => {
-      const parts: string[] = [];
-      parts.push(`  <loc>${encodeUrl(sitemap.loc)}</loc>`);
-      if (sitemap.lastmod) {
-        parts.push(`  <lastmod>${escapeXml(sitemap.lastmod)}</lastmod>`);
-      }
-      return `<sitemap>\n${parts.join("\n")}\n</sitemap>`;
-    })
-    .join("\n");
-
-  return `${XML_DECLARATION}
-<sitemapindex ${buildSitemapIndexNsAttr()}>
-${entries}
-</sitemapindex>`;
 }
 
 /**

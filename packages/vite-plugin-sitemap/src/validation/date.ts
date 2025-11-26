@@ -23,6 +23,35 @@ export const W3C_DATETIME_REGEX = new RegExp(
 );
 
 /**
+ * Date validation result.
+ */
+export interface DateValidationResult {
+  error?: string;
+  examples?: string[];
+  suggestion?: string;
+  valid: boolean;
+}
+
+/**
+ * Get current date in W3C Datetime format (YYYY-MM-DD).
+ */
+export function getCurrentW3CDate(): string {
+  return new Date().toISOString().split("T")[0] ?? "";
+}
+
+/**
+ * Check if a date is in the future (warning, not error).
+ */
+export function isFutureDate(date: string): boolean {
+  try {
+    const dateObj = new Date(date);
+    return dateObj > new Date();
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Validate a date string for W3C Datetime compliance.
  * @returns true if valid, false otherwise
  */
@@ -66,18 +95,15 @@ export function isValidW3CDatetime(date: string): boolean {
 export function validateW3CDatetime(date: string): DateValidationResult {
   if (!date || typeof date !== "string") {
     return {
-      valid: false,
       error: "Date is required and must be a string",
       suggestion: "Provide a date in W3C Datetime format like '2024-01-15'",
+      valid: false,
     };
   }
 
   if (!W3C_DATETIME_REGEX.test(date)) {
     return {
-      valid: false,
       error: "Date does not match W3C Datetime format",
-      suggestion:
-        "Use format: YYYY, YYYY-MM, YYYY-MM-DD, or YYYY-MM-DDThh:mm:ss±hh:mm",
       examples: [
         "2024",
         "2024-01",
@@ -85,6 +111,9 @@ export function validateW3CDatetime(date: string): DateValidationResult {
         "2024-01-15T10:30:00Z",
         "2024-01-15T10:30:00+00:00",
       ],
+      suggestion:
+        "Use format: YYYY, YYYY-MM, YYYY-MM-DD, or YYYY-MM-DDThh:mm:ss±hh:mm",
+      valid: false,
     };
   }
 
@@ -93,9 +122,9 @@ export function validateW3CDatetime(date: string): DateValidationResult {
     const parts = date.split("T")[0];
     if (!parts) {
       return {
-        valid: false,
         error: "Invalid date format",
         suggestion: "Ensure the date part is valid",
+        valid: false,
       };
     }
 
@@ -106,64 +135,35 @@ export function validateW3CDatetime(date: string): DateValidationResult {
 
     if (year < 1 || year > 9999) {
       return {
-        valid: false,
         error: `Invalid year: ${year}`,
         suggestion: "Year must be between 1 and 9999",
+        valid: false,
       };
     }
 
     if (month < 1 || month > 12) {
       return {
-        valid: false,
         error: `Invalid month: ${month}`,
         suggestion: "Month must be between 01 and 12",
+        valid: false,
       };
     }
 
     const daysInMonth = new Date(year, month, 0).getDate();
     if (day < 1 || day > daysInMonth) {
       return {
-        valid: false,
         error: `Invalid day: ${day} for month ${month}`,
         suggestion: `Day must be between 01 and ${daysInMonth} for the given month`,
+        valid: false,
       };
     }
 
     return { valid: true };
   } catch {
     return {
-      valid: false,
       error: "Failed to parse date",
       suggestion: "Ensure the date is in a valid W3C Datetime format",
+      valid: false,
     };
   }
-}
-
-/**
- * Date validation result.
- */
-export interface DateValidationResult {
-  valid: boolean;
-  error?: string;
-  suggestion?: string;
-  examples?: string[];
-}
-
-/**
- * Check if a date is in the future (warning, not error).
- */
-export function isFutureDate(date: string): boolean {
-  try {
-    const dateObj = new Date(date);
-    return dateObj > new Date();
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Get current date in W3C Datetime format (YYYY-MM-DD).
- */
-export function getCurrentW3CDate(): string {
-  return new Date().toISOString().split("T")[0] ?? "";
 }

@@ -37,10 +37,10 @@ export const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>';
  * Only includes namespaces that are actually used.
  */
 export function buildNamespaceAttrs(options: {
-  hasImages?: boolean;
-  hasVideos?: boolean;
-  hasNews?: boolean;
   hasAlternates?: boolean;
+  hasImages?: boolean;
+  hasNews?: boolean;
+  hasVideos?: boolean;
 }): string {
   const attrs: string[] = [`xmlns="${SITEMAP_NS}"`];
 

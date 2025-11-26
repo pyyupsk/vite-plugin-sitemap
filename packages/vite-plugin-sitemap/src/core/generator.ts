@@ -3,55 +3,130 @@
  * Orchestrates route validation, transformation, and XML generation.
  */
 
-import type { Route } from "../types/sitemap";
 import type { PluginOptions, ResolvedPluginOptions } from "../types/config";
-import type { ValidationResult, ValidationError } from "../validation/errors";
-import { routeSchema } from "../validation/schemas";
-import {
-  formatZodErrors,
-  createSuccessResult,
-  createFailedResult,
-} from "../validation/errors";
-import { matchesExcludePattern } from "../validation/url";
-import { isFutureDate } from "../validation/date";
-import { buildSitemapXml, calculateByteSize } from "../xml/builder";
-import { splitRoutes } from "./splitter";
+import type { Route } from "../types/sitemap";
+import type { ValidationError, ValidationResult } from "../validation/errors";
 import type { SplitResult } from "./splitter";
 
-/**
- * Result of sitemap generation.
- */
-export interface GenerationResult {
-  /** Whether generation was successful */
-  success: boolean;
-  /** Generated XML content (single sitemap, or first chunk if split) */
-  xml?: string;
-  /** Byte size of the generated XML */
-  byteSize?: number;
-  /** Number of routes in the sitemap */
-  routeCount?: number;
-  /** Validation result */
-  validation: ValidationResult;
-  /** Warnings (non-fatal issues) */
-  warnings: string[];
-  /** Split result if sitemap was split into multiple files */
-  splitResult?: SplitResult;
-}
+import { isFutureDate } from "../validation/date";
+import {
+  createFailedResult,
+  createSuccessResult,
+  formatZodErrors,
+} from "../validation/errors";
+import { routeSchema } from "../validation/schemas";
+import { matchesExcludePattern } from "../validation/url";
+import { buildSitemapXml, calculateByteSize } from "../xml/builder";
+import { splitRoutes } from "./splitter";
 
 /**
  * Options for the generation pipeline.
  */
 export interface GenerationOptions {
-  /** Plugin options (for defaults and exclusions) */
-  pluginOptions?: PluginOptions | ResolvedPluginOptions;
-  /** Whether to skip validation (not recommended) */
-  skipValidation?: boolean;
-  /** Custom hostname to prepend to relative URLs */
-  hostname?: string | undefined;
   /** Base filename for sitemaps (without extension) */
   baseFilename?: string;
   /** Enable auto-splitting for large sitemaps */
   enableSplitting?: boolean;
+  /** Custom hostname to prepend to relative URLs */
+  hostname?: string | undefined;
+  /** Plugin options (for defaults and exclusions) */
+  pluginOptions?: PluginOptions | ResolvedPluginOptions;
+  /** Whether to skip validation (not recommended) */
+  skipValidation?: boolean;
+}
+
+/**
+ * Result of sitemap generation.
+ */
+export interface GenerationResult {
+  /** Byte size of the generated XML */
+  byteSize?: number;
+  /** Number of routes in the sitemap */
+  routeCount?: number;
+  /** Split result if sitemap was split into multiple files */
+  splitResult?: SplitResult;
+  /** Whether generation was successful */
+  success: boolean;
+  /** Validation result */
+  validation: ValidationResult;
+  /** Warnings (non-fatal issues) */
+  warnings: string[];
+  /** Generated XML content (single sitemap, or first chunk if split) */
+  xml?: string;
+}
+
+/**
+ * Apply default values to routes.
+ */
+export function applyDefaults(
+  routes: Route[],
+  options: PluginOptions | ResolvedPluginOptions,
+): Route[] {
+  return routes.map((route) => {
+    const result: Route = { ...route };
+
+    // Only set defaults if the route doesn't have the value and the default is defined
+    if (route.changefreq === undefined && options.changefreq !== undefined) {
+      result.changefreq = options.changefreq;
+    }
+    if (route.priority === undefined && options.priority !== undefined) {
+      result.priority = options.priority;
+    }
+    if (route.lastmod === undefined && options.lastmod !== undefined) {
+      result.lastmod = options.lastmod;
+    }
+
+    return result;
+  });
+}
+
+/**
+ * Deduplicate routes by URL.
+ * First occurrence wins.
+ */
+export function deduplicateRoutes(routes: Route[]): Route[] {
+  const seen = new Set<string>();
+  const result: Route[] = [];
+
+  for (const route of routes) {
+    if (!seen.has(route.url)) {
+      seen.add(route.url);
+      result.push(route);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Filter out routes matching exclusion patterns.
+ */
+export function filterExcludedRoutes(
+  routes: Route[],
+  patterns: Array<RegExp | string>,
+): Route[] {
+  if (patterns.length === 0) {
+    return routes;
+  }
+
+  return routes.filter((route) => !matchesExcludePattern(route.url, patterns));
+}
+
+/**
+ * Generate sitemaps for multiple route sets (named exports).
+ */
+export async function generateMultipleSitemaps(
+  routeSets: Array<{ name: string; routes: Route[] }>,
+  options: GenerationOptions = {},
+): Promise<Map<string, GenerationResult>> {
+  const results = new Map<string, GenerationResult>();
+
+  for (const { name, routes } of routeSets) {
+    const result = await generateSitemap(routes, options);
+    results.set(name, result);
+  }
+
+  return results;
 }
 
 /**
@@ -152,24 +227,24 @@ export async function generateSitemap(
       );
 
       return {
-        success: true,
-        xml: splitResult.sitemaps[0]!.xml,
         byteSize: splitResult.sitemaps.reduce((sum, s) => sum + s.byteSize, 0),
         routeCount: deduplicatedRoutes.length,
+        splitResult,
+        success: true,
         validation: createSuccessResult(deduplicatedRoutes.length, warnings),
         warnings,
-        splitResult,
+        xml: splitResult.sitemaps[0]!.xml,
       };
     }
 
     // Not split - return the single sitemap from split result
     return {
-      success: true,
-      xml: splitResult.sitemaps[0]!.xml,
       byteSize: splitResult.sitemaps[0]!.byteSize,
       routeCount: deduplicatedRoutes.length,
+      success: true,
       validation: createSuccessResult(deduplicatedRoutes.length, warnings),
       warnings,
+      xml: splitResult.sitemaps[0]!.xml,
     };
   }
 
@@ -184,12 +259,30 @@ export async function generateSitemap(
   const byteSize = calculateByteSize(xml);
 
   return {
-    success: true,
-    xml,
     byteSize,
     routeCount: deduplicatedRoutes.length,
+    success: true,
     validation: createSuccessResult(deduplicatedRoutes.length, warnings),
     warnings,
+    xml,
+  };
+}
+
+/**
+ * Prepend hostname to a URL if it's relative.
+ */
+export function prependHostname(route: Route, hostname: string): Route {
+  if (route.url.startsWith("http://") || route.url.startsWith("https://")) {
+    return route;
+  }
+
+  // Ensure hostname doesn't end with slash and path starts with slash
+  const cleanHostname = hostname.replace(/\/$/, "");
+  const path = route.url.startsWith("/") ? route.url : `/${route.url}`;
+
+  return {
+    ...route,
+    url: `${cleanHostname}${path}`,
   };
 }
 
@@ -214,96 +307,4 @@ export function validateRoutes(routes: Route[]): ValidationResult {
   }
 
   return createSuccessResult(routes.length);
-}
-
-/**
- * Filter out routes matching exclusion patterns.
- */
-export function filterExcludedRoutes(
-  routes: Route[],
-  patterns: Array<string | RegExp>,
-): Route[] {
-  if (patterns.length === 0) {
-    return routes;
-  }
-
-  return routes.filter((route) => !matchesExcludePattern(route.url, patterns));
-}
-
-/**
- * Apply default values to routes.
- */
-export function applyDefaults(
-  routes: Route[],
-  options: PluginOptions | ResolvedPluginOptions,
-): Route[] {
-  return routes.map((route) => {
-    const result: Route = { ...route };
-
-    // Only set defaults if the route doesn't have the value and the default is defined
-    if (route.changefreq === undefined && options.changefreq !== undefined) {
-      result.changefreq = options.changefreq;
-    }
-    if (route.priority === undefined && options.priority !== undefined) {
-      result.priority = options.priority;
-    }
-    if (route.lastmod === undefined && options.lastmod !== undefined) {
-      result.lastmod = options.lastmod;
-    }
-
-    return result;
-  });
-}
-
-/**
- * Prepend hostname to a URL if it's relative.
- */
-export function prependHostname(route: Route, hostname: string): Route {
-  if (route.url.startsWith("http://") || route.url.startsWith("https://")) {
-    return route;
-  }
-
-  // Ensure hostname doesn't end with slash and path starts with slash
-  const cleanHostname = hostname.replace(/\/$/, "");
-  const path = route.url.startsWith("/") ? route.url : `/${route.url}`;
-
-  return {
-    ...route,
-    url: `${cleanHostname}${path}`,
-  };
-}
-
-/**
- * Deduplicate routes by URL.
- * First occurrence wins.
- */
-export function deduplicateRoutes(routes: Route[]): Route[] {
-  const seen = new Set<string>();
-  const result: Route[] = [];
-
-  for (const route of routes) {
-    if (!seen.has(route.url)) {
-      seen.add(route.url);
-      result.push(route);
-    }
-  }
-
-  return result;
-}
-
-/**
- * Generate sitemaps for multiple route sets (named exports).
- */
-export async function generateMultipleSitemaps(
-  routeSets: Array<{ name: string; routes: Route[] }>,
-  options: GenerationOptions = {},
-): Promise<Map<string, GenerationResult>> {
-  const results = new Map<string, GenerationResult>();
-
-  for (const { name, routes } of routeSets) {
-    const result = await generateSitemap(routes, options);
-    results.set(name, result);
-  }
-
-  return results;
 }

@@ -1,40 +1,19 @@
-import type { Route, ChangeFrequency } from "./sitemap";
-
-/**
- * Function to transform routes before XML generation.
- * Return null to exclude the route from the sitemap.
- */
-export type RouteTransformer = (
-  route: Route,
-) => Route | null | Promise<Route | null>;
-
-/**
- * Custom XML serializer function.
- * Receives all routes and returns the complete XML string.
- */
-export type XmlSerializer = (routes: Route[]) => string | Promise<string>;
+import type { ChangeFrequency, Route } from "./sitemap";
 
 /**
  * Plugin configuration options.
  */
 export interface PluginOptions {
   /**
-   * Base URL of the site. Required for relative URL resolution.
-   * Example: 'https://example.com'
+   * Default change frequency for all routes.
    */
-  hostname?: string;
+  changefreq?: ChangeFrequency;
 
   /**
-   * Path to the sitemap definition file (without extension).
-   * @default 'src/sitemap'
+   * URL patterns to exclude from the sitemap.
+   * Supports string patterns and RegExp.
    */
-  sitemapFile?: string;
-
-  /**
-   * Output directory for generated files.
-   * @default Vite's build.outDir
-   */
-  outDir?: string;
+  exclude?: Array<RegExp | string>;
 
   /**
    * Name of the output sitemap file.
@@ -49,14 +28,10 @@ export interface PluginOptions {
   generateRobotsTxt?: boolean;
 
   /**
-   * Default change frequency for all routes.
+   * Base URL of the site. Required for relative URL resolution.
+   * Example: 'https://example.com'
    */
-  changefreq?: ChangeFrequency;
-
-  /**
-   * Default priority for all routes.
-   */
-  priority?: number;
+  hostname?: string;
 
   /**
    * Default last modified date for all routes.
@@ -64,54 +39,79 @@ export interface PluginOptions {
   lastmod?: string;
 
   /**
-   * URL patterns to exclude from the sitemap.
-   * Supports string patterns and RegExp.
+   * Output directory for generated files.
+   * @default Vite's build.outDir
    */
-  exclude?: Array<string | RegExp>;
+  outDir?: string;
+
+  /**
+   * Default priority for all routes.
+   */
+  priority?: number;
+
+  /**
+   * Custom XML serialization function.
+   */
+  serialize?: XmlSerializer;
+
+  /**
+   * Path to the sitemap definition file (without extension).
+   * @default 'src/sitemap'
+   */
+  sitemapFile?: string;
 
   /**
    * Transform function applied to each route.
    * Return null to exclude the route.
    */
   transform?: RouteTransformer;
-
-  /**
-   * Custom XML serialization function.
-   */
-  serialize?: XmlSerializer;
 }
 
 /**
  * Resolved plugin options with defaults applied.
  */
 export interface ResolvedPluginOptions {
-  hostname: string | undefined;
-  sitemapFile: string;
-  outDir: string;
+  changefreq: ChangeFrequency | undefined;
+  exclude: Array<RegExp | string>;
   filename: string;
   generateRobotsTxt: boolean;
-  changefreq: ChangeFrequency | undefined;
-  priority: number | undefined;
+  hostname: string | undefined;
   lastmod: string | undefined;
-  exclude: Array<string | RegExp>;
+  outDir: string;
+  priority: number | undefined;
+  serialize: undefined | XmlSerializer;
+  sitemapFile: string;
   transform: RouteTransformer | undefined;
-  serialize: XmlSerializer | undefined;
 }
+
+/**
+ * Function to transform routes before XML generation.
+ * Return null to exclude the route from the sitemap.
+ */
+export type RouteTransformer = (
+  route: Route,
+) => null | Promise<null | Route> | Route;
+
+/**
+ * Custom XML serializer function.
+ * Receives all routes and returns the complete XML string.
+ */
+export type XmlSerializer = (routes: Route[]) => Promise<string> | string;
 
 /**
  * Default plugin options.
  */
 export const defaultOptions: Omit<ResolvedPluginOptions, "outDir"> = {
-  hostname: undefined,
-  sitemapFile: "src/sitemap",
+  changefreq: undefined,
+  exclude: [],
   filename: "sitemap.xml",
   generateRobotsTxt: false,
-  changefreq: undefined,
-  priority: undefined,
+  hostname: undefined,
   lastmod: undefined,
-  exclude: [],
-  transform: undefined,
+  priority: undefined,
   serialize: undefined,
+  sitemapFile: "src/sitemap",
+  transform: undefined,
 };
 
 /**
@@ -122,17 +122,17 @@ export function resolveOptions(
   outDir: string,
 ): ResolvedPluginOptions {
   return {
-    hostname: options.hostname ?? defaultOptions.hostname,
-    sitemapFile: options.sitemapFile ?? defaultOptions.sitemapFile,
-    outDir: options.outDir ?? outDir,
+    changefreq: options.changefreq ?? defaultOptions.changefreq,
+    exclude: options.exclude ?? defaultOptions.exclude,
     filename: options.filename ?? defaultOptions.filename,
     generateRobotsTxt:
       options.generateRobotsTxt ?? defaultOptions.generateRobotsTxt,
-    changefreq: options.changefreq ?? defaultOptions.changefreq,
-    priority: options.priority ?? defaultOptions.priority,
+    hostname: options.hostname ?? defaultOptions.hostname,
     lastmod: options.lastmod ?? defaultOptions.lastmod,
-    exclude: options.exclude ?? defaultOptions.exclude,
-    transform: options.transform ?? defaultOptions.transform,
+    outDir: options.outDir ?? outDir,
+    priority: options.priority ?? defaultOptions.priority,
     serialize: options.serialize ?? defaultOptions.serialize,
+    sitemapFile: options.sitemapFile ?? defaultOptions.sitemapFile,
+    transform: options.transform ?? defaultOptions.transform,
   };
 }

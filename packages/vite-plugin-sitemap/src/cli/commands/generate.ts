@@ -3,45 +3,34 @@
  * Generates sitemap files without running a full Vite build.
  */
 
-import { writeFile, mkdir } from "node:fs/promises";
-import { join, resolve } from "node:path";
 import type { Command } from "commander";
-import {
-  logger,
-  loadRoutesFromSitemap,
-  formatDuration,
-  formatBytes,
-} from "../utils";
-import { generateSitemap } from "../../core/generator";
-import { getSitemapIndexFilename } from "../../core/splitter";
-import { getSitemapFilename } from "../../core/loader";
-import { updateRobotsTxt, buildSitemapUrl } from "../../core/robots";
-import { formatResultForConsole } from "../../validation/errors";
+
+import { mkdir, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
+
 import type { PluginOptions, ResolvedPluginOptions } from "../../types/config";
+
+import { generateSitemap } from "../../core/generator";
+import { getSitemapFilename } from "../../core/loader";
+import { buildSitemapUrl, updateRobotsTxt } from "../../core/robots";
+import { getSitemapIndexFilename } from "../../core/splitter";
 import { resolveOptions } from "../../types/config";
+import { formatResultForConsole } from "../../validation/errors";
+import {
+  formatBytes,
+  formatDuration,
+  loadRoutesFromSitemap,
+  logger,
+} from "../utils";
 
 /**
  * Options for the generate command.
  */
 interface GenerateOptions {
-  output?: string;
   hostname?: string;
+  output?: string;
   robotsTxt?: boolean;
   verbose: boolean;
-}
-
-/**
- * Get CLI options from parent command.
- */
-function getGlobalOptions(cmd: Command): {
-  config?: string;
-  verbose?: boolean;
-} {
-  const opts = cmd.parent?.opts() ?? {};
-  return {
-    config: opts.config,
-    verbose: opts.verbose,
-  };
 }
 
 /**
@@ -100,8 +89,8 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
     const outputDir = resolve(root, options.output ?? "dist");
     const pluginOptions: PluginOptions = {
       ...(options.hostname && { hostname: options.hostname }),
-      outDir: options.output ?? "dist",
       generateRobotsTxt: options.robotsTxt ?? false,
+      outDir: options.output ?? "dist",
     };
 
     const resolvedOpts: ResolvedPluginOptions = resolveOptions(
@@ -120,10 +109,10 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
       const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
 
       const genResult = await generateSitemap(routes, {
-        pluginOptions: resolvedOpts,
-        hostname: resolvedOpts.hostname,
         baseFilename,
         enableSplitting: true,
+        hostname: resolvedOpts.hostname,
+        pluginOptions: resolvedOpts,
       });
 
       if (!genResult.success) {
@@ -231,4 +220,18 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
     // Clean up Vite server
     await server.close();
   }
+}
+
+/**
+ * Get CLI options from parent command.
+ */
+function getGlobalOptions(cmd: Command): {
+  config?: string;
+  verbose?: boolean;
+} {
+  const opts = cmd.parent?.opts() ?? {};
+  return {
+    config: opts.config,
+    verbose: opts.verbose,
+  };
 }

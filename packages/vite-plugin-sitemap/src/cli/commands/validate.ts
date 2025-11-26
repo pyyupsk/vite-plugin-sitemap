@@ -4,12 +4,13 @@
  */
 
 import type { Command } from "commander";
+
 import { validateRoutes } from "../../core/generator";
 import { formatResultForConsole } from "../../validation/errors";
 import {
-  logger,
-  loadRoutesFromSitemap,
   formatDuration,
+  loadRoutesFromSitemap,
+  logger,
   printRoutesSummary,
 } from "../utils";
 

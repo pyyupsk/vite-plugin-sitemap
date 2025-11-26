@@ -4,37 +4,37 @@
  * @module
  */
 
+// Configuration types
+export type {
+  PluginOptions,
+  ResolvedPluginOptions,
+  RouteTransformer,
+  XmlSerializer,
+} from "./config";
+
+export { defaultOptions, resolveOptions } from "./config";
+
+// Extension types (Google sitemaps)
+export type {
+  Alternate,
+  Image,
+  News,
+  NewsPublication,
+  Video,
+  VideoPlatform,
+  VideoRestriction,
+  VideoUploader,
+} from "./extensions";
+
 // Core sitemap types
 export type {
   ChangeFrequency,
   Route,
   RouteGenerator,
-  SitemapDefaultExport,
-  SitemapNamedExports,
-  SitemapModule,
   Sitemap,
-  SitemapReference,
+  SitemapDefaultExport,
   SitemapIndex,
+  SitemapModule,
+  SitemapNamedExports,
+  SitemapReference,
 } from "./sitemap";
-
-// Extension types (Google sitemaps)
-export type {
-  Image,
-  Video,
-  VideoRestriction,
-  VideoPlatform,
-  VideoUploader,
-  News,
-  NewsPublication,
-  Alternate,
-} from "./extensions";
-
-// Configuration types
-export type {
-  RouteTransformer,
-  XmlSerializer,
-  PluginOptions,
-  ResolvedPluginOptions,
-} from "./config";
-
-export { defaultOptions, resolveOptions } from "./config";

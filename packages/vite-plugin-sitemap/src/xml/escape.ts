@@ -4,14 +4,29 @@
  */
 
 const XML_ENTITIES: Record<string, string> = {
+  '"': "&quot;",
   "&": "&amp;",
+  "'": "&apos;",
   "<": "&lt;",
   ">": "&gt;",
-  '"': "&quot;",
-  "'": "&apos;",
 };
 
 const XML_ENTITY_REGEX = /[&<>"']/g;
+
+/**
+ * Encode a URL for use in XML sitemap.
+ * Ensures proper URL encoding while preserving already-encoded characters.
+ */
+export function encodeUrl(url: string): string {
+  try {
+    // Parse and reconstruct to normalize encoding
+    const parsed = new URL(url);
+    return parsed.href;
+  } catch {
+    // If URL is invalid, escape XML entities at minimum
+    return escapeXml(url);
+  }
+}
 
 /**
  * Escape special XML characters in text content.
@@ -30,19 +45,4 @@ export function escapeXml(text: string): string {
  */
 export function escapeXmlAttr(text: string): string {
   return escapeXml(text);
-}
-
-/**
- * Encode a URL for use in XML sitemap.
- * Ensures proper URL encoding while preserving already-encoded characters.
- */
-export function encodeUrl(url: string): string {
-  try {
-    // Parse and reconstruct to normalize encoding
-    const parsed = new URL(url);
-    return parsed.href;
-  } catch {
-    // If URL is invalid, escape XML entities at minimum
-    return escapeXml(url);
-  }
 }

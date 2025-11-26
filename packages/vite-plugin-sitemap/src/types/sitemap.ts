@@ -1,25 +1,37 @@
+import type { Alternate, Image, News, Video } from "./extensions";
+
 /**
  * Change frequency values as defined by the sitemap protocol.
  * Indicates how frequently the page is likely to change.
  */
 export type ChangeFrequency =
   | "always"
-  | "hourly"
   | "daily"
-  | "weekly"
+  | "hourly"
   | "monthly"
-  | "yearly"
-  | "never";
+  | "never"
+  | "weekly"
+  | "yearly";
 
 /**
  * A single URL entry in the sitemap.
  */
 export interface Route {
   /**
-   * The URL of the page. Must be an absolute URL with http(s) protocol.
-   * Maximum 2,048 characters.
+   * Alternate language versions of this URL for hreflang annotations.
    */
-  url: string;
+  alternates?: Alternate[];
+
+  /**
+   * How frequently the page is likely to change.
+   */
+  changefreq?: ChangeFrequency;
+
+  /**
+   * Images associated with this URL for Google Image sitemap extension.
+   * Maximum 1,000 images per URL.
+   */
+  images?: Image[];
 
   /**
    * The date the page was last modified.
@@ -29,9 +41,9 @@ export interface Route {
   lastmod?: string;
 
   /**
-   * How frequently the page is likely to change.
+   * News article metadata for Google News sitemap extension.
    */
-  changefreq?: ChangeFrequency;
+  news?: News;
 
   /**
    * The priority of this URL relative to other URLs on your site.
@@ -40,71 +52,38 @@ export interface Route {
   priority?: number;
 
   /**
-   * Images associated with this URL for Google Image sitemap extension.
-   * Maximum 1,000 images per URL.
+   * The URL of the page. Must be an absolute URL with http(s) protocol.
+   * Maximum 2,048 characters.
    */
-  images?: import("./extensions").Image[];
+  url: string;
 
   /**
    * Videos associated with this URL for Google Video sitemap extension.
    */
-  videos?: import("./extensions").Video[];
-
-  /**
-   * News article metadata for Google News sitemap extension.
-   */
-  news?: import("./extensions").News;
-
-  /**
-   * Alternate language versions of this URL for hreflang annotations.
-   */
-  alternates?: import("./extensions").Alternate[];
+  videos?: Video[];
 }
 
 /**
  * Async function that returns routes.
  */
-export type RouteGenerator = () => Route[] | Promise<Route[]>;
-
-/**
- * Valid default export from sitemap.ts.
- */
-export type SitemapDefaultExport = Route[] | RouteGenerator;
-
-/**
- * Named exports from sitemap.ts for multiple sitemaps.
- */
-export type SitemapNamedExports = Record<string, Route[] | RouteGenerator>;
-
-/**
- * Complete sitemap.ts module structure.
- */
-export interface SitemapModule {
-  default?: SitemapDefaultExport;
-  [key: string]: Route[] | RouteGenerator | undefined;
-}
+export type RouteGenerator = () => Promise<Route[]> | Route[];
 
 /**
  * Generated sitemap file structure.
  */
 export interface Sitemap {
+  /** Approximate XML size in bytes */
+  byteSize: number;
   /** Output filename (e.g., 'sitemap.xml') */
   filename: string;
   /** Routes in this sitemap */
   routes: Route[];
-  /** Approximate XML size in bytes */
-  byteSize: number;
 }
 
 /**
- * Reference to a child sitemap in an index.
+ * Valid default export from sitemap.ts.
  */
-export interface SitemapReference {
-  /** Absolute URL to sitemap file */
-  loc: string;
-  /** Optional last modified date */
-  lastmod?: string;
-}
+export type SitemapDefaultExport = Route[] | RouteGenerator;
 
 /**
  * Index file referencing multiple sitemaps.
@@ -114,4 +93,27 @@ export interface SitemapIndex {
   filename: string;
   /** References to child sitemaps */
   sitemaps: SitemapReference[];
+}
+
+/**
+ * Complete sitemap.ts module structure.
+ */
+export interface SitemapModule {
+  [key: string]: Route[] | RouteGenerator | undefined;
+  default?: SitemapDefaultExport;
+}
+
+/**
+ * Named exports from sitemap.ts for multiple sitemaps.
+ */
+export type SitemapNamedExports = Record<string, Route[] | RouteGenerator>;
+
+/**
+ * Reference to a child sitemap in an index.
+ */
+export interface SitemapReference {
+  /** Optional last modified date */
+  lastmod?: string;
+  /** Absolute URL to sitemap file */
+  loc: string;
 }

@@ -38,22 +38,13 @@
  * @packageDocumentation
  */
 
+// Generator exports for programmatic usage
+export { generateSitemap, validateRoutes } from "./core/generator";
+
+export type { GenerationOptions, GenerationResult } from "./core/generator";
+
 // Main plugin export
-export { sitemapPlugin, sitemapPlugin as default, PLUGIN_NAME } from "./plugin";
-
-// Type exports for user sitemap files
-export type { Route, ChangeFrequency } from "./types/sitemap";
-
-export type {
-  Image,
-  Video,
-  VideoRestriction,
-  VideoPlatform,
-  VideoUploader,
-  News,
-  NewsPublication,
-  Alternate,
-} from "./types/extensions";
+export { sitemapPlugin as default, PLUGIN_NAME, sitemapPlugin } from "./plugin";
 
 export type {
   PluginOptions,
@@ -61,23 +52,32 @@ export type {
   XmlSerializer,
 } from "./types/config";
 
+export type {
+  Alternate,
+  Image,
+  News,
+  NewsPublication,
+  Video,
+  VideoPlatform,
+  VideoRestriction,
+  VideoUploader,
+} from "./types/extensions";
+
+// Type exports for user sitemap files
+export type { ChangeFrequency, Route } from "./types/sitemap";
+
 // Validation exports for advanced usage
 export type { ValidationError, ValidationResult } from "./validation/errors";
 
 export {
-  formatResultForConsole,
   formatErrorsForConsole,
+  formatResultForConsole,
 } from "./validation/errors";
-
-// Generator exports for programmatic usage
-export { generateSitemap, validateRoutes } from "./core/generator";
-
-export type { GenerationResult, GenerationOptions } from "./core/generator";
 
 // XML builder exports for custom serialization
 export {
-  buildSitemapXml,
   buildSitemapIndexXml,
+  buildSitemapXml,
   buildUrlElement,
   calculateByteSize,
 } from "./xml/builder";
