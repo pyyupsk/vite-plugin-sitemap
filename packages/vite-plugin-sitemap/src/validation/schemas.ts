@@ -87,9 +87,7 @@ export const videoUploaderSchema = z.object({
 export const videoSchema = z
   .object({
     content_loc: urlSchema.optional(),
-    description: z
-      .string()
-      .max(2048, "Video description must not exceed 2048 characters"),
+    description: z.string().max(2048, "Video description must not exceed 2048 characters"),
     duration: z
       .number()
       .int()
@@ -102,11 +100,7 @@ export const videoSchema = z
     platform: videoPlatformSchema.optional(),
     player_loc: urlSchema.optional(),
     publication_date: w3cDatetimeSchema.optional(),
-    rating: z
-      .number()
-      .min(0)
-      .max(5, "Rating must be between 0.0 and 5.0")
-      .optional(),
+    rating: z.number().min(0).max(5, "Rating must be between 0.0 and 5.0").optional(),
     requires_subscription: z.boolean().optional(),
     restriction: videoRestrictionSchema.optional(),
     tag: z.array(z.string()).max(32, "Maximum 32 tags allowed").optional(),
@@ -123,10 +117,7 @@ export const videoSchema = z
  * News publication schema.
  */
 export const newsPublicationSchema = z.object({
-  language: z
-    .string()
-    .min(2)
-    .max(5, "Language must be an ISO 639-1 code (e.g., 'en')"),
+  language: z.string().min(2).max(5, "Language must be an ISO 639-1 code (e.g., 'en')"),
   name: z.string(),
 });
 
@@ -160,10 +151,7 @@ export const alternateSchema = z.object({
 export const routeSchema = z.object({
   alternates: z.array(alternateSchema).optional(),
   changefreq: changeFrequencySchema.optional(),
-  images: z
-    .array(imageSchema)
-    .max(1000, "Maximum 1000 images per URL")
-    .optional(),
+  images: z.array(imageSchema).max(1000, "Maximum 1000 images per URL").optional(),
   lastmod: w3cDatetimeSchema.optional(),
   news: newsSchema.optional(),
   priority: prioritySchema.optional(),

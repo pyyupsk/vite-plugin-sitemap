@@ -63,10 +63,7 @@ export async function loadSitemapFile(
   // Use Vite's ssrLoadModule for TypeScript support and proper module resolution
   const module = await server.ssrLoadModule(filePath);
 
-  const namedExports = new Map<
-    string,
-    (() => Promise<Route[]> | Route[]) | Route[]
-  >();
+  const namedExports = new Map<string, (() => Promise<Route[]> | Route[]) | Route[]>();
   const allSources: LoadResult["allSources"] = [];
 
   let defaultRoutes: LoadResult["defaultRoutes"];
@@ -100,17 +97,12 @@ export async function loadSitemapFile(
  * @param filePath Absolute path to the sitemap file
  * @returns Load result with default and named exports
  */
-export async function loadSitemapFileDirect(
-  filePath: string,
-): Promise<LoadResult> {
+export async function loadSitemapFileDirect(filePath: string): Promise<LoadResult> {
   // For .ts files, we need tsx or ts-node
   // This function is primarily for compiled JS or when using a runtime with TS support
   const module = await import(filePath);
 
-  const namedExports = new Map<
-    string,
-    (() => Promise<Route[]> | Route[]) | Route[]
-  >();
+  const namedExports = new Map<string, (() => Promise<Route[]> | Route[]) | Route[]>();
   const allSources: LoadResult["allSources"] = [];
 
   let defaultRoutes: LoadResult["defaultRoutes"];
@@ -163,9 +155,7 @@ export function mergeRoutes(...routeArrays: Route[][]): Route[] {
  * @param loadResult Result from loadSitemapFile
  * @returns Array of resolved routes with their names
  */
-export async function resolveRoutes(
-  loadResult: LoadResult,
-): Promise<ResolvedRoutes[]> {
+export async function resolveRoutes(loadResult: LoadResult): Promise<ResolvedRoutes[]> {
   const resolved: ResolvedRoutes[] = [];
 
   for (const source of loadResult.allSources) {
@@ -182,16 +172,12 @@ export async function resolveRoutes(
 /**
  * Type guard to check if a value is routes array or a function returning routes.
  */
-function isRoutesOrFunction(
-  value: unknown,
-): value is (() => Promise<Route[]> | Route[]) | Route[] {
+function isRoutesOrFunction(value: unknown): value is (() => Promise<Route[]> | Route[]) | Route[] {
   // Check if it's an array
   if (Array.isArray(value)) {
     // Basic check: if empty array or first element has 'url' property
     if (value.length === 0) return true;
-    return (
-      typeof value[0] === "object" && value[0] !== null && "url" in value[0]
-    );
+    return typeof value[0] === "object" && value[0] !== null && "url" in value[0];
   }
 
   // Check if it's a function

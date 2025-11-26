@@ -88,9 +88,7 @@ export interface ResolvedPluginOptions {
  * Function to transform routes before XML generation.
  * Return null to exclude the route from the sitemap.
  */
-export type RouteTransformer = (
-  route: Route,
-) => null | Promise<null | Route> | Route;
+export type RouteTransformer = (route: Route) => null | Promise<null | Route> | Route;
 
 /**
  * Custom XML serializer function.
@@ -117,16 +115,12 @@ export const defaultOptions: Omit<ResolvedPluginOptions, "outDir"> = {
 /**
  * Resolve plugin options with defaults.
  */
-export function resolveOptions(
-  options: PluginOptions,
-  outDir: string,
-): ResolvedPluginOptions {
+export function resolveOptions(options: PluginOptions, outDir: string): ResolvedPluginOptions {
   return {
     changefreq: options.changefreq ?? defaultOptions.changefreq,
     exclude: options.exclude ?? defaultOptions.exclude,
     filename: options.filename ?? defaultOptions.filename,
-    generateRobotsTxt:
-      options.generateRobotsTxt ?? defaultOptions.generateRobotsTxt,
+    generateRobotsTxt: options.generateRobotsTxt ?? defaultOptions.generateRobotsTxt,
     hostname: options.hostname ?? defaultOptions.hostname,
     lastmod: options.lastmod ?? defaultOptions.lastmod,
     outDir: options.outDir ?? outDir,

@@ -9,11 +9,7 @@ import type { ValidationError, ValidationResult } from "../validation/errors";
 import type { SplitResult } from "./splitter";
 
 import { isFutureDate } from "../validation/date";
-import {
-  createFailedResult,
-  createSuccessResult,
-  formatZodErrors,
-} from "../validation/errors";
+import { createFailedResult, createSuccessResult, formatZodErrors } from "../validation/errors";
 import { routeSchema } from "../validation/schemas";
 import { matchesExcludePattern } from "../validation/url";
 import { buildSitemapXml, calculateByteSize } from "../xml/builder";
@@ -101,10 +97,7 @@ export function deduplicateRoutes(routes: Route[]): Route[] {
 /**
  * Filter out routes matching exclusion patterns.
  */
-export function filterExcludedRoutes(
-  routes: Route[],
-  patterns: Array<RegExp | string>,
-): Route[] {
+export function filterExcludedRoutes(routes: Route[], patterns: Array<RegExp | string>): Route[] {
   if (patterns.length === 0) {
     return routes;
   }
@@ -152,10 +145,7 @@ export async function generateSitemap(
   const { pluginOptions = {} } = options;
 
   // Step 1: Filter excluded routes
-  let processedRoutes = filterExcludedRoutes(
-    routes,
-    pluginOptions.exclude ?? [],
-  );
+  let processedRoutes = filterExcludedRoutes(routes, pluginOptions.exclude ?? []);
   if (processedRoutes.length < routes.length) {
     const excluded = routes.length - processedRoutes.length;
     warnings.push(`${excluded} routes excluded by filter patterns`);
@@ -179,9 +169,7 @@ export async function generateSitemap(
   // Step 4: Prepend hostname to relative URLs if provided
   if (options.hostname || pluginOptions.hostname) {
     const hostname = options.hostname ?? pluginOptions.hostname!;
-    processedRoutes = processedRoutes.map((route) =>
-      prependHostname(route, hostname),
-    );
+    processedRoutes = processedRoutes.map((route) => prependHostname(route, hostname));
   }
 
   // Step 5: Validate routes

@@ -16,12 +16,7 @@ import { buildSitemapUrl, updateRobotsTxt } from "../../core/robots";
 import { getSitemapIndexFilename } from "../../core/splitter";
 import { resolveOptions } from "../../types/config";
 import { formatResultForConsole } from "../../validation/errors";
-import {
-  formatBytes,
-  formatDuration,
-  loadRoutesFromSitemap,
-  logger,
-} from "../utils";
+import { formatBytes, formatDuration, loadRoutesFromSitemap, logger } from "../utils";
 
 /**
  * Options for the generate command.
@@ -40,11 +35,7 @@ export function registerGenerateCommand(program: Command): void {
   program
     .command("generate")
     .description("Generate sitemap files without running a full Vite build")
-    .option(
-      "-o, --output <dir>",
-      "Output directory for generated files",
-      "dist",
-    )
+    .option("-o, --output <dir>", "Output directory for generated files", "dist")
     .option("-h, --hostname <url>", "Base hostname for sitemap URLs")
     .option("--robots-txt", "Generate robots.txt with Sitemap directive")
     .action(async function (this: Command, options: GenerateOptions) {
@@ -93,10 +84,7 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
       outDir: options.output ?? "dist",
     };
 
-    const resolvedOpts: ResolvedPluginOptions = resolveOptions(
-      pluginOptions,
-      outputDir,
-    );
+    const resolvedOpts: ResolvedPluginOptions = resolveOptions(pluginOptions, outputDir);
 
     // Ensure output directory exists
     await mkdir(outputDir, { recursive: true });
@@ -180,13 +168,9 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
 
     // Generate robots.txt if enabled
     if (options.robotsTxt && options.hostname) {
-      const primarySitemapFilename =
-        totalFiles > 1 ? "sitemap-index.xml" : "sitemap.xml";
+      const primarySitemapFilename = totalFiles > 1 ? "sitemap-index.xml" : "sitemap.xml";
 
-      const sitemapUrl = buildSitemapUrl(
-        options.hostname,
-        primarySitemapFilename,
-      );
+      const sitemapUrl = buildSitemapUrl(options.hostname, primarySitemapFilename);
 
       const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
 

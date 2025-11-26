@@ -56,9 +56,7 @@ export interface DiscoveryResult {
  * @param options Discovery options
  * @returns Discovery result with found status and path
  */
-export function discoverSitemapFile(
-  options: DiscoveryOptions = {},
-): DiscoveryResult {
+export function discoverSitemapFile(options: DiscoveryOptions = {}): DiscoveryResult {
   const root = options.root ?? process.cwd();
   const srcDir = options.srcDir ?? DEFAULT_SRC_DIR;
 

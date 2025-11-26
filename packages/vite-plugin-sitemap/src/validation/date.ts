@@ -18,9 +18,7 @@
 const DATE_REGEX = /^\d{4}(?:-\d{2})?(?:-\d{2})?$/;
 const TIME_REGEX = /^T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?$/;
 
-export const W3C_DATETIME_REGEX = new RegExp(
-  `${DATE_REGEX.source}(?:${TIME_REGEX.source})?$`,
-);
+export const W3C_DATETIME_REGEX = new RegExp(`${DATE_REGEX.source}(?:${TIME_REGEX.source})?$`);
 
 /**
  * Date validation result.
@@ -111,8 +109,7 @@ export function validateW3CDatetime(date: string): DateValidationResult {
         "2024-01-15T10:30:00Z",
         "2024-01-15T10:30:00+00:00",
       ],
-      suggestion:
-        "Use format: YYYY, YYYY-MM, YYYY-MM-DD, or YYYY-MM-DDThh:mm:ss±hh:mm",
+      suggestion: "Use format: YYYY, YYYY-MM, YYYY-MM-DD, or YYYY-MM-DDThh:mm:ss±hh:mm",
       valid: false,
     };
   }

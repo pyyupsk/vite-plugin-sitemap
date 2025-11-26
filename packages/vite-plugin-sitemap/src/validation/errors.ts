@@ -53,10 +53,7 @@ export function createFailedResult(
 /**
  * Create a successful validation result.
  */
-export function createSuccessResult(
-  routeCount: number,
-  warnings: string[] = [],
-): ValidationResult {
+export function createSuccessResult(routeCount: number, warnings: string[] = []): ValidationResult {
   return {
     errors: [],
     routeCount,
@@ -93,9 +90,7 @@ export function formatErrorsForConsole(errors: ValidationError[]): string {
       let output = `\n${index + 1}. ${error.path}: ${error.message}`;
       if (error.value !== undefined) {
         const valueStr =
-          typeof error.value === "string"
-            ? `"${error.value}"`
-            : String(error.value as string);
+          typeof error.value === "string" ? `"${error.value}"` : String(error.value as string);
         output += `\n   Value: ${valueStr}`;
       }
       if (error.suggestion) {
@@ -131,20 +126,14 @@ export function formatResultForConsole(result: ValidationResult): string {
 /**
  * Convert Zod errors to ValidationError format with suggestions.
  */
-export function formatZodErrors(
-  zodError: ZodError,
-  basePath = "",
-): ValidationError[] {
+export function formatZodErrors(zodError: ZodError, basePath = ""): ValidationError[] {
   return zodError.issues.map((issue) => formatZodIssue(issue, basePath));
 }
 
 /**
  * Format a single Zod issue.
  */
-function formatZodIssue(
-  issue: core.$ZodIssue,
-  basePath: string,
-): ValidationError {
+function formatZodIssue(issue: core.$ZodIssue, basePath: string): ValidationError {
   const path = [...(basePath ? [basePath] : []), ...issue.path].join(".");
   const suggestion = getSuggestion(issue);
 

@@ -12,11 +12,7 @@ import type { PluginOptions } from "./types/config";
 
 import { discoverSitemapFile, formatNotFoundError } from "./core/discovery";
 import { generateSitemap } from "./core/generator";
-import {
-  getSitemapFilename,
-  loadSitemapFile,
-  resolveRoutes,
-} from "./core/loader";
+import { getSitemapFilename, loadSitemapFile, resolveRoutes } from "./core/loader";
 import { buildSitemapUrl, updateRobotsTxt } from "./core/robots";
 import { getSitemapIndexFilename } from "./core/splitter";
 import { resolveOptions } from "./types/config";
@@ -58,9 +54,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
         });
 
         if (!discovery.found || !discovery.path) {
-          logger.warn(
-            `[${PLUGIN_NAME}] ${formatNotFoundError({ root: config.root })}`,
-          );
+          logger.warn(`[${PLUGIN_NAME}] ${formatNotFoundError({ root: config.root })}`);
           return;
         }
 
@@ -98,8 +92,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
           let totalFiles = 0;
 
           for (const { name, routes } of resolvedRoutes) {
-            const baseFilename =
-              name === "default" ? "sitemap" : `sitemap-${name}`;
+            const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
             const result = await generateSitemap(routes, {
               baseFilename,
               enableSplitting: true,
@@ -140,8 +133,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
               totalRoutes += result.routeCount ?? 0;
             } else {
               // Single sitemap file
-              const filename =
-                resolvedOptions.filename ?? getSitemapFilename(name);
+              const filename = resolvedOptions.filename ?? getSitemapFilename(name);
               const outputPath = join(outputDir, filename);
 
               await writeFile(outputPath, result.xml!, "utf-8");
@@ -169,34 +161,22 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
             const primarySitemapFilename =
               totalFiles > 1 ? "sitemap-index.xml" : resolvedOptions.filename;
 
-            const sitemapUrl = buildSitemapUrl(
-              resolvedOptions.hostname,
-              primarySitemapFilename,
-            );
+            const sitemapUrl = buildSitemapUrl(resolvedOptions.hostname, primarySitemapFilename);
 
             const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
 
             if (robotsResult.success) {
               if (robotsResult.action === "created") {
-                logger.info(
-                  `[${PLUGIN_NAME}] Created robots.txt with Sitemap directive`,
-                );
+                logger.info(`[${PLUGIN_NAME}] Created robots.txt with Sitemap directive`);
               } else if (robotsResult.action === "updated") {
-                logger.info(
-                  `[${PLUGIN_NAME}] Updated robots.txt with Sitemap directive`,
-                );
+                logger.info(`[${PLUGIN_NAME}] Updated robots.txt with Sitemap directive`);
               }
               // No log for 'unchanged' - sitemap directive already exists
             } else {
               logger.warn(`[${PLUGIN_NAME}] ${robotsResult.error}`);
             }
-          } else if (
-            resolvedOptions.generateRobotsTxt &&
-            !resolvedOptions.hostname
-          ) {
-            logger.warn(
-              `[${PLUGIN_NAME}] Cannot generate robots.txt: hostname option is required`,
-            );
+          } else if (resolvedOptions.generateRobotsTxt && !resolvedOptions.hostname) {
+            logger.warn(`[${PLUGIN_NAME}] Cannot generate robots.txt: hostname option is required`);
           }
 
           const elapsed = Date.now() - startTime;

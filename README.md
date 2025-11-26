@@ -1,135 +1,365 @@
-# Turborepo starter
+# @pyyupsk/vite-plugin-sitemap
 
-This Turborepo starter is maintained by the Turborepo core team.
+A TypeScript-first Vite plugin for generating XML sitemaps from a file-based convention. Zero runtime footprint—build-time only execution.
 
-## Using this example
+## Features
 
-Run the following command:
+- **File-based configuration** - Define routes in `src/sitemap.ts`
+- **Async support** - Fetch routes from APIs or databases at build time
+- **Auto-splitting** - Automatically splits large sitemaps (50,000+ URLs)
+- **Google extensions** - Support for images, videos, news, and i18n (hreflang)
+- **CLI tools** - Validate, preview, and generate sitemaps without building
+- **Zero runtime** - No client bundle impact
 
-```sh
-npx create-turbo@latest
+## Installation
+
+```bash
+# npm
+npm install --save-dev @pyyupsk/vite-plugin-sitemap
+
+# pnpm
+pnpm add -D @pyyupsk/vite-plugin-sitemap
+
+# yarn
+yarn add --dev @pyyupsk/vite-plugin-sitemap
+
+# bun
+bun add -d @pyyupsk/vite-plugin-sitemap
 ```
 
-## What's inside?
+## Quick Start
 
-This Turborepo includes the following packages/apps:
+### 1. Configure Vite
 
-### Apps and Packages
+```typescript
+// vite.config.ts
+import { defineConfig } from "vite";
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+    }),
+  ],
+});
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 2. Create sitemap definition
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+```typescript
+// src/sitemap.ts
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+const routes: Route[] = [
+  { url: "/" },
+  { url: "/about" },
+  { url: "/contact" },
+  { url: "/blog", changefreq: "weekly", priority: 0.8 },
+];
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+export default routes;
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 3. Build
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```bash
+npm run build
 ```
 
-### Remote Caching
+Your `dist/` folder will contain `sitemap.xml`.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## Plugin Options
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+```typescript
+sitemap({
+  // Base URL of your site (required for relative URLs)
+  hostname: "https://example.com",
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+  // Path to sitemap definition file (without extension)
+  sitemapFile: "src/sitemap", // default
 
+  // Output directory
+  outDir: "dist", // default: Vite's build.outDir
+
+  // Output filename
+  filename: "sitemap.xml", // default
+
+  // Generate robots.txt with Sitemap directive
+  generateRobotsTxt: false, // default
+
+  // Default values for all routes
+  changefreq: "weekly",
+  priority: 0.5,
+  lastmod: "2024-01-01",
+
+  // Exclude URL patterns
+  exclude: ["/admin/*", /\/private\/.*/],
+
+  // Transform routes before generation
+  transform: (route) => {
+    if (route.url.includes("draft")) return null;
+    return { ...route, priority: route.priority ?? 0.5 };
+  },
+});
 ```
-cd my-turborepo
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+## Route Definition
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+### Basic Routes
+
+```typescript
+// src/sitemap.ts
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+const routes: Route[] = [
+  { url: "/" },
+  { url: "/about", lastmod: "2024-01-15" },
+  { url: "/blog", changefreq: "weekly", priority: 0.8 },
+];
+
+export default routes;
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Async Routes
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+```typescript
+// src/sitemap.ts
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
 
+export default async function generateSitemap(): Promise<Route[]> {
+  const posts = await fetch("https://api.example.com/posts").then((r) => r.json());
+
+  return [
+    { url: "/" },
+    ...posts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      lastmod: post.updatedAt,
+    })),
+  ];
+}
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+### Multiple Sitemaps
+
+Use named exports for multiple sitemaps:
+
+```typescript
+// src/sitemap.ts
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export const pages: Route[] = [{ url: "/" }, { url: "/about" }];
+
+export async function blog(): Promise<Route[]> {
+  const posts = await fetchBlogPosts();
+  return posts.map((post) => ({
+    url: `/blog/${post.slug}`,
+    lastmod: post.updatedAt,
+  }));
+}
+
+export async function products(): Promise<Route[]> {
+  const items = await fetchProducts();
+  return items.map((item) => ({
+    url: `/products/${item.id}`,
+  }));
+}
 ```
 
-## Useful Links
+This generates:
 
-Learn more about the power of Turborepo:
+- `sitemap-pages.xml`
+- `sitemap-blog.xml`
+- `sitemap-products.xml`
+- `sitemap-index.xml`
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+## Google Extensions
+
+### Images
+
+```typescript
+const routes: Route[] = [
+  {
+    url: "/gallery",
+    images: [
+      {
+        loc: "https://example.com/images/photo1.jpg",
+        title: "Beautiful sunset",
+        caption: "A stunning sunset over the ocean",
+      },
+    ],
+  },
+];
+```
+
+### Videos
+
+```typescript
+const routes: Route[] = [
+  {
+    url: "/videos/intro",
+    videos: [
+      {
+        thumbnail_loc: "https://example.com/thumb.jpg",
+        title: "Introduction Video",
+        description: "Learn about our product",
+        content_loc: "https://example.com/video.mp4",
+        duration: 120,
+      },
+    ],
+  },
+];
+```
+
+### News
+
+```typescript
+const routes: Route[] = [
+  {
+    url: "/news/breaking-story",
+    news: {
+      publication: {
+        name: "Example News",
+        language: "en",
+      },
+      publication_date: "2024-01-15T10:00:00Z",
+      title: "Breaking: Major Event Happens",
+    },
+  },
+];
+```
+
+### Internationalization (hreflang)
+
+```typescript
+const routes: Route[] = [
+  {
+    url: "/en/about",
+    alternates: [
+      { hreflang: "en", href: "https://example.com/en/about" },
+      { hreflang: "es", href: "https://example.com/es/about" },
+      { hreflang: "fr", href: "https://example.com/fr/about" },
+      { hreflang: "x-default", href: "https://example.com/en/about" },
+    ],
+  },
+];
+```
+
+## CLI Commands
+
+### Validate
+
+Check your sitemap configuration for errors:
+
+```bash
+npx vite-sitemap validate
+```
+
+### Preview
+
+Preview the generated XML without writing files:
+
+```bash
+npx vite-sitemap preview
+```
+
+### Generate
+
+Generate sitemaps without running a full Vite build:
+
+```bash
+npx vite-sitemap generate --output ./dist --hostname https://example.com
+```
+
+Options:
+
+- `-o, --output <dir>` - Output directory (default: `dist`)
+- `-h, --hostname <url>` - Base hostname for sitemap URLs
+- `--robots-txt` - Generate robots.txt with Sitemap directive
+- `--verbose` - Enable verbose output
+
+## Type Definitions
+
+### Route
+
+```typescript
+interface Route {
+  url: string;
+  lastmod?: string;
+  changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+  priority?: number; // 0.0 - 1.0
+  images?: Image[];
+  videos?: Video[];
+  news?: News;
+  alternates?: Alternate[];
+}
+```
+
+### Image
+
+```typescript
+interface Image {
+  loc: string;
+  caption?: string;
+  title?: string;
+  geo_location?: string;
+  license?: string;
+}
+```
+
+### Video
+
+```typescript
+interface Video {
+  thumbnail_loc: string;
+  title: string;
+  description: string;
+  content_loc?: string;
+  player_loc?: string;
+  duration?: number;
+  expiration_date?: string;
+  rating?: number;
+  view_count?: number;
+  publication_date?: string;
+  family_friendly?: boolean;
+  restriction?: VideoRestriction;
+  platform?: VideoPlatform;
+  requires_subscription?: boolean;
+  uploader?: VideoUploader;
+  live?: boolean;
+  tag?: string[];
+}
+```
+
+### News
+
+```typescript
+interface News {
+  publication: {
+    name: string;
+    language: string;
+  };
+  publication_date: string;
+  title: string;
+  keywords?: string;
+  stock_tickers?: string;
+}
+```
+
+### Alternate
+
+```typescript
+interface Alternate {
+  hreflang: string;
+  href: string;
+}
+```
+
+## Requirements
+
+- Vite 7.x
+- Node.js 20.x
+
+## License
+
+MIT

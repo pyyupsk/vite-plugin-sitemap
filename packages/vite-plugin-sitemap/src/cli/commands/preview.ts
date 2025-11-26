@@ -7,12 +7,7 @@ import type { Command } from "commander";
 
 import { generateSitemap } from "../../core/generator";
 import { formatResultForConsole } from "../../validation/errors";
-import {
-  formatBytes,
-  formatDuration,
-  loadRoutesFromSitemap,
-  logger,
-} from "../utils";
+import { formatBytes, formatDuration, loadRoutesFromSitemap, logger } from "../utils";
 
 /**
  * Register the preview command.
@@ -55,9 +50,7 @@ export function registerPreviewCommand(program: Command): void {
 
           if (filteredRoutes.length === 0) {
             logger.error(
-              options.name
-                ? `No export named '${options.name}' found.`
-                : "No routes found.",
+              options.name ? `No export named '${options.name}' found.` : "No routes found.",
             );
             process.exit(1);
           }
@@ -79,9 +72,7 @@ export function registerPreviewCommand(program: Command): void {
             // Display XML output
             const xml = genResult.xml ?? "";
             const lines = xml.split("\n");
-            const limit = options.full
-              ? lines.length
-              : Number.parseInt(options.limit, 10);
+            const limit = options.full ? lines.length : Number.parseInt(options.limit, 10);
 
             console.log("─".repeat(60));
             console.log(lines.slice(0, limit).join("\n"));

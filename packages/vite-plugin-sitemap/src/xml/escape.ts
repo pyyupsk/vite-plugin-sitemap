@@ -33,10 +33,7 @@ export function encodeUrl(url: string): string {
  * Handles: & < > " '
  */
 export function escapeXml(text: string): string {
-  return text.replaceAll(
-    XML_ENTITY_REGEX,
-    (char) => XML_ENTITIES[char] ?? char,
-  );
+  return text.replaceAll(XML_ENTITY_REGEX, (char) => XML_ENTITIES[char] ?? char);
 }
 
 /**

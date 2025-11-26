@@ -46,11 +46,7 @@ export type { GenerationOptions, GenerationResult } from "./core/generator";
 // Main plugin export
 export { sitemapPlugin as default, PLUGIN_NAME, sitemapPlugin } from "./plugin";
 
-export type {
-  PluginOptions,
-  RouteTransformer,
-  XmlSerializer,
-} from "./types/config";
+export type { PluginOptions, RouteTransformer, XmlSerializer } from "./types/config";
 
 export type {
   Alternate,
@@ -69,10 +65,7 @@ export type { ChangeFrequency, Route } from "./types/sitemap";
 // Validation exports for advanced usage
 export type { ValidationError, ValidationResult } from "./validation/errors";
 
-export {
-  formatErrorsForConsole,
-  formatResultForConsole,
-} from "./validation/errors";
+export { formatErrorsForConsole, formatResultForConsole } from "./validation/errors";
 
 // XML builder exports for custom serialization
 export {

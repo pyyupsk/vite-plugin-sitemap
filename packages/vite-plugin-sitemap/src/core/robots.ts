@@ -29,10 +29,7 @@ export interface RobotsTxtResult {
  * @param sitemapUrl URL of the sitemap to add
  * @returns Updated robots.txt content
  */
-export function appendSitemapDirective(
-  content: string,
-  sitemapUrl: string,
-): string {
+export function appendSitemapDirective(content: string, sitemapUrl: string): string {
   const directive = `Sitemap: ${sitemapUrl}`;
 
   // If content is empty, just return the directive with newline
@@ -106,10 +103,7 @@ export function extractSitemapUrls(content: string): string[] {
  * @param sitemapUrl URL of the sitemap to check for
  * @returns true if the sitemap URL is already present
  */
-export function hasSitemapDirective(
-  content: string,
-  sitemapUrl: string,
-): boolean {
+export function hasSitemapDirective(content: string, sitemapUrl: string): boolean {
   // Normalize the URL for comparison (trim whitespace)
   const normalizedUrl = sitemapUrl.trim();
 

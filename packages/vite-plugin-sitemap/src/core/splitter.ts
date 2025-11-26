@@ -6,11 +6,7 @@
 import type { Route } from "../types/sitemap";
 
 import { getCurrentW3CDate } from "../validation/date";
-import {
-  buildSitemapIndexXml,
-  buildSitemapXml,
-  calculateByteSize,
-} from "../xml/builder";
+import { buildSitemapIndexXml, buildSitemapXml, calculateByteSize } from "../xml/builder";
 
 /**
  * Maximum URLs per sitemap per Google's specification.
@@ -84,9 +80,7 @@ export function estimateTotalSize(routes: Route[]): {
   const bytesPerRoute = (sampleBytes - baseSize) / Math.max(sampleSize, 1);
 
   const estimatedBytes = baseSize + bytesPerRoute * routes.length;
-  const needsSplit =
-    routes.length > MAX_URLS_PER_SITEMAP ||
-    estimatedBytes > MAX_BYTES_PER_SITEMAP;
+  const needsSplit = routes.length > MAX_URLS_PER_SITEMAP || estimatedBytes > MAX_BYTES_PER_SITEMAP;
 
   // Estimate chunks based on limiting factor
   let estimatedChunks: number;
@@ -123,10 +117,7 @@ export function getSitemapIndexFilename(baseFilename = "sitemap"): string {
  * @param options Split options
  * @returns Split result with chunks and optional index
  */
-export function splitRoutes(
-  routes: Route[],
-  options: SplitOptions = {},
-): SplitResult {
+export function splitRoutes(routes: Route[], options: SplitOptions = {}): SplitResult {
   const {
     baseFilename = "sitemap",
     hostname,
@@ -182,17 +173,12 @@ export function splitRoutes(
 /**
  * Generate a sitemap index XML from chunks.
  */
-function generateSitemapIndex(
-  sitemaps: SitemapChunk[],
-  hostname?: string,
-): string {
+function generateSitemapIndex(sitemaps: SitemapChunk[], hostname?: string): string {
   const lastmod = getCurrentW3CDate();
 
   const entries = sitemaps.map((sitemap) => ({
     lastmod,
-    loc: hostname
-      ? `${hostname.replace(/\/$/, "")}/${sitemap.filename}`
-      : sitemap.filename,
+    loc: hostname ? `${hostname.replace(/\/$/, "")}/${sitemap.filename}` : sitemap.filename,
   }));
 
   return buildSitemapIndexXml(entries);
@@ -209,11 +195,7 @@ function getBaseXmlSize(): number {
 /**
  * Split routes by URL count and byte size limits.
  */
-function splitByUrlsAndSize(
-  routes: Route[],
-  maxUrls: number,
-  maxBytes: number,
-): Route[][] {
+function splitByUrlsAndSize(routes: Route[], maxUrls: number, maxBytes: number): Route[][] {
   const chunks: Route[][] = [];
   let currentChunk: Route[] = [];
   let currentSize = getBaseXmlSize();

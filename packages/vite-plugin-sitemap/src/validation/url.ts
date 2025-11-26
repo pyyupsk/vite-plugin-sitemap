@@ -54,16 +54,11 @@ export function isValidUrl(url: string): boolean {
 /**
  * Check if a URL matches any exclusion pattern.
  */
-export function matchesExcludePattern(
-  url: string,
-  patterns: Array<RegExp | string>,
-): boolean {
+export function matchesExcludePattern(url: string, patterns: Array<RegExp | string>): boolean {
   for (const pattern of patterns) {
     if (typeof pattern === "string") {
       // Simple glob-style matching with * wildcard
-      const regex = new RegExp(
-        "^" + pattern.replaceAll("*", ".*").replaceAll("?", ".") + "$",
-      );
+      const regex = new RegExp("^" + pattern.replaceAll("*", ".*").replaceAll("?", ".") + "$");
       if (regex.test(url)) {
         return true;
       }
@@ -83,8 +78,7 @@ export function validateUrl(url: string): UrlValidationResult {
   if (!url || typeof url !== "string") {
     return {
       error: "URL is required and must be a string",
-      suggestion:
-        "Provide a valid absolute URL like 'https://example.com/page'",
+      suggestion: "Provide a valid absolute URL like 'https://example.com/page'",
       valid: false,
     };
   }
@@ -120,8 +114,7 @@ export function validateUrl(url: string): UrlValidationResult {
   } catch {
     return {
       error: "Invalid URL format",
-      suggestion:
-        "Ensure the URL is a valid absolute URL like 'https://example.com/page'",
+      suggestion: "Ensure the URL is a valid absolute URL like 'https://example.com/page'",
       valid: false,
     };
   }

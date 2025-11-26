@@ -7,11 +7,7 @@ import type { Alternate, Image, News, Video } from "../types/extensions";
 import type { Route } from "../types/sitemap";
 
 import { encodeUrl, escapeXml } from "./escape";
-import {
-  buildNamespaceAttrs,
-  buildSitemapIndexNsAttr,
-  XML_DECLARATION,
-} from "./namespaces";
+import { buildNamespaceAttrs, buildSitemapIndexNsAttr, XML_DECLARATION } from "./namespaces";
 
 /**
  * Build an <xhtml:link> element for hreflang.
@@ -28,22 +24,16 @@ export function buildImageElement(image: Image): string {
   parts.push(`    <image:loc>${encodeUrl(image.loc)}</image:loc>`);
 
   if (image.caption) {
-    parts.push(
-      `    <image:caption>${escapeXml(image.caption)}</image:caption>`,
-    );
+    parts.push(`    <image:caption>${escapeXml(image.caption)}</image:caption>`);
   }
   if (image.title) {
     parts.push(`    <image:title>${escapeXml(image.title)}</image:title>`);
   }
   if (image.geo_location) {
-    parts.push(
-      `    <image:geo_location>${escapeXml(image.geo_location)}</image:geo_location>`,
-    );
+    parts.push(`    <image:geo_location>${escapeXml(image.geo_location)}</image:geo_location>`);
   }
   if (image.license) {
-    parts.push(
-      `    <image:license>${encodeUrl(image.license)}</image:license>`,
-    );
+    parts.push(`    <image:license>${encodeUrl(image.license)}</image:license>`);
   }
 
   return `  <image:image>\n${parts.join("\n")}\n  </image:image>`;
@@ -69,14 +59,10 @@ export function buildNewsElement(news: News): string {
 
   // Optional fields
   if (news.keywords) {
-    parts.push(
-      `    <news:keywords>${escapeXml(news.keywords)}</news:keywords>`,
-    );
+    parts.push(`    <news:keywords>${escapeXml(news.keywords)}</news:keywords>`);
   }
   if (news.stock_tickers) {
-    parts.push(
-      `    <news:stock_tickers>${escapeXml(news.stock_tickers)}</news:stock_tickers>`,
-    );
+    parts.push(`    <news:stock_tickers>${escapeXml(news.stock_tickers)}</news:stock_tickers>`);
   }
 
   return `  <news:news>\n${parts.join("\n")}\n  </news:news>`;
@@ -85,9 +71,7 @@ export function buildNewsElement(news: News): string {
 /**
  * Build a sitemap index XML document.
  */
-export function buildSitemapIndexXml(
-  sitemaps: Array<{ lastmod?: string; loc: string }>,
-): string {
+export function buildSitemapIndexXml(sitemaps: Array<{ lastmod?: string; loc: string }>): string {
   const entries = sitemaps
     .map((sitemap) => {
       const parts: string[] = [];
@@ -112,9 +96,7 @@ export function buildSitemapXml(routes: Route[]): string {
   const hasImages = routes.some((r) => r.images && r.images.length > 0);
   const hasVideos = routes.some((r) => r.videos && r.videos.length > 0);
   const hasNews = routes.some((r) => r.news);
-  const hasAlternates = routes.some(
-    (r) => r.alternates && r.alternates.length > 0,
-  );
+  const hasAlternates = routes.some((r) => r.alternates && r.alternates.length > 0);
 
   const nsAttrs = buildNamespaceAttrs({
     hasAlternates,
@@ -199,14 +181,10 @@ export function buildVideoElement(video: Video): string {
 
   // Content location (at least one of content_loc or player_loc required)
   if (video.content_loc) {
-    parts.push(
-      `    <video:content_loc>${encodeUrl(video.content_loc)}</video:content_loc>`,
-    );
+    parts.push(`    <video:content_loc>${encodeUrl(video.content_loc)}</video:content_loc>`);
   }
   if (video.player_loc) {
-    parts.push(
-      `    <video:player_loc>${encodeUrl(video.player_loc)}</video:player_loc>`,
-    );
+    parts.push(`    <video:player_loc>${encodeUrl(video.player_loc)}</video:player_loc>`);
   }
 
   // Optional fields
@@ -250,12 +228,8 @@ export function buildVideoElement(video: Video): string {
     );
   }
   if (video.uploader) {
-    const infoAttr = video.uploader.info
-      ? ` info="${encodeUrl(video.uploader.info)}"`
-      : "";
-    parts.push(
-      `    <video:uploader${infoAttr}>${escapeXml(video.uploader.name)}</video:uploader>`,
-    );
+    const infoAttr = video.uploader.info ? ` info="${encodeUrl(video.uploader.info)}"` : "";
+    parts.push(`    <video:uploader${infoAttr}>${escapeXml(video.uploader.name)}</video:uploader>`);
   }
   if (video.live !== undefined) {
     parts.push(`    <video:live>${video.live ? "yes" : "no"}</video:live>`);

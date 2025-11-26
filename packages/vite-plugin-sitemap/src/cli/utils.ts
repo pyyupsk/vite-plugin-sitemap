@@ -9,11 +9,7 @@ import { createServer, type ViteDevServer } from "vite";
 import type { PluginOptions } from "../types/config";
 
 import { discoverSitemapFile, formatNotFoundError } from "../core/discovery";
-import {
-  loadSitemapFile,
-  type ResolvedRoutes,
-  resolveRoutes,
-} from "../core/loader";
+import { loadSitemapFile, type ResolvedRoutes, resolveRoutes } from "../core/loader";
 
 /**
  * CLI logger with colored output.
@@ -40,12 +36,7 @@ export const logger = {
  * Find vite.config file in the project.
  */
 export function findViteConfig(root: string): null | string {
-  const configNames = [
-    "vite.config.ts",
-    "vite.config.js",
-    "vite.config.mts",
-    "vite.config.mjs",
-  ];
+  const configNames = ["vite.config.ts", "vite.config.js", "vite.config.mts", "vite.config.mjs"];
 
   for (const name of configNames) {
     const configPath = join(root, name);
@@ -77,9 +68,7 @@ export function formatDuration(ms: number): string {
 /**
  * Load plugin options from vite.config.
  */
-export async function loadPluginOptions(
-  configPath: string,
-): Promise<null | PluginOptions> {
+export async function loadPluginOptions(configPath: string): Promise<null | PluginOptions> {
   try {
     // Note: This is a simplified version. In a real implementation,
     // we would use Vite's config loading utilities.
