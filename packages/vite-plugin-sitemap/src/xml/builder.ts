@@ -4,12 +4,7 @@
  */
 
 import type { Route } from "../types/sitemap";
-import type {
-  Image,
-  Video,
-  News,
-  Alternate,
-} from "../types/extensions";
+import type { Image, Video, News, Alternate } from "../types/extensions";
 import { escapeXml, encodeUrl } from "./escape";
 import {
   XML_DECLARATION,
@@ -104,7 +99,9 @@ export function buildImageElement(image: Image): string {
   parts.push(`    <image:loc>${encodeUrl(image.loc)}</image:loc>`);
 
   if (image.caption) {
-    parts.push(`    <image:caption>${escapeXml(image.caption)}</image:caption>`);
+    parts.push(
+      `    <image:caption>${escapeXml(image.caption)}</image:caption>`,
+    );
   }
   if (image.title) {
     parts.push(`    <image:title>${escapeXml(image.title)}</image:title>`);
@@ -115,7 +112,9 @@ export function buildImageElement(image: Image): string {
     );
   }
   if (image.license) {
-    parts.push(`    <image:license>${encodeUrl(image.license)}</image:license>`);
+    parts.push(
+      `    <image:license>${encodeUrl(image.license)}</image:license>`,
+    );
   }
 
   return `  <image:image>\n${parts.join("\n")}\n  </image:image>`;
@@ -130,9 +129,7 @@ export function buildVideoElement(video: Video): string {
   // Required fields
   parts.push(
     `    <video:thumbnail_loc>${encodeUrl(video.thumbnail_loc)}</video:thumbnail_loc>`,
-  );
-  parts.push(`    <video:title>${escapeXml(video.title)}</video:title>`);
-  parts.push(
+    `    <video:title>${escapeXml(video.title)}</video:title>`,
     `    <video:description>${escapeXml(video.description)}</video:description>`,
   );
 
@@ -214,25 +211,23 @@ export function buildVideoElement(video: Video): string {
 export function buildNewsElement(news: News): string {
   const parts: string[] = [];
 
-  // Publication info
-  parts.push("    <news:publication>");
   parts.push(
+    // Publication info
+    "    <news:publication>",
     `      <news:name>${escapeXml(news.publication.name)}</news:name>`,
-  );
-  parts.push(
     `      <news:language>${escapeXml(news.publication.language)}</news:language>`,
-  );
-  parts.push("    </news:publication>");
+    "    </news:publication>",
 
-  // Required fields
-  parts.push(
+    // Required fields
     `    <news:publication_date>${escapeXml(news.publication_date)}</news:publication_date>`,
+    `    <news:title>${escapeXml(news.title)}</news:title>`,
   );
-  parts.push(`    <news:title>${escapeXml(news.title)}</news:title>`);
 
   // Optional fields
   if (news.keywords) {
-    parts.push(`    <news:keywords>${escapeXml(news.keywords)}</news:keywords>`);
+    parts.push(
+      `    <news:keywords>${escapeXml(news.keywords)}</news:keywords>`,
+    );
   }
   if (news.stock_tickers) {
     parts.push(

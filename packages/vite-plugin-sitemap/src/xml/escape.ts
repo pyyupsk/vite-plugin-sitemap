@@ -18,7 +18,10 @@ const XML_ENTITY_REGEX = /[&<>"']/g;
  * Handles: & < > " '
  */
 export function escapeXml(text: string): string {
-  return text.replace(XML_ENTITY_REGEX, (char) => XML_ENTITIES[char] ?? char);
+  return text.replaceAll(
+    XML_ENTITY_REGEX,
+    (char) => XML_ENTITIES[char] ?? char,
+  );
 }
 
 /**
