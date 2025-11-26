@@ -17,6 +17,7 @@ import {
 import { generateSitemap } from "./core/generator";
 import { getSitemapIndexFilename } from "./core/splitter";
 import { formatResultForConsole } from "./validation/errors";
+import { updateRobotsTxt, buildSitemapUrl } from "./core/robots";
 
 /**
  * Plugin name for identification.
@@ -164,6 +165,36 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
                 logger.warn(`[${PLUGIN_NAME}] ${warning}`);
               }
             }
+          }
+
+          // Step 5: Generate robots.txt if enabled
+          if (resolvedOptions.generateRobotsTxt && resolvedOptions.hostname) {
+            // Determine the primary sitemap filename to reference
+            // Use sitemap-index.xml if we have multiple sitemaps, otherwise sitemap.xml
+            const primarySitemapFilename =
+              totalFiles > 1 ? "sitemap-index.xml" : resolvedOptions.filename;
+
+            const sitemapUrl = buildSitemapUrl(
+              resolvedOptions.hostname,
+              primarySitemapFilename,
+            );
+
+            const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
+
+            if (robotsResult.success) {
+              if (robotsResult.action === "created") {
+                logger.info(`[${PLUGIN_NAME}] Created robots.txt with Sitemap directive`);
+              } else if (robotsResult.action === "updated") {
+                logger.info(`[${PLUGIN_NAME}] Updated robots.txt with Sitemap directive`);
+              }
+              // No log for 'unchanged' - sitemap directive already exists
+            } else {
+              logger.warn(`[${PLUGIN_NAME}] ${robotsResult.error}`);
+            }
+          } else if (resolvedOptions.generateRobotsTxt && !resolvedOptions.hostname) {
+            logger.warn(
+              `[${PLUGIN_NAME}] Cannot generate robots.txt: hostname option is required`,
+            );
           }
 
           const elapsed = Date.now() - startTime;
