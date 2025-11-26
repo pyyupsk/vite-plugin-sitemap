@@ -10,8 +10,9 @@ export type RouteTransformer = (
 
 /**
  * Custom XML serializer function.
+ * Receives all routes and returns the complete XML string.
  */
-export type XmlSerializer = (route: Route) => string;
+export type XmlSerializer = (routes: Route[]) => string | Promise<string>;
 
 /**
  * Plugin configuration options.
