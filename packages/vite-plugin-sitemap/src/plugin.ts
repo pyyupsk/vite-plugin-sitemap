@@ -10,7 +10,7 @@ import { join } from "node:path";
 
 import type { PluginOptions } from "./types/config";
 
-import { discoverSitemapFile, formatNotFoundError } from "./core/discovery";
+import { formatNotFoundError, inlineDiscoverSitemapFile } from "./core/discovery";
 import { generateSitemap } from "./core/generator";
 import { getSitemapFilename, loadSitemapFile, resolveRoutes } from "./core/loader";
 import { buildSitemapUrl, updateRobotsTxt } from "./core/robots";
@@ -48,10 +48,17 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
 
       try {
         // Step 1: Discover sitemap file
-        const discovery = discoverSitemapFile({
-          root: config.root,
-          sitemapFile: resolvedOptions.sitemapFile,
-        });
+        // Use dynamic import to avoid module caching issues in Vite build context
+        const { existsSync } = await import("node:fs");
+        const { resolve: pathResolve } = await import("node:path");
+
+        // Inline discovery to avoid module caching issues
+        const discovery = await inlineDiscoverSitemapFile(
+          config.root,
+          resolvedOptions.sitemapFile,
+          existsSync,
+          pathResolve,
+        );
 
         if (!discovery.found || !discovery.path) {
           logger.warn(`[${PLUGIN_NAME}] ${formatNotFoundError({ root: config.root })}`);

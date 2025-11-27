@@ -9,19 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Comprehensive unit tests for validation and XML modules
-- Test helpers for CLI execution, temp directories, and Vite project scaffolding
-- New test fixtures (empty-sitemap, large-sitemap, invalid-changefreq)
-
-### Changed
-
-- Lint scripts now include tests directory
-
-## [0.1.0] - 2025-11-26
-
-### Added
-
-- Initial release of @pyyupsk/vite-plugin-sitemap
 - File-based sitemap configuration via `src/sitemap.ts`
 - Support for async route generation (fetch from APIs/databases)
 - Google sitemap extensions:
@@ -40,3 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript-first with full type definitions
 - Zero client bundle impact (build-time only)
 - Support for Vite 7.x
+- Comprehensive unit tests for validation and XML modules
+- Test helpers for CLI execution, temp directories, and Vite project scaffolding
+- New test fixtures (empty-sitemap, large-sitemap, invalid-changefreq)
+
+### Changed
+
+- Lint scripts now include tests directory
+- Discovery module now uses dependency injection for fs functions to avoid Vite build caching issues
+- Transform function now correctly distinguishes `undefined` (keep original route) from `null` (remove route)
+- URL encoding now XML-escapes ampersands and special characters per sitemap.org specification
+- Simplified W3C datetime regex pattern

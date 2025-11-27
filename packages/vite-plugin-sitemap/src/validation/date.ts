@@ -14,11 +14,10 @@
 
 /**
  * Regex pattern for W3C Datetime format.
+ * Supports: YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDThh:mm:ssZ, YYYY-MM-DDThh:mm:ss±hh:mm
  */
-const DATE_REGEX = /^\d{4}(?:-\d{2})?(?:-\d{2})?$/;
-const TIME_REGEX = /^T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?$/;
-
-export const W3C_DATETIME_REGEX = new RegExp(`${DATE_REGEX.source}(?:${TIME_REGEX.source})?$`);
+export const W3C_DATETIME_REGEX =
+  /^\d{4}(?:-\d{2})?(?:-\d{2})?(?:T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?)?$/;
 
 /**
  * Date validation result.

@@ -56,14 +56,42 @@ export interface DiscoveryResult {
  * @param options Discovery options
  * @returns Discovery result with found status and path
  */
+/**
+ * Type for existsSync function.
+ */
+type ExistsSyncFn = (_path: string) => boolean;
+
+/**
+ * Type for resolve function.
+ */
+type ResolveFn = (..._paths: string[]) => string;
+
 export function discoverSitemapFile(options: DiscoveryOptions = {}): DiscoveryResult {
+  return discoverSitemapFileWithFs(existsSync, resolve, options);
+}
+
+/**
+ * Discover the sitemap configuration file with injected fs functions.
+ * This version allows passing custom existsSync and resolve functions,
+ * which is useful for avoiding module caching issues in build contexts.
+ *
+ * @param options Discovery options
+ * @param existsSyncFn Function to check if a path exists
+ * @param resolveFn Function to resolve paths
+ * @returns Discovery result with found status and path
+ */
+export function discoverSitemapFileWithFs(
+  existsSyncFn: ExistsSyncFn,
+  resolveFn: ResolveFn,
+  options: DiscoveryOptions = {},
+): DiscoveryResult {
   const root = options.root ?? process.cwd();
   const srcDir = options.srcDir ?? DEFAULT_SRC_DIR;
 
   // If custom path provided, check if it exists
   if (options.sitemapFile) {
-    const customPath = resolve(root, options.sitemapFile);
-    if (existsSync(customPath)) {
+    const customPath = resolveFn(root, options.sitemapFile);
+    if (existsSyncFn(customPath)) {
       const ext = getExtension(customPath);
       return {
         extension: ext,
@@ -75,13 +103,13 @@ export function discoverSitemapFile(options: DiscoveryOptions = {}): DiscoveryRe
   }
 
   // Search in src directory first
-  const srcResult = searchInDirectory(join(root, srcDir));
+  const srcResult = searchInDirectoryWithFs(join(root, srcDir), existsSyncFn);
   if (srcResult.found) {
     return srcResult;
   }
 
   // Fall back to root directory
-  return searchInDirectory(root);
+  return searchInDirectoryWithFs(root, existsSyncFn);
 }
 
 /**
@@ -135,6 +163,46 @@ export function getPossiblePaths(options: DiscoveryOptions = {}): string[] {
 }
 
 /**
+ * Inline discovery function to avoid module caching issues in Vite build context.
+ * This duplicates the logic from core/discovery.ts but uses dynamically imported fs functions.
+ */
+export async function inlineDiscoverSitemapFile(
+  root: string,
+  sitemapFile: string | undefined,
+  existsSyncFn: (_path: string) => boolean,
+  resolveFn: (..._paths: string[]) => string,
+): Promise<{ extension?: string; found: boolean; path?: string }> {
+  // If custom path provided, check if it exists
+  if (sitemapFile) {
+    const customPath = resolveFn(root, sitemapFile);
+    if (existsSyncFn(customPath)) {
+      const ext = new RegExp(/\.[^.]+$/).exec(customPath)?.[0] ?? "";
+      return { extension: ext, found: true, path: customPath };
+    }
+    return { found: false };
+  }
+
+  // Search in src directory first
+  const srcDir = join(root, DEFAULT_SRC_DIR);
+  for (const ext of SITEMAP_EXTENSIONS) {
+    const filePath = join(srcDir, `${SITEMAP_FILENAME}${ext}`);
+    if (existsSyncFn(filePath)) {
+      return { extension: ext, found: true, path: filePath };
+    }
+  }
+
+  // Fall back to root directory
+  for (const ext of SITEMAP_EXTENSIONS) {
+    const filePath = join(root, `${SITEMAP_FILENAME}${ext}`);
+    if (existsSyncFn(filePath)) {
+      return { extension: ext, found: true, path: filePath };
+    }
+  }
+
+  return { found: false };
+}
+
+/**
  * Get file extension from path.
  */
 function getExtension(filePath: string): string {
@@ -143,12 +211,12 @@ function getExtension(filePath: string): string {
 }
 
 /**
- * Search for sitemap file in a specific directory.
+ * Search for sitemap file in a specific directory with injected existsSync function.
  */
-function searchInDirectory(directory: string): DiscoveryResult {
+function searchInDirectoryWithFs(directory: string, existsSyncFn: ExistsSyncFn): DiscoveryResult {
   for (const ext of SITEMAP_EXTENSIONS) {
     const filePath = join(directory, `${SITEMAP_FILENAME}${ext}`);
-    if (existsSync(filePath)) {
+    if (existsSyncFn(filePath)) {
       return {
         extension: ext,
         found: true,

@@ -16,12 +16,17 @@ const XML_ENTITY_REGEX = /[&<>"']/g;
 /**
  * Encode a URL for use in XML sitemap.
  * Ensures proper URL encoding while preserving already-encoded characters.
+ * Also XML-escapes characters like & that must be escaped in sitemap XML.
+ *
+ * Per sitemap spec: URLs must have &, <, >, ", and ' escaped.
+ * @see https://www.sitemaps.org/protocol.html
  */
 export function encodeUrl(url: string): string {
   try {
     // Parse and reconstruct to normalize encoding
     const parsed = new URL(url);
-    return parsed.href;
+    // XML-escape the URL (ampersands must be &amp; in XML)
+    return escapeXml(parsed.href);
   } catch {
     // If URL is invalid, escape XML entities at minimum
     return escapeXml(url);

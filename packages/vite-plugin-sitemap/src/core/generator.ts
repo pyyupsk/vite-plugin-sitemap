@@ -153,14 +153,18 @@ export async function generateSitemap(
 
   // Step 2: Apply transform function if provided
   if (pluginOptions.transform) {
-    processedRoutes = await Promise.all(
+    const transformedRoutes = await Promise.all(
       processedRoutes.map(async (route) => {
         const transformed = await pluginOptions.transform!(route);
-        return transformed ?? route;
+        // Return null/undefined to remove routes, or the transformed route
+        return transformed;
       }),
     );
     // Filter out null/undefined results (routes can be removed by transform)
-    processedRoutes = processedRoutes.filter(Boolean);
+    // Use the original route if transform returns undefined (not null)
+    processedRoutes = transformedRoutes
+      .map((transformed, i) => (transformed === undefined ? processedRoutes[i]! : transformed))
+      .filter((route): route is Route => route !== null);
   }
 
   // Step 3: Apply defaults
