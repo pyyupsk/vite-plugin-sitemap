@@ -36,6 +36,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unit tests for core modules (discovery, generator, loader, robots, splitter)
 - Vite integration tests with actual build scenarios
 - Tests for CLI reading plugin options from vite.config.ts
+- VitePress documentation site with comprehensive guides
+  - Getting started and installation guide
+  - Configuration reference (plugin options, route options)
+  - Google extensions documentation (images, videos, news, i18n)
+  - Advanced topics (large sitemaps, dynamic routes, custom serialization)
+  - CLI usage guide
+  - Complete API reference with TypeScript types
 
 ### Changed
 

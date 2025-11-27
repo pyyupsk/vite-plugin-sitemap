@@ -7,5 +7,8 @@
     "build": "vitepress build docs",
     "dev": "vitepress dev docs",
     "preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
   }
 }

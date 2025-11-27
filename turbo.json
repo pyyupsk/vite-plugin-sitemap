@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", "docs/.vitepress/dist/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -20,6 +20,7 @@
       "dependsOn": ["^typecheck"]
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     }
