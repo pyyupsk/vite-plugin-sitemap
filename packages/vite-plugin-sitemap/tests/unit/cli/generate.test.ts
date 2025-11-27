@@ -4,11 +4,14 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { runCli } from "../../helpers/cli";
 import { cleanupTempDir, createTempDir } from "../../helpers/temp-dir";
+
+/** Path to the package source for imports in test configs */
+const PACKAGE_SRC = resolve(__dirname, "..", "..", "..", "src", "index.ts").replaceAll("\\", "/");
 
 describe("CLI generate command", () => {
   let tempDir: string;
@@ -189,6 +192,116 @@ export default pages;
       expect(existsSync(join(tempDir, "dist", "sitemap.xml"))).toBe(true);
       expect(existsSync(join(tempDir, "dist", "sitemap-pages.xml"))).toBe(true);
       expect(existsSync(join(tempDir, "dist", "sitemap-blog.xml"))).toBe(true);
+    });
+  });
+
+  describe("with vite.config.ts", () => {
+    beforeEach(() => {
+      // Create a sitemap with relative URLs (requires hostname)
+      const sitemapContent = `export default [
+  { url: "/" },
+  { url: "/about" },
+];`;
+      writeFileSync(join(tempDir, "src", "sitemap.ts"), sitemapContent);
+    });
+
+    it("should read hostname from vite.config.ts", async () => {
+      // Create vite.config.ts with hostname
+      const viteConfig = `
+import sitemap from "${PACKAGE_SRC}";
+
+export default {
+  plugins: [
+    sitemap({
+      hostname: "https://from-config.example.com",
+    }),
+  ],
+};`;
+      writeFileSync(join(tempDir, "vite.config.ts"), viteConfig);
+
+      await runCli(["generate", "--output", "dist"], { cwd: tempDir });
+
+      const content = readFileSync(join(tempDir, "dist", "sitemap.xml"), "utf-8");
+
+      expect(content).toContain("<loc>https://from-config.example.com/</loc>");
+      expect(content).toContain("<loc>https://from-config.example.com/about</loc>");
+    });
+
+    it("should read generateRobotsTxt from vite.config.ts", async () => {
+      // Create vite.config.ts with generateRobotsTxt enabled
+      const viteConfig = `
+import sitemap from "${PACKAGE_SRC}";
+
+export default {
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+      generateRobotsTxt: true,
+    }),
+  ],
+};`;
+      writeFileSync(join(tempDir, "vite.config.ts"), viteConfig);
+
+      await runCli(["generate", "--output", "dist"], { cwd: tempDir });
+
+      expect(existsSync(join(tempDir, "dist", "robots.txt"))).toBe(true);
+      const content = readFileSync(join(tempDir, "dist", "robots.txt"), "utf-8");
+      expect(content).toContain("Sitemap: https://example.com/sitemap.xml");
+    });
+
+    it("should allow CLI --hostname to override vite.config", async () => {
+      // Create vite.config.ts with one hostname
+      const viteConfig = `
+import sitemap from "${PACKAGE_SRC}";
+
+export default {
+  plugins: [
+    sitemap({
+      hostname: "https://config.example.com",
+    }),
+  ],
+};`;
+      writeFileSync(join(tempDir, "vite.config.ts"), viteConfig);
+
+      // Override with CLI flag
+      await runCli(
+        ["generate", "--output", "dist", "--hostname", "https://cli-override.example.com"],
+        { cwd: tempDir },
+      );
+
+      const content = readFileSync(join(tempDir, "dist", "sitemap.xml"), "utf-8");
+
+      expect(content).toContain("<loc>https://cli-override.example.com/</loc>");
+      expect(content).not.toContain("https://config.example.com/");
+    });
+
+    it("should read sitemapFile path from vite.config.ts", async () => {
+      // Create sitemap in custom location
+      const customDir = join(tempDir, "custom");
+      mkdirSync(customDir, { recursive: true });
+      writeFileSync(
+        join(customDir, "routes.ts"),
+        `export default [{ url: "https://example.com/from-custom" }];`,
+      );
+
+      // Create vite.config.ts pointing to custom sitemap
+      const viteConfig = `
+import sitemap from "${PACKAGE_SRC}";
+
+export default {
+  plugins: [
+    sitemap({
+      sitemapFile: "custom/routes.ts",
+    }),
+  ],
+};`;
+      writeFileSync(join(tempDir, "vite.config.ts"), viteConfig);
+
+      await runCli(["generate", "--output", "dist"], { cwd: tempDir });
+
+      const content = readFileSync(join(tempDir, "dist", "sitemap.xml"), "utf-8");
+
+      expect(content).toContain("https://example.com/from-custom");
     });
   });
 });

@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unit tests for CLI commands (generate, preview, validate)
 - Unit tests for core modules (discovery, generator, loader, robots, splitter)
 - Vite integration tests with actual build scenarios
+- Tests for CLI reading plugin options from vite.config.ts
 
 ### Changed
 
