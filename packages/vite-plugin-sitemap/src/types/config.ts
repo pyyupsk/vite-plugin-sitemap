@@ -80,7 +80,7 @@ export interface ResolvedPluginOptions {
   outDir: string;
   priority: number | undefined;
   serialize: undefined | XmlSerializer;
-  sitemapFile: string;
+  sitemapFile: string | undefined;
   transform: RouteTransformer | undefined;
 }
 
@@ -99,7 +99,9 @@ export type XmlSerializer = (routes: Route[]) => Promise<string> | string;
 /**
  * Default plugin options.
  */
-export const defaultOptions: Omit<ResolvedPluginOptions, "outDir"> = {
+export const defaultOptions: Omit<ResolvedPluginOptions, "outDir" | "sitemapFile"> & {
+  sitemapFile: string | undefined;
+} = {
   changefreq: undefined,
   exclude: [],
   filename: "sitemap.xml",
@@ -108,7 +110,7 @@ export const defaultOptions: Omit<ResolvedPluginOptions, "outDir"> = {
   lastmod: undefined,
   priority: undefined,
   serialize: undefined,
-  sitemapFile: "src/sitemap",
+  sitemapFile: undefined, // undefined enables auto-discovery
   transform: undefined,
 };
 

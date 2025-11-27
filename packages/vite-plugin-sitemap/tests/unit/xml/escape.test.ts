@@ -109,9 +109,10 @@ describe("encodeUrl", () => {
       );
     });
 
-    it("should preserve URL with query string", () => {
+    it("should XML-escape URL with query string", () => {
+      // encodeUrl XML-escapes ampersands per sitemap spec
       expect(encodeUrl("https://example.com/page?q=test&lang=en")).toBe(
-        "https://example.com/page?q=test&lang=en",
+        "https://example.com/page?q=test&amp;lang=en",
       );
     });
 

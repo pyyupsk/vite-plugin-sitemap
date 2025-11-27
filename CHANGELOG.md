@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Edge case tests for boundary values, concurrent operations, empty sitemaps, invalid input, and large sitemaps
 - Unit tests for CLI commands (generate, preview, validate)
 - Unit tests for core modules (discovery, generator, loader, robots, splitter)
+- Vite integration tests with actual build scenarios
 
 ### Changed
 
@@ -40,3 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Transform function now correctly distinguishes `undefined` (keep original route) from `null` (remove route)
 - URL encoding now XML-escapes ampersands and special characters per sitemap.org specification
 - Simplified W3C datetime regex pattern
+
+### Fixed
+
+- Plugin now correctly handles absolute output directory paths
+- Default sitemapFile option is now undefined to enable auto-discovery

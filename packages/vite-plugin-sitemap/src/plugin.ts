@@ -6,7 +6,7 @@
 import type { Plugin, ResolvedConfig } from "vite";
 
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 
 import type { PluginOptions } from "./types/config";
 
@@ -90,7 +90,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
 
           // Step 4: Generate sitemaps
           const outDir = resolvedOptions.outDir;
-          const outputDir = join(config.root, outDir);
+          const outputDir = isAbsolute(outDir) ? outDir : join(config.root, outDir);
 
           // Ensure output directory exists
           await mkdir(outputDir, { recursive: true });

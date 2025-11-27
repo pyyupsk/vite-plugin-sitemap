@@ -124,7 +124,10 @@ export async function createProjectWithRobots(
 export async function createViteProject(
   options: ViteProjectOptions = {},
 ): Promise<ViteProjectContext> {
-  const { files = {}, pluginOptions = {}, sitemapContent = getDefaultSitemapContent() } = options;
+  const { files = {}, pluginOptions = {} } = options;
+  // Only use default if sitemapContent is not explicitly set (check key existence)
+  const sitemapContent =
+    "sitemapContent" in options ? options.sitemapContent : getDefaultSitemapContent();
 
   // Create temp directory
   const root = await createTempDir("vite-test-");
