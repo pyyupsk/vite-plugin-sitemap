@@ -24,6 +24,7 @@
     "prettier-plugin-pkg": "^0.21.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "turbo": "^2.6.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitepress": "^2.0.0-alpha.15"
   }
 }
