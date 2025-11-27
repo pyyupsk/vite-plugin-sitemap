@@ -53,10 +53,11 @@
       "name": "@pyyupsk/vite-plugin-sitemap",
       "version": "0.0.1",
       "bin": {
-        "vite-sitemap": "./dist/cli/index.js",
+        "vite-sitemap": "./dist/cli/index.mjs",
       },
       "dependencies": {
         "commander": "^14.0.2",
+        "picocolors": "^1.1.1",
         "zod": "^4.1.13",
       },
       "devDependencies": {

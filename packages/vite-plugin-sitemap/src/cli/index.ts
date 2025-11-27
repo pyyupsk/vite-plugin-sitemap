@@ -11,6 +11,7 @@ import pkg from "../../package.json";
 import { registerGenerateCommand } from "./commands/generate";
 import { registerPreviewCommand } from "./commands/preview";
 import { registerValidateCommand } from "./commands/validate";
+import { colors } from "./utils";
 
 /**
  * Create and configure the CLI program.
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
     await program.parseAsync(process.argv);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`\x1b[31m✗\x1b[0m ${message}`);
+    console.error(`${colors.red("✗")} ${message}`);
     process.exit(1);
   }
 }

@@ -4,7 +4,13 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import picocolors from "picocolors";
 import { createServer, loadConfigFromFile, type ViteDevServer } from "vite";
+
+/**
+ * Re-export picocolors for use in CLI commands.
+ */
+export const colors = picocolors;
 
 import type { PluginOptions } from "../types/config";
 
@@ -17,19 +23,19 @@ import { PLUGIN_NAME } from "../plugin";
  */
 export const logger = {
   dim(message: string): void {
-    console.log(`\x1b[2m${message}\x1b[0m`);
+    console.log(colors.dim(message));
   },
   error(message: string): void {
-    console.error(`\x1b[31m✗\x1b[0m ${message}`);
+    console.error(`${colors.red("✗")} ${message}`);
   },
   info(message: string): void {
-    console.log(`\x1b[36mℹ\x1b[0m ${message}`);
+    console.log(`${colors.cyan("➜")} ${message}`);
   },
   success(message: string): void {
-    console.log(`\x1b[32m✓\x1b[0m ${message}`);
+    console.log(`${colors.green("✓")} ${message}`);
   },
   warn(message: string): void {
-    console.log(`\x1b[33m⚠\x1b[0m ${message}`);
+    console.log(`${colors.yellow("⚠")} ${message}`);
   },
 };
 
@@ -166,16 +172,16 @@ export async function loadRoutesFromSitemap(options: {
  * Print a table of routes summary.
  */
 export function printRoutesSummary(routes: ResolvedRoutes[]): void {
-  console.log("\nRoutes Summary:");
-  console.log("─".repeat(50));
+  console.log(`\n${colors.bold("Routes Summary:")}`);
+  console.log(colors.dim("─".repeat(50)));
 
   let totalUrls = 0;
 
   for (const { name, routes: routeList } of routes) {
-    console.log(`  ${name}: ${routeList.length} URLs`);
+    console.log(`  ${colors.cyan(name)}: ${colors.bold(String(routeList.length))} URLs`);
     totalUrls += routeList.length;
   }
 
-  console.log("─".repeat(50));
-  console.log(`  Total: ${totalUrls} URLs`);
+  console.log(colors.dim("─".repeat(50)));
+  console.log(`  ${colors.bold("Total")}: ${colors.green(colors.bold(String(totalUrls)))} URLs`);
 }

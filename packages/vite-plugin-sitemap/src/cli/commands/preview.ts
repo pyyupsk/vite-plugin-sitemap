@@ -7,7 +7,7 @@ import type { Command } from "commander";
 
 import { generateSitemap } from "../../core/generator";
 import { formatResultForConsole } from "../../validation/errors";
-import { formatBytes, formatDuration, loadRoutesFromSitemap, logger } from "../utils";
+import { colors, formatBytes, formatDuration, loadRoutesFromSitemap, logger } from "../utils";
 
 /**
  * Register the preview command.
@@ -59,7 +59,9 @@ export function registerPreviewCommand(program: Command): void {
           }
 
           for (const { name, routes: routeList } of filteredRoutes) {
-            logger.info(`Preview: ${name} (${routeList.length} routes)\n`);
+            logger.info(
+              `Preview: ${colors.cyan(name)} ${colors.dim(`(${routeList.length} routes)`)}\n`,
+            );
 
             const genResult = await generateSitemap(routeList, {
               enableSplitting: false, // Don't split for preview
@@ -77,19 +79,21 @@ export function registerPreviewCommand(program: Command): void {
             const lines = xml.split("\n");
             const limit = options.full ? lines.length : Number.parseInt(options.limit, 10);
 
-            console.log("─".repeat(60));
+            console.log(colors.dim("─".repeat(60)));
             console.log(lines.slice(0, limit).join("\n"));
 
             if (!options.full && lines.length > limit) {
               console.log(
-                `\n\x1b[2m... ${lines.length - limit} more lines (use --full to see all)\x1b[0m`,
+                colors.dim(`\n... ${lines.length - limit} more lines (use --full to see all)`),
               );
             }
-            console.log("─".repeat(60));
+            console.log(colors.dim("─".repeat(60)));
 
             // Show stats
-            console.log(`\nSize: ${formatBytes(genResult.byteSize ?? 0)}`);
-            console.log(`Routes: ${genResult.routeCount}`);
+            console.log(
+              `\n${colors.bold("Size:")} ${colors.green(formatBytes(genResult.byteSize ?? 0))}`,
+            );
+            console.log(`${colors.bold("Routes:")} ${colors.green(String(genResult.routeCount))}`);
 
             // Show warnings
             if (genResult.warnings.length > 0) {
@@ -103,7 +107,9 @@ export function registerPreviewCommand(program: Command): void {
           }
 
           const elapsed = formatDuration(Date.now() - startTime);
-          logger.success(`Preview complete in ${elapsed}`);
+          logger.success(
+            `Preview complete ${colors.dim(`in ${colors.reset(colors.bold(elapsed))}`)}`,
+          );
         } finally {
           await server.close();
         }

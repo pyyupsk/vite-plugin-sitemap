@@ -9,7 +9,13 @@ import type { Route } from "../../types";
 
 import { validateRoutes } from "../../core/generator";
 import { formatResultForConsole } from "../../validation/errors";
-import { formatDuration, loadRoutesFromSitemap, logger, printRoutesSummary } from "../utils";
+import {
+  colors,
+  formatDuration,
+  loadRoutesFromSitemap,
+  logger,
+  printRoutesSummary,
+} from "../utils";
 
 /**
  * Register the validate command.
@@ -50,7 +56,9 @@ export function registerValidateCommand(program: Command): void {
 
           for (const { name, routes: routeList } of routes) {
             if (options.verbose) {
-              logger.info(`Validating '${name}' (${routeList.length} routes)...`);
+              logger.info(
+                `Validating ${colors.cyan(name)} ${colors.dim(`(${routeList.length} routes)`)}...`,
+              );
             }
 
             // Prepend hostname to relative URLs if available
@@ -61,10 +69,12 @@ export function registerValidateCommand(program: Command): void {
 
             if (!validationResult.valid) {
               hasErrors = true;
-              logger.error(`Validation failed for '${name}':`);
+              logger.error(`Validation failed for ${colors.cyan(name)}:`);
               console.log(formatResultForConsole(validationResult));
             } else if (options.verbose) {
-              logger.success(`'${name}' validation passed (${routeList.length} routes)`);
+              logger.success(
+                `${colors.cyan(name)} validation passed ${colors.dim(`(${routeList.length} routes)`)}`,
+              );
             }
           }
 
@@ -75,10 +85,12 @@ export function registerValidateCommand(program: Command): void {
           const elapsed = formatDuration(Date.now() - startTime);
 
           if (hasErrors) {
-            logger.error(`\nValidation failed in ${elapsed}`);
+            logger.error(`Validation failed ${colors.dim(`in ${elapsed}`)}`);
             process.exit(1);
           } else {
-            logger.success(`\nValidation passed! ${totalRoutes} routes validated in ${elapsed}`);
+            logger.success(
+              `Validation passed! ${colors.green(colors.bold(String(totalRoutes)))} routes validated ${colors.dim(`in ${colors.reset(colors.bold(elapsed))}`)}`,
+            );
           }
         } finally {
           await server.close();

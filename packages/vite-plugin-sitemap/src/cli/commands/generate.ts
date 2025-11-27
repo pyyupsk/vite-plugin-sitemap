@@ -16,7 +16,7 @@ import { buildSitemapUrl, updateRobotsTxt } from "../../core/robots";
 import { getSitemapIndexFilename } from "../../core/splitter";
 import { resolveOptions } from "../../types/config";
 import { formatResultForConsole } from "../../validation/errors";
-import { formatBytes, formatDuration, loadRoutesFromSitemap, logger } from "../utils";
+import { colors, formatBytes, formatDuration, loadRoutesFromSitemap, logger } from "../utils";
 
 /**
  * Options for the generate command.
@@ -131,7 +131,7 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
 
           if (options.verbose) {
             logger.info(
-              `Generated ${chunk.filename} (${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`,
+              `${colors.cyan(chunk.filename)} ${colors.dim(`(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`)}`,
             );
           }
         }
@@ -145,7 +145,7 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
 
         if (options.verbose) {
           logger.info(
-            `Generated ${indexFilename} (index for ${genResult.splitResult.sitemaps.length} sitemaps)`,
+            `${colors.cyan(indexFilename)} ${colors.dim(`(index for ${genResult.splitResult.sitemaps.length} sitemaps)`)}`,
           );
         }
 
@@ -163,7 +163,7 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
 
         if (options.verbose) {
           logger.info(
-            `Generated ${filename} (${genResult.routeCount} URLs, ${formatBytes(genResult.byteSize ?? 0)})`,
+            `${colors.cyan(filename)} ${colors.dim(`(${genResult.routeCount} URLs, ${formatBytes(genResult.byteSize ?? 0)})`)}`,
           );
         }
       }
@@ -202,14 +202,16 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
     const elapsed = Date.now() - startTime;
 
     // Print summary
-    console.log("\n" + "─".repeat(50));
+    console.log("\n" + colors.dim("─".repeat(50)));
     logger.success(
-      `Generated ${totalFiles} sitemap(s) with ${totalRoutes} URLs in ${formatDuration(elapsed)}`,
+      `${colors.bold("built")} ${colors.green(colors.bold(String(totalFiles)))} sitemap(s) with ${colors.green(colors.bold(String(totalRoutes)))} URLs ${colors.dim(`in ${colors.reset(colors.bold(formatDuration(elapsed)))}`)}`,
     );
 
-    console.log("\nGenerated files:");
+    console.log(`\n${colors.bold("Generated files:")}`);
     for (const file of generatedFiles) {
-      console.log(`  ${join(options.output ?? "dist", file)}`);
+      console.log(
+        `  ${colors.green("➜")}  ${colors.dim(join(options.output ?? "dist", "/"))}${colors.cyan(file)}`,
+      );
     }
   } finally {
     // Clean up Vite server
