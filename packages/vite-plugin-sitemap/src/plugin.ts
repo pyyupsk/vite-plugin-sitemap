@@ -7,6 +7,7 @@ import type { Plugin, ResolvedConfig } from "vite";
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
+import pc from "picocolors";
 
 import type { PluginOptions } from "./types/config";
 
@@ -56,7 +57,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
       const startTime = Date.now();
       const logger = config.logger;
 
-      logger.info(`\n[${PLUGIN_NAME}] Generating sitemap...`);
+      logger.info(`${pc.green("generating sitemap...")}`);
 
       try {
         // Step 1: Discover sitemap file
@@ -73,11 +74,11 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
         );
 
         if (!discovery.found || !discovery.path) {
-          logger.warn(`[${PLUGIN_NAME}] ${formatNotFoundError({ root: config.root })}`);
+          logger.warn(`${pc.yellow("⚠")} ${formatNotFoundError({ root: config.root })}`);
           return;
         }
 
-        logger.info(`[${PLUGIN_NAME}] Found sitemap file: ${discovery.path}`);
+        logger.info(`${pc.dim("found")} ${pc.cyan(discovery.path)}`);
 
         // Step 2: Create a temporary dev server for ssrLoadModule
         // This allows TypeScript file loading during build
@@ -95,7 +96,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
 
           if (resolvedRoutes.length === 0) {
             logger.warn(
-              `[${PLUGIN_NAME}] No routes found in sitemap file. Ensure your sitemap.ts exports routes.`,
+              `${pc.yellow("⚠")} No routes found in sitemap file. Ensure your sitemap.ts exports routes.`,
             );
             return;
           }
@@ -121,7 +122,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
 
             if (!result.success) {
               logger.error(
-                `[${PLUGIN_NAME}] Validation failed for '${name}':\n${formatResultForConsole(result.validation)}`,
+                `${pc.red("✗")} Validation failed for ${pc.cyan(name)}:\n${formatResultForConsole(result.validation)}`,
               );
               continue;
             }
@@ -135,7 +136,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
                 totalFiles++;
 
                 logger.info(
-                  `[${PLUGIN_NAME}] Generated ${chunk.filename} (${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`,
+                  `${pc.cyan(chunk.filename)} ${pc.dim(`(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`)}`,
                 );
               }
 
@@ -146,7 +147,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
               totalFiles++;
 
               logger.info(
-                `[${PLUGIN_NAME}] Generated ${indexFilename} (index for ${result.splitResult.sitemaps.length} sitemaps)`,
+                `${pc.cyan(indexFilename)} ${pc.dim(`(index for ${result.splitResult.sitemaps.length} sitemaps)`)}`,
               );
 
               totalRoutes += result.routeCount ?? 0;
@@ -161,14 +162,14 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
               totalFiles++;
 
               logger.info(
-                `[${PLUGIN_NAME}] Generated ${filename} (${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`,
+                `${pc.cyan(filename)} ${pc.dim(`(${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`)}`,
               );
             }
 
             // Log warnings if any
             if (result.warnings.length > 0) {
               for (const warning of result.warnings) {
-                logger.warn(`[${PLUGIN_NAME}] ${warning}`);
+                logger.warn(`${pc.yellow("⚠")} ${warning}`);
               }
             }
           }
@@ -186,21 +187,23 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
 
             if (robotsResult.success) {
               if (robotsResult.action === "created") {
-                logger.info(`[${PLUGIN_NAME}] Created robots.txt with Sitemap directive`);
+                logger.info(`${pc.cyan("robots.txt")} ${pc.dim("created with Sitemap directive")}`);
               } else if (robotsResult.action === "updated") {
-                logger.info(`[${PLUGIN_NAME}] Updated robots.txt with Sitemap directive`);
+                logger.info(`${pc.cyan("robots.txt")} ${pc.dim("updated with Sitemap directive")}`);
               }
               // No log for 'unchanged' - sitemap directive already exists
             } else {
-              logger.warn(`[${PLUGIN_NAME}] ${robotsResult.error}`);
+              logger.warn(`${pc.yellow("⚠")} ${robotsResult.error}`);
             }
           } else if (resolvedOptions.generateRobotsTxt && !resolvedOptions.hostname) {
-            logger.warn(`[${PLUGIN_NAME}] Cannot generate robots.txt: hostname option is required`);
+            logger.warn(
+              `${pc.yellow("⚠")} Cannot generate robots.txt: hostname option is required`,
+            );
           }
 
           const elapsed = Date.now() - startTime;
           logger.info(
-            `[${PLUGIN_NAME}] Done! Generated ${totalFiles} sitemap(s) with ${totalRoutes} URLs in ${elapsed}ms`,
+            `${pc.green("✓")} ${pc.bold(String(totalFiles))} sitemap(s) with ${pc.bold(String(totalRoutes))} URLs ${pc.dim(`in ${pc.reset(pc.bold(`${elapsed}ms`))}`)}`,
           );
         } finally {
           // Clean up temporary server
@@ -208,10 +211,10 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        logger.error(`[${PLUGIN_NAME}] Failed to generate sitemap: ${message}`);
+        logger.error(`${pc.red("✗")} Failed to generate sitemap: ${message}`);
 
         if (error instanceof Error && error.stack) {
-          logger.error(error.stack);
+          logger.error(pc.dim(error.stack));
         }
       }
     },

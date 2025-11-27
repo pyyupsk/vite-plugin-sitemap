@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- CLI terminal output now uses picocolors for Vite-style formatting
+- Plugin and CLI terminal output now uses picocolors for Vite-style formatting
 - Lint scripts now include tests directory
 - Discovery module now uses dependency injection for fs functions to avoid Vite build caching issues
 - Transform function now correctly distinguishes `undefined` (keep original route) from `null` (remove route)
