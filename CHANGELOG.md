@@ -27,9 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript-first with full type definitions
 - Zero client bundle impact (build-time only)
 - Support for Vite 7.x
-- Comprehensive unit tests for validation and XML modules
+- Comprehensive test suite covering unit, integration, and edge cases
 - Test helpers for CLI execution, temp directories, and Vite project scaffolding
-- New test fixtures (empty-sitemap, large-sitemap, invalid-changefreq)
+- Edge case tests for boundary values, concurrent operations, empty sitemaps, invalid input, and large sitemaps
+- Unit tests for CLI commands (generate, preview, validate)
+- Unit tests for core modules (discovery, generator, loader, robots, splitter)
 
 ### Changed
 

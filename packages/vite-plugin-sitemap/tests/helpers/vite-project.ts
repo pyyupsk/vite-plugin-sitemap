@@ -4,10 +4,16 @@
  */
 
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { build, type InlineConfig } from "vite";
 
+import { type PluginOptions, sitemapPlugin } from "../../src/index";
 import { cleanupTempDir, createTempDir } from "./temp-dir";
+
+/**
+ * Get the absolute path to the package source.
+ */
+const PACKAGE_ROOT = resolve(__dirname, "..", "..");
 
 /**
  * Context for a test Vite project.
@@ -18,8 +24,6 @@ export interface ViteProjectContext {
   build: (config?: InlineConfig) => Promise<void>;
   /** Clean up the project directory */
   cleanup: () => Promise<void>;
-  /** Path to vite.config.ts */
-  configPath: string;
   /** Output directory (dist) */
   outDir: string;
   /** Root directory of the project */
@@ -35,30 +39,16 @@ export interface ViteProjectOptions {
   /** Additional files to create: { path: content } */
   files?: Record<string, string>;
   /** Plugin options to pass */
-  pluginOptions?: Record<string, unknown>;
+  pluginOptions?: PluginOptions;
   /** Sitemap file content (TypeScript) */
   sitemapContent?: string;
-  /** Custom vite.config.ts content */
-  viteConfig?: string;
 }
 
 /**
- * Default minimal vite.config.ts template.
+ * Get the absolute path to the Route type import for use in custom sitemap content.
  */
-function getDefaultViteConfig(pluginOptions: Record<string, unknown> = {}): string {
-  const optionsStr = JSON.stringify(pluginOptions, null, 2);
-  return `import { defineConfig } from "vite";
-import sitemap from "../../../src/index";
-
-export default defineConfig({
-  plugins: [sitemap(${optionsStr})],
-  build: {
-    rollupOptions: {
-      input: "./index.html"
-    }
-  }
-});
-`;
+export function getRouteTypesImportPath(): string {
+  return join(PACKAGE_ROOT, "src", "types", "sitemap").replaceAll("\\", "/");
 }
 
 /**
@@ -76,23 +66,12 @@ const DEFAULT_INDEX_HTML = `<!DOCTYPE html>
 `;
 
 /**
- * Default sitemap.ts content.
- */
-const DEFAULT_SITEMAP_CONTENT = `import type { Route } from "../../../src/types/sitemap";
-
-export default [
-  { url: "https://example.com/" },
-  { url: "https://example.com/about" },
-  { url: "https://example.com/contact" },
-] satisfies Route[];
-`;
-
-/**
  * Create a Vite project with async sitemap content.
  */
 export async function createAsyncSitemapProject(): Promise<ViteProjectContext> {
+  const typesPath = join(PACKAGE_ROOT, "src", "types", "sitemap").replaceAll("\\", "/");
   return createViteProject({
-    sitemapContent: `import type { Route } from "../../../src/types/sitemap";
+    sitemapContent: `import type { Route } from "${typesPath}";
 
 export default async function getRoutes(): Promise<Route[]> {
   // Simulate async data fetching
@@ -145,12 +124,7 @@ export async function createProjectWithRobots(
 export async function createViteProject(
   options: ViteProjectOptions = {},
 ): Promise<ViteProjectContext> {
-  const {
-    files = {},
-    pluginOptions = {},
-    sitemapContent = DEFAULT_SITEMAP_CONTENT,
-    viteConfig,
-  } = options;
+  const { files = {}, pluginOptions = {}, sitemapContent = getDefaultSitemapContent() } = options;
 
   // Create temp directory
   const root = await createTempDir("vite-test-");
@@ -162,11 +136,6 @@ export async function createViteProject(
 
   // Create index.html
   await writeFile(join(root, "index.html"), DEFAULT_INDEX_HTML);
-
-  // Create vite.config.ts
-  const configPath = join(root, "vite.config.ts");
-  const configContent = viteConfig ?? getDefaultViteConfig(pluginOptions);
-  await writeFile(configPath, configContent);
 
   // Create sitemap.ts if content provided
   let sitemapPath: string | undefined;
@@ -186,18 +155,39 @@ export async function createViteProject(
   const context: ViteProjectContext = {
     build: async (config?: InlineConfig) => {
       await build({
-        configFile: configPath,
+        build: {
+          outDir,
+          rollupOptions: {
+            input: join(root, "index.html"),
+          },
+        },
+        configFile: false,
         logLevel: "silent",
+        plugins: [sitemapPlugin(pluginOptions)],
         root,
         ...config,
       });
     },
     cleanup: () => cleanupTempDir(root),
-    configPath,
     outDir,
     root,
     sitemapPath,
   };
 
   return context;
+}
+
+/**
+ * Get the default sitemap.ts content with absolute import path.
+ */
+function getDefaultSitemapContent(): string {
+  const typesPath = join(PACKAGE_ROOT, "src", "types", "sitemap").replaceAll("\\", "/");
+  return `import type { Route } from "${typesPath}";
+
+export default [
+  { url: "https://example.com/" },
+  { url: "https://example.com/about" },
+  { url: "https://example.com/contact" },
+] satisfies Route[];
+`;
 }

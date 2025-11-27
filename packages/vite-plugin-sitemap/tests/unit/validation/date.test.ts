@@ -41,6 +41,11 @@ describe("isValidW3CDatetime", () => {
       expect(isValidW3CDatetime("2024-01-15T10:30:00-08:00")).toBe(true);
     });
 
+    it("should accept datetime without seconds", () => {
+      expect(isValidW3CDatetime("2024-01-15T10:30Z")).toBe(true);
+      expect(isValidW3CDatetime("2024-01-15T10:30+00:00")).toBe(true);
+    });
+
     it("should accept leap year date", () => {
       expect(isValidW3CDatetime("2024-02-29")).toBe(true);
     });

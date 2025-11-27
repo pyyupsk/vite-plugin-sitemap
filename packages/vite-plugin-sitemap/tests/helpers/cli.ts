@@ -21,6 +21,8 @@ export interface CliOptions {
  * Result of running a CLI command.
  */
 export interface CliResult {
+  /** Combined stdout and stderr output */
+  combined: string;
   /** Exit code from the process */
   exitCode: number;
   /** Combined stderr output */
@@ -77,6 +79,7 @@ export async function runCli(args: string[], options: CliOptions = {}): Promise<
     proc.on("close", (code) => {
       clearTimeout(timeoutId);
       resolve({
+        combined: stdout + stderr,
         exitCode: code ?? 1,
         stderr,
         stdout,

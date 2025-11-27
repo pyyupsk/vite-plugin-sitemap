@@ -42,11 +42,15 @@ export function extractLocValues(xml: string): string[] {
  * Generate routes for testing large sitemaps.
  *
  * @param count Number of routes to generate
+ * @param hostname Optional hostname prefix (default: "https://example.com")
  * @returns Array of route objects
  */
-export function generateRoutes(count: number): Array<{ url: string }> {
+export function generateRoutes(
+  count: number,
+  hostname = "https://example.com",
+): Array<{ url: string }> {
   return Array.from({ length: count }, (_, i) => ({
-    url: `https://example.com/page-${i}`,
+    url: `${hostname}/page-${i}`,
   }));
 }
 
