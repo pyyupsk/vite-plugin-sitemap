@@ -46,3 +46,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Plugin now correctly handles absolute output directory paths
 - Default sitemapFile option is now undefined to enable auto-discovery
+- W3C datetime validation now supports decimal fraction of seconds per spec, allowing `new Date().toISOString()` output

@@ -17,15 +17,15 @@
     "node": ">=20"
   },
   "bin": {
-    "vite-sitemap": "./dist/cli/index.js"
+    "vite-sitemap": "./dist/cli/index.mjs"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "module": "./dist/index.js",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "module": "./dist/index.mjs",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
     }
   },
   "files": [

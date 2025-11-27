@@ -1,11 +1,13 @@
 /**
  * W3C Datetime validation (ISO 8601 subset) for sitemap protocol.
  *
- * Valid formats:
+ * Valid formats (per https://www.w3.org/TR/NOTE-datetime):
  * - YYYY (year only)
  * - YYYY-MM (year and month)
  * - YYYY-MM-DD (full date)
- * - YYYY-MM-DDThh:mm:ssTZD (full datetime with timezone)
+ * - YYYY-MM-DDThh:mmTZD (date with hours and minutes)
+ * - YYYY-MM-DDThh:mm:ssTZD (date with seconds)
+ * - YYYY-MM-DDThh:mm:ss.sTZD (date with decimal fraction of seconds)
  *
  * TZD formats:
  * - Z (UTC)
@@ -14,10 +16,11 @@
 
 /**
  * Regex pattern for W3C Datetime format.
- * Supports: YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDThh:mm:ssZ, YYYY-MM-DDThh:mm:ss±hh:mm
+ * Supports: YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDThh:mm:ss.sssZ, YYYY-MM-DDThh:mm:ss.sss±hh:mm
+ * Also supports new Date().toISOString() output (e.g., 2024-01-15T10:30:00.000Z)
  */
 export const W3C_DATETIME_REGEX =
-  /^\d{4}(?:-\d{2})?(?:-\d{2})?(?:T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+  /^\d{4}(?:-\d{2})?(?:-\d{2})?(?:T\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
 
 /**
  * Date validation result.
@@ -106,9 +109,11 @@ export function validateW3CDatetime(date: string): DateValidationResult {
         "2024-01",
         "2024-01-15",
         "2024-01-15T10:30:00Z",
+        "2024-01-15T10:30:00.000Z",
         "2024-01-15T10:30:00+00:00",
       ],
-      suggestion: "Use format: YYYY, YYYY-MM, YYYY-MM-DD, or YYYY-MM-DDThh:mm:ss±hh:mm",
+      suggestion:
+        "Use format: YYYY, YYYY-MM, YYYY-MM-DD, or YYYY-MM-DDThh:mm:ss.sss±hh:mm (supports new Date().toISOString())",
       valid: false,
     };
   }
