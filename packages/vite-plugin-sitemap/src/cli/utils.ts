@@ -4,12 +4,13 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { createServer, type ViteDevServer } from "vite";
+import { createServer, loadConfigFromFile, type ViteDevServer } from "vite";
 
 import type { PluginOptions } from "../types/config";
 
 import { discoverSitemapFile, formatNotFoundError } from "../core/discovery";
 import { loadSitemapFile, type ResolvedRoutes, resolveRoutes } from "../core/loader";
+import { PLUGIN_NAME } from "../plugin";
 
 /**
  * CLI logger with colored output.
@@ -66,26 +67,33 @@ export function formatDuration(ms: number): string {
 }
 
 /**
- * Load plugin options from vite.config.
+ * Load plugin options from vite.config using Vite's config loader.
  */
-export async function loadPluginOptions(configPath: string): Promise<null | PluginOptions> {
+export async function loadPluginOptions(root: string): Promise<null | PluginOptions> {
   try {
-    // Note: This is a simplified version. In a real implementation,
-    // we would use Vite's config loading utilities.
-    const module = await import(configPath);
-    const config = module.default ?? module;
+    const configResult = await loadConfigFromFile(
+      { command: "build", mode: "production" },
+      undefined,
+      root,
+    );
+
+    if (!configResult?.config.plugins) {
+      return null;
+    }
+
+    // Flatten plugins array (handles nested arrays from plugin presets)
+    const plugins = configResult.config.plugins.flat(2);
 
     // Try to find the sitemap plugin in the plugins array
-    if (config.plugins && Array.isArray(config.plugins)) {
-      for (const plugin of config.plugins) {
-        if (plugin?.name === "vite-plugin-sitemap") {
-          // The options would be stored on the plugin instance
-          return plugin.__options ?? {};
-        }
+    for (const plugin of plugins) {
+      if (plugin && typeof plugin === "object" && "name" in plugin && plugin.name === PLUGIN_NAME) {
+        // The options are stored on the plugin instance
+        const sitemapPlugin = plugin as { __options?: PluginOptions };
+        return sitemapPlugin.__options ?? {};
       }
     }
 
-    return {};
+    return null;
   } catch {
     return null;
   }
@@ -98,13 +106,26 @@ export async function loadRoutesFromSitemap(options: {
   root?: string;
   sitemapFile?: string;
   verbose?: boolean;
-}): Promise<null | { routes: ResolvedRoutes[]; server: ViteDevServer }> {
+}): Promise<null | {
+  pluginOptions: null | PluginOptions;
+  routes: ResolvedRoutes[];
+  server: ViteDevServer;
+}> {
   const root = options.root ?? process.cwd();
+
+  // Load plugin options from vite.config
+  const pluginOptions = await loadPluginOptions(root);
+
+  if (options.verbose && pluginOptions) {
+    logger.info("Loaded plugin options from vite.config");
+  }
 
   // Discover sitemap file
   const discovery = discoverSitemapFile({
     root,
     ...(options.sitemapFile && { sitemapFile: options.sitemapFile }),
+    ...(pluginOptions?.sitemapFile &&
+      !options.sitemapFile && { sitemapFile: pluginOptions.sitemapFile }),
   });
 
   if (!discovery.found || !discovery.path) {
@@ -134,7 +155,7 @@ export async function loadRoutesFromSitemap(options: {
       return null;
     }
 
-    return { routes, server };
+    return { pluginOptions, routes, server };
   } catch (error) {
     await server.close();
     throw error;

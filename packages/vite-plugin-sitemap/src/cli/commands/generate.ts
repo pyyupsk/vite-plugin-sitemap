@@ -25,7 +25,9 @@ interface GenerateOptions {
   hostname?: string;
   output?: string;
   robotsTxt?: boolean;
-  verbose: boolean;
+  root?: string;
+  sitemap?: string;
+  verbose?: boolean;
 }
 
 /**
@@ -35,8 +37,11 @@ export function registerGenerateCommand(program: Command): void {
   program
     .command("generate")
     .description("Generate sitemap files without running a full Vite build")
+    .option("-r, --root <path>", "Project root directory", process.cwd())
+    .option("-s, --sitemap <path>", "Path to sitemap file")
     .option("-o, --output <dir>", "Output directory for generated files", "dist")
     .option("-h, --hostname <url>", "Base hostname for sitemap URLs")
+    .option("-v, --verbose", "Show detailed output")
     .option("--robots-txt", "Generate robots.txt with Sitemap directive")
     .action(async function (this: Command, options: GenerateOptions) {
       const globalOpts = getGlobalOptions(this);
@@ -54,7 +59,7 @@ export function registerGenerateCommand(program: Command): void {
  */
 async function executeGenerate(options: GenerateOptions): Promise<void> {
   const startTime = Date.now();
-  const root = process.cwd();
+  const root = options.root ?? process.cwd();
 
   logger.info("Generating sitemap...");
 
@@ -66,6 +71,7 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
   // Load routes from sitemap file
   const result = await loadRoutesFromSitemap({
     root,
+    ...(options.sitemap && { sitemapFile: options.sitemap }),
     ...(options.verbose && { verbose: options.verbose }),
   });
 
@@ -73,15 +79,19 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
     process.exit(1);
   }
 
-  const { routes: resolvedRoutes, server } = result;
+  const { pluginOptions: configOptions, routes: resolvedRoutes, server } = result;
+
+  // Use hostname from CLI option, or fall back to vite.config
+  const hostname = options.hostname ?? configOptions?.hostname;
 
   try {
-    // Resolve options with defaults
-    const outputDir = resolve(root, options.output ?? "dist");
+    // Resolve options with defaults, merging CLI options with config options
+    const outputDir = resolve(root, options.output ?? configOptions?.outDir ?? "dist");
     const pluginOptions: PluginOptions = {
-      ...(options.hostname && { hostname: options.hostname }),
-      generateRobotsTxt: options.robotsTxt ?? false,
-      outDir: options.output ?? "dist",
+      ...configOptions,
+      ...(hostname && { hostname }),
+      generateRobotsTxt: options.robotsTxt ?? configOptions?.generateRobotsTxt ?? false,
+      outDir: options.output ?? configOptions?.outDir ?? "dist",
     };
 
     const resolvedOpts: ResolvedPluginOptions = resolveOptions(pluginOptions, outputDir);
@@ -167,10 +177,11 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
     }
 
     // Generate robots.txt if enabled
-    if (options.robotsTxt && options.hostname) {
+    const shouldGenerateRobots = options.robotsTxt ?? configOptions?.generateRobotsTxt;
+    if (shouldGenerateRobots && hostname) {
       const primarySitemapFilename = totalFiles > 1 ? "sitemap-index.xml" : "sitemap.xml";
 
-      const sitemapUrl = buildSitemapUrl(options.hostname, primarySitemapFilename);
+      const sitemapUrl = buildSitemapUrl(hostname, primarySitemapFilename);
 
       const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
 
@@ -184,8 +195,8 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
       } else {
         logger.warn(robotsResult.error ?? "Failed to update robots.txt");
       }
-    } else if (options.robotsTxt && !options.hostname) {
-      logger.warn("Cannot generate robots.txt: --hostname option is required");
+    } else if (shouldGenerateRobots && !hostname) {
+      logger.warn("Cannot generate robots.txt: hostname is required");
     }
 
     const elapsed = Date.now() - startTime;

@@ -40,7 +40,10 @@ export function registerPreviewCommand(program: Command): void {
           process.exit(1);
         }
 
-        const { routes, server } = result;
+        const { pluginOptions, routes, server } = result;
+
+        // Use hostname from CLI option, or fall back to vite.config
+        const hostname = options.hostname ?? pluginOptions?.hostname;
 
         try {
           // Filter to specific named export if requested
@@ -60,7 +63,7 @@ export function registerPreviewCommand(program: Command): void {
 
             const genResult = await generateSitemap(routeList, {
               enableSplitting: false, // Don't split for preview
-              hostname: options.hostname,
+              hostname,
             });
 
             if (!genResult.success) {

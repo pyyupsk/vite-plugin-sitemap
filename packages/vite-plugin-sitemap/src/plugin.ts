@@ -29,11 +29,23 @@ export const PLUGIN_NAME = "vite-plugin-sitemap";
  * @param userOptions Plugin options
  * @returns Vite plugin
  */
-export function sitemapPlugin(userOptions: PluginOptions = {}): Plugin {
+/**
+ * Extended plugin type with options for CLI access.
+ */
+export interface SitemapPlugin extends Plugin {
+  __options: PluginOptions;
+}
+
+export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
   let config: ResolvedConfig;
   let resolvedOptions: ReturnType<typeof resolveOptions>;
 
   return {
+    /**
+     * Expose plugin options for CLI access.
+     */
+    __options: userOptions,
+
     // Generate sitemap after build completes
     async closeBundle() {
       // Only run in build mode

@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `vite-sitemap validate` - Check configuration for errors
   - `vite-sitemap preview` - Preview generated XML
   - `vite-sitemap generate` - Generate sitemaps without full build
+- CLI now reads plugin options from `vite.config.ts` (hostname, generateRobotsTxt, outDir, sitemapFile)
+- Consistent CLI options across all commands: `-r/--root`, `-s/--sitemap`, `-h/--hostname`, `-v/--verbose`
 - Zod-based validation with helpful error messages
 - TypeScript-first with full type definitions
 - Zero client bundle impact (build-time only)
