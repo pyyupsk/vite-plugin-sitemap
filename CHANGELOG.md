@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Comprehensive unit tests for validation and XML modules
+- Test helpers for CLI execution, temp directories, and Vite project scaffolding
+- New test fixtures (empty-sitemap, large-sitemap, invalid-changefreq)
+
+### Changed
+
+- Lint scripts now include tests directory
+
 ## [0.1.0] - 2025-11-26
 
 ### Added

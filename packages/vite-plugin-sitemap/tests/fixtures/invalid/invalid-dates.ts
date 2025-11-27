@@ -7,17 +7,17 @@ import type { Route } from "../../../src/types/sitemap";
 
 export default [
   // Invalid date format (US style)
-  { url: "https://example.com/page1", lastmod: "01/15/2024" },
+  { lastmod: "01/15/2024", url: "https://example.com/page1" },
 
   // Invalid date format (wrong separator)
-  { url: "https://example.com/page2", lastmod: "2024.01.15" },
+  { lastmod: "2024.01.15", url: "https://example.com/page2" },
 
   // Invalid month
-  { url: "https://example.com/page3", lastmod: "2024-13-01" },
+  { lastmod: "2024-13-01", url: "https://example.com/page3" },
 
   // Invalid day
-  { url: "https://example.com/page4", lastmod: "2024-01-32" },
+  { lastmod: "2024-01-32", url: "https://example.com/page4" },
 
   // Invalid format (just text)
-  { url: "https://example.com/page5", lastmod: "January 15, 2024" },
+  { lastmod: "January 15, 2024", url: "https://example.com/page5" },
 ] satisfies Route[];

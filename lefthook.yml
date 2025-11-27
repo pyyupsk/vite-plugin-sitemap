@@ -4,6 +4,14 @@
 pre-commit:
   parallel: true
   commands:
+    changelog:
+      run: |
+        if git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/"; then
+          if ! git diff --staged --name-only | grep -q "^CHANGELOG.md$"; then
+            echo "❌ Please update CHANGELOG.md"
+            exit 1
+          fi
+        fi
     lint:
       glob: "*.{js,ts,mjs}"
       run: bun run lint
