@@ -1,1 +1,0 @@
-import{_ as i,c as a,o as t,ag as n}from"./chunks/framework.CQuhCYrb.js";const F=JSON.parse('{"title":"CLI","description":"","frontmatter":{},"headers":[],"relativePath":"guide/cli.md","filePath":"guide/cli.md"}'),e={name:"guide/cli.md"};function p(l,s,h,k,d,r){return t(),a("div",null,[...s[0]||(s[0]=[n("",61)])])}const g=i(e,[["render",p]]);export{F as __pageData,g as default};
