@@ -1,6 +1,6 @@
 {
   "name": "@pyyupsk/vite-plugin-sitemap",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "description": "A modern Vite plugin for generating XML sitemaps from file-based conventions",
   "repository": {

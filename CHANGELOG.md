@@ -5,56 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2025-11-28
 
 ### Added
 
-- File-based sitemap configuration via `src/sitemap.ts`
-- Support for async route generation (fetch from APIs/databases)
-- Google sitemap extensions:
-  - Image sitemaps
-  - Video sitemaps
-  - News sitemaps
-  - Internationalization (hreflang alternates)
-- Auto-splitting for large sitemaps (50,000+ URLs)
-- Sitemap index generation for multiple sitemaps
-- robots.txt generation with Sitemap directive
-- CLI commands:
-  - `vite-sitemap validate` - Check configuration for errors
-  - `vite-sitemap preview` - Preview generated XML
-  - `vite-sitemap generate` - Generate sitemaps without full build
-- CLI now reads plugin options from `vite.config.ts` (hostname, generateRobotsTxt, outDir, sitemapFile)
-- Consistent CLI options across all commands: `-r/--root`, `-s/--sitemap`, `-h/--hostname`, `-v/--verbose`
-- Zod-based validation with helpful error messages
-- TypeScript-first with full type definitions
-- Zero client bundle impact (build-time only)
-- Support for Vite 7.x
-- Comprehensive test suite covering unit, integration, and edge cases
-- Test helpers for CLI execution, temp directories, and Vite project scaffolding
-- Edge case tests for boundary values, concurrent operations, empty sitemaps, invalid input, and large sitemaps
-- Unit tests for CLI commands (generate, preview, validate)
-- Unit tests for core modules (discovery, generator, loader, robots, splitter)
-- Vite integration tests with actual build scenarios
-- Tests for CLI reading plugin options from vite.config.ts
-- VitePress documentation site with comprehensive guides
-  - Getting started and installation guide
-  - Configuration reference (plugin options, route options)
-  - Google extensions documentation (images, videos, news, i18n)
-  - Advanced topics (large sitemaps, dynamic routes, custom serialization)
-  - CLI usage guide
-  - Complete API reference with TypeScript types
-
-### Changed
-
-- Plugin and CLI terminal output now uses picocolors for Vite-style formatting
-- Lint scripts now include tests directory
-- Discovery module now uses dependency injection for fs functions to avoid Vite build caching issues
-- Transform function now correctly distinguishes `undefined` (keep original route) from `null` (remove route)
-- URL encoding now XML-escapes ampersands and special characters per sitemap.org specification
-- Simplified W3C datetime regex pattern
-
-### Fixed
-
-- Plugin now correctly handles absolute output directory paths
-- Default sitemapFile option is now undefined to enable auto-discovery
-- W3C datetime validation now supports decimal fraction of seconds per spec, allowing `new Date().toISOString()` output
+- **Vite Plugin**: Automatic sitemap generation during build via `closeBundle` hook
+- **File-based Configuration**: Define routes in `src/sitemap.ts` with TypeScript support
+- **Route Discovery**: Auto-discovery of sitemap files with configurable paths
+- **Google Sitemap Extensions**:
+  - Image sitemaps with caption, title, license, and geo-location support
+  - Video sitemaps with full metadata (duration, rating, platform restrictions, etc.)
+  - News sitemaps with publication info and stock tickers
+  - Multilingual support via `hreflang` alternate links
+- **Auto-splitting**: Automatic sitemap splitting when exceeding 50,000 URLs or 45MB size limit
+- **Sitemap Index**: Automatic generation of sitemap index for split sitemaps
+- **robots.txt Integration**: Optional generation/update of robots.txt with Sitemap directive
+- **Validation**: Comprehensive Zod-based validation with detailed error messages
+  - URL validation (protocol, length, format)
+  - W3C Datetime format validation
+  - Priority range validation (0.0-1.0)
+  - Extension-specific validation (video duration, tag limits, etc.)
+- **CLI Tool** (`vite-sitemap`):
+  - `validate` - Validate sitemap configuration without generating files
+  - `preview` - Preview generated sitemap XML in console
+  - `generate` - Generate sitemap files outside of Vite build
+- **Route Transformation**: Custom `transform` function to modify or filter routes
+- **Custom Serialization**: Optional `serialize` function for custom XML output
+- **Exclusion Patterns**: Support for string and RegExp patterns to exclude URLs
+- **Default Values**: Configurable defaults for `changefreq`, `lastmod`, and `priority`
+- **Named Exports**: Support for multiple sitemaps via named exports in sitemap file
+- **TypeScript**: Full TypeScript support with exported types for routes and configuration
