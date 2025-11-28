@@ -3,6 +3,7 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
   title: "vite-plugin-sitemap",
   description: "A modern Vite plugin for generating XML sitemaps with Google extensions support",
+  base: "/vite-plugin-sitemap/",
 
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
