@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Glob matching bug where `*.example.com` incorrectly matched `abcexample.com`
 - Priority precision in XML output (0.85 no longer rounds to 0.9)
+- Incorrect robots.txt sitemap URL when multiple named exports exist without splitting
 
 ## [0.2.0] - 2025-11-29
 

@@ -143,6 +143,7 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
 
     let totalRoutes = 0;
     let totalFiles = 0;
+    let anyWasSplit = false;
     const generatedFiles: string[] = [];
 
     for (const { name, routes } of resolvedRoutes) {
@@ -164,6 +165,8 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
 
       // Handle split sitemaps
       if (genResult.splitResult?.wasSplit) {
+        anyWasSplit = true;
+
         // Write all sitemap chunks
         for (const chunk of genResult.splitResult.sitemaps) {
           const outputPath = join(outputDir, chunk.filename);
@@ -221,7 +224,8 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
     // Generate robots.txt if enabled
     const shouldGenerateRobots = options.robotsTxt ?? configOptions?.generateRobotsTxt;
     if (shouldGenerateRobots && hostname) {
-      const primarySitemapFilename = totalFiles > 1 ? "sitemap-index.xml" : "sitemap.xml";
+      // Use sitemap-index.xml if any sitemap was split, otherwise use sitemap.xml
+      const primarySitemapFilename = anyWasSplit ? "sitemap-index.xml" : "sitemap.xml";
 
       const sitemapUrl = buildSitemapUrl(hostname, primarySitemapFilename);
 

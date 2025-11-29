@@ -190,6 +190,7 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
 
           let totalRoutes = 0;
           let totalFiles = 0;
+          let anyWasSplit = false;
 
           for (const { name, routes } of resolvedRoutes) {
             const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
@@ -209,6 +210,8 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
 
             // Handle split sitemaps
             if (result.splitResult?.wasSplit) {
+              anyWasSplit = true;
+
               // Write all sitemap chunks
               for (const chunk of result.splitResult.sitemaps) {
                 const outputPath = join(outputDir, chunk.filename);
@@ -257,9 +260,10 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
           // Step 5: Generate robots.txt if enabled
           if (resolvedOptions.generateRobotsTxt && resolvedOptions.hostname) {
             // Determine the primary sitemap filename to reference
-            // Use sitemap-index.xml if we have multiple sitemaps, otherwise sitemap.xml
-            const primarySitemapFilename =
-              totalFiles > 1 ? "sitemap-index.xml" : resolvedOptions.filename;
+            // Use sitemap-index.xml if any sitemap was split, otherwise use the configured filename
+            const primarySitemapFilename = anyWasSplit
+              ? "sitemap-index.xml"
+              : resolvedOptions.filename;
 
             const sitemapUrl = buildSitemapUrl(resolvedOptions.hostname, primarySitemapFilename);
 
