@@ -326,12 +326,14 @@ function getBaseXmlSize(): number {
 function splitByUrlsAndSize(routes: Route[], maxUrls: number, maxBytes: number): Route[][] {
   const chunks: Route[][] = [];
   let currentChunk: Route[] = [];
-  let currentSize = getBaseXmlSize();
+
+  const baseSize = getBaseXmlSize();
+  let currentSize = baseSize;
 
   for (const route of routes) {
     // Estimate size of this route's XML
     const routeXml = buildSitemapXml([route]);
-    const routeSize = calculateByteSize(routeXml) - getBaseXmlSize();
+    const routeSize = calculateByteSize(routeXml) - baseSize;
 
     // Check if adding this route would exceed limits
     const wouldExceedUrls = currentChunk.length >= maxUrls;
@@ -342,7 +344,7 @@ function splitByUrlsAndSize(routes: Route[], maxUrls: number, maxBytes: number):
       if (currentChunk.length > 0) {
         chunks.push(currentChunk);
         currentChunk = [];
-        currentSize = getBaseXmlSize();
+        currentSize = baseSize;
       }
     }
 
