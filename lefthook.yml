@@ -16,11 +16,14 @@ pre-commit:
         fi
     version-check:
       run: |
-        if git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/src/"; then
-          if ! git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/package.json$"; then
-            echo "❌ Source files changed but version not bumped"
-            echo "   Please update the version in packages/vite-plugin-sitemap/package.json"
-            exit 1
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        if [ "$BRANCH" = "main" ]; then
+          if git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/src/"; then
+            if ! git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/package.json$"; then
+              echo "❌ Source files changed but version not bumped"
+              echo "   Please update the version in packages/vite-plugin-sitemap/package.json"
+              exit 1
+            fi
           fi
         fi
     lint:

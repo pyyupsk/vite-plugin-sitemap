@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace custom glob matching with `picomatch` for proper pattern support
+- Fix glob matching bug where `*.example.com` incorrectly matched `abcexample.com`
+
 ## [0.2.0] - 2025-11-29
 
 ### Added

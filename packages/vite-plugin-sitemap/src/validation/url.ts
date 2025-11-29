@@ -3,6 +3,8 @@
  * URLs must be absolute and use http(s) protocol per RFC 3986.
  */
 
+import picomatch from "picomatch";
+
 /**
  * Maximum URL length per sitemap protocol.
  */
@@ -53,13 +55,12 @@ export function isValidUrl(url: string): boolean {
 
 /**
  * Check if a URL matches any exclusion pattern.
+ * Supports glob patterns (*, **, ?) and RegExp.
  */
 export function matchesExcludePattern(url: string, patterns: Array<RegExp | string>): boolean {
   for (const pattern of patterns) {
     if (typeof pattern === "string") {
-      // Simple glob-style matching with * wildcard
-      const regex = new RegExp("^" + pattern.replaceAll("*", ".*").replaceAll("?", ".") + "$");
-      if (regex.test(url)) {
+      if (picomatch.isMatch(url, pattern)) {
         return true;
       }
     } else if (pattern instanceof RegExp) {
