@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace custom glob matching with `picomatch` for proper pattern support
 - Fix glob matching bug where `*.example.com` incorrectly matched `abcexample.com`
 - Extract `formatBytes` to shared utility module (DRY refactor)
+- Add explicit guard for empty routes array in `splitRoutes()`
 
 ## [0.2.0] - 2025-11-29
 

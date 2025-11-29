@@ -113,7 +113,7 @@ export function getSitemapIndexFilename(baseFilename = "sitemap"): string {
  * - More than 50,000 URLs
  * - Single sitemap exceeds 45MB
  *
- * @param routes All routes to include
+ * @param routes All routes to include. Empty array returns single empty sitemap.
  * @param options Split options
  * @returns Split result with chunks and optional index
  */
@@ -124,6 +124,23 @@ export function splitRoutes(routes: Route[], options: SplitOptions = {}): SplitR
     maxBytes = MAX_BYTES_PER_SITEMAP,
     maxUrls = MAX_URLS_PER_SITEMAP,
   } = options;
+
+  // Handle empty routes case explicitly
+  if (routes.length === 0) {
+    const xml = buildSitemapXml([]);
+    return {
+      sitemaps: [
+        {
+          byteSize: calculateByteSize(xml),
+          filename: `${baseFilename}.xml`,
+          index: 0,
+          routes: [],
+          xml,
+        },
+      ],
+      wasSplit: false,
+    };
+  }
 
   // If under URL limit, try generating a single sitemap
   if (routes.length <= maxUrls) {
