@@ -1,6 +1,7 @@
 /**
  * Sitemap generator module.
  * Orchestrates route validation, transformation, and XML generation.
+ * @module
  */
 
 import type { PluginOptions, ResolvedPluginOptions } from "../types/config";
@@ -17,42 +18,91 @@ import { splitRoutes } from "./splitter";
 
 /**
  * Options for the generation pipeline.
+ *
+ * @interface GenerationOptions
+ * @since 0.1.0
  */
 export interface GenerationOptions {
-  /** Base filename for sitemaps (without extension) */
+  /**
+   * Base filename for sitemaps (without extension).
+   * @default "sitemap"
+   */
   baseFilename?: string;
-  /** Enable auto-splitting for large sitemaps */
+  /**
+   * Enable auto-splitting for large sitemaps.
+   * @default true
+   */
   enableSplitting?: boolean;
-  /** Custom hostname to prepend to relative URLs */
+  /**
+   * Custom hostname to prepend to relative URLs.
+   * @example "https://example.com"
+   */
   hostname?: string | undefined;
-  /** Plugin options (for defaults and exclusions) */
+  /**
+   * Plugin options (for defaults and exclusions).
+   */
   pluginOptions?: PluginOptions | ResolvedPluginOptions;
-  /** Whether to skip validation (not recommended) */
+  /**
+   * Whether to skip validation (not recommended).
+   * @default false
+   */
   skipValidation?: boolean;
 }
 
 /**
  * Result of sitemap generation.
+ *
+ * @interface GenerationResult
+ * @since 0.1.0
  */
 export interface GenerationResult {
-  /** Byte size of the generated XML */
+  /**
+   * Byte size of the generated XML (UTF-8 encoded).
+   */
   byteSize?: number;
-  /** Number of routes in the sitemap */
+  /**
+   * Number of routes included in the sitemap.
+   */
   routeCount?: number;
-  /** Split result if sitemap was split into multiple files */
+  /**
+   * Split result if sitemap was split into multiple files.
+   * Only present when splitting occurred.
+   */
   splitResult?: SplitResult;
-  /** Whether generation was successful */
+  /**
+   * Whether generation was successful.
+   */
   success: boolean;
-  /** Validation result */
+  /**
+   * Validation result with errors if any.
+   */
   validation: ValidationResult;
-  /** Warnings (non-fatal issues) */
+  /**
+   * Warnings (non-fatal issues like duplicates removed).
+   */
   warnings: string[];
-  /** Generated XML content (single sitemap, or first chunk if split) */
+  /**
+   * Generated XML content (single sitemap, or first chunk if split).
+   */
   xml?: string;
 }
 
 /**
  * Apply default values to routes.
+ * Sets default changefreq, priority, and lastmod values from plugin options
+ * if not already specified on individual routes.
+ *
+ * @param {Route[]} routes - Array of routes to process
+ * @param {PluginOptions | ResolvedPluginOptions} options - Plugin options containing defaults
+ * @returns {Route[]} Routes with defaults applied
+ *
+ * @example
+ * const routes = [{ url: 'https://example.com' }];
+ * const options = { priority: 0.8, changefreq: 'daily' };
+ * const withDefaults = applyDefaults(routes, options);
+ * // Result: [{ url: 'https://example.com', priority: 0.8, changefreq: 'daily' }]
+ *
+ * @since 0.1.0
  */
 export function applyDefaults(
   routes: Route[],
@@ -78,7 +128,21 @@ export function applyDefaults(
 
 /**
  * Deduplicate routes by URL.
- * First occurrence wins.
+ * First occurrence wins when duplicate URLs are found.
+ *
+ * @param {Route[]} routes - Array of routes that may contain duplicates
+ * @returns {Route[]} Deduplicated routes array
+ *
+ * @example
+ * const routes = [
+ *   { url: 'https://example.com' },
+ *   { url: 'https://example.com/about' },
+ *   { url: 'https://example.com' } // Duplicate
+ * ];
+ * const unique = deduplicateRoutes(routes);
+ * console.log(unique.length); // 2
+ *
+ * @since 0.1.0
  */
 export function deduplicateRoutes(routes: Route[]): Route[] {
   const seen = new Set<string>();
@@ -96,6 +160,22 @@ export function deduplicateRoutes(routes: Route[]): Route[] {
 
 /**
  * Filter out routes matching exclusion patterns.
+ * Supports both glob patterns and regular expressions.
+ *
+ * @param {Route[]} routes - Array of routes to filter
+ * @param {Array<RegExp | string>} patterns - Exclusion patterns (glob or RegExp)
+ * @returns {Route[]} Filtered routes array with excluded routes removed
+ *
+ * @example
+ * const routes = [
+ *   { url: 'https://example.com' },
+ *   { url: 'https://example.com/admin' },
+ *   { url: 'https://example.com/api/test' }
+ * ];
+ * const filtered = filterExcludedRoutes(routes, ['/admin', '/api/*']);
+ * console.log(filtered.length); // 1 (only homepage remains)
+ *
+ * @since 0.1.0
  */
 export function filterExcludedRoutes(routes: Route[], patterns: Array<RegExp | string>): Route[] {
   if (patterns.length === 0) {
@@ -107,6 +187,21 @@ export function filterExcludedRoutes(routes: Route[], patterns: Array<RegExp | s
 
 /**
  * Generate sitemaps for multiple route sets (named exports).
+ * Creates separate sitemaps for each named export from the sitemap file.
+ *
+ * @param {Array<{ name: string, routes: Route[] }>} routeSets - Array of named route sets
+ * @param {GenerationOptions} [options={}] - Generation options
+ * @returns {Promise<Map<string, GenerationResult>>} Map of sitemap name to generation result
+ *
+ * @example
+ * const routeSets = [
+ *   { name: 'pages', routes: [...] },
+ *   { name: 'blog', routes: [...] }
+ * ];
+ * const results = await generateMultipleSitemaps(routeSets, { hostname: 'https://example.com' });
+ * console.log(`Generated ${results.size} sitemaps`);
+ *
+ * @since 0.1.0
  */
 export async function generateMultipleSitemaps(
   routeSets: Array<{ name: string; routes: Route[] }>,
@@ -131,11 +226,23 @@ export async function generateMultipleSitemaps(
  * 3. Apply defaults (changefreq, priority, lastmod)
  * 4. Validate all routes
  * 5. Deduplicate by URL
- * 6. Generate XML
+ * 6. Generate XML (with optional splitting)
  *
- * @param routes Input routes
- * @param options Generation options
- * @returns Generation result with XML and validation info
+ * @param {Route[]} routes - Input routes to process
+ * @param {GenerationOptions} [options={}] - Generation options
+ * @returns {Promise<GenerationResult>} Generation result with XML, validation info, and warnings
+ *
+ * @example
+ * const routes = [
+ *   { url: 'https://example.com' },
+ *   { url: 'https://example.com/about' }
+ * ];
+ * const result = await generateSitemap(routes, { hostname: 'https://example.com' });
+ * if (result.success) {
+ *   console.log(result.xml);
+ * }
+ *
+ * @since 0.1.0
  */
 export async function generateSitemap(
   routes: Route[],
@@ -262,6 +369,24 @@ export async function generateSitemap(
 
 /**
  * Prepend hostname to a URL if it's relative.
+ * Converts relative URLs to absolute URLs by prepending the hostname.
+ * Leaves absolute URLs (http:// or https://) unchanged.
+ *
+ * @param {Route} route - Route with potentially relative URL
+ * @param {string} hostname - Hostname to prepend (e.g., 'https://example.com')
+ * @returns {Route} Route with absolute URL
+ *
+ * @example
+ * const route = { url: '/about' };
+ * const absolute = prependHostname(route, 'https://example.com');
+ * console.log(absolute.url); // 'https://example.com/about'
+ *
+ * @example
+ * const route = { url: 'https://example.com/contact' };
+ * const unchanged = prependHostname(route, 'https://example.com');
+ * console.log(unchanged.url); // 'https://example.com/contact' (unchanged)
+ *
+ * @since 0.1.0
  */
 export function prependHostname(route: Route, hostname: string): Route {
   if (route.url.startsWith("http://") || route.url.startsWith("https://")) {
@@ -280,6 +405,24 @@ export function prependHostname(route: Route, hostname: string): Route {
 
 /**
  * Validate routes against the schema.
+ * Checks each route for compliance with sitemap protocol requirements
+ * using Zod schema validation.
+ *
+ * @param {Route[]} routes - Array of routes to validate
+ * @returns {ValidationResult} Validation result with errors if any
+ *
+ * @example
+ * const routes = [
+ *   { url: 'https://example.com' },
+ *   { url: 'invalid-url' } // Will fail validation
+ * ];
+ * const result = validateRoutes(routes);
+ * if (!result.valid) {
+ *   console.error('Validation errors:', result.errors);
+ * }
+ *
+ * @see {@link https://www.sitemaps.org/protocol.html}
+ * @since 0.1.0
  */
 export function validateRoutes(routes: Route[]): ValidationResult {
   const errors: ValidationError[] = [];

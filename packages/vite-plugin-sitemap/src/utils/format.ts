@@ -1,12 +1,21 @@
 /**
  * Formatting utility functions.
+ * @module
  */
 
 /**
  * Format bytes as human-readable string.
+ * Converts a byte count to a human-readable string with appropriate unit suffix.
  *
- * @param bytes - Number of bytes
- * @returns Formatted string (e.g., "1.5 KB", "2.3 MB")
+ * @param {number} bytes - Number of bytes to format
+ * @returns {string} Formatted string with unit (e.g., "1.5 KB", "2.3 MB")
+ *
+ * @example
+ * formatBytes(512); // "512 B"
+ * formatBytes(1536); // "1.5 KB"
+ * formatBytes(2457600); // "2.3 MB"
+ *
+ * @since 0.3.0
  */
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

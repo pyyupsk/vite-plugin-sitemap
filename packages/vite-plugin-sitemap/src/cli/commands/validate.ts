@@ -1,6 +1,7 @@
 /**
  * CLI validate command.
  * Validates sitemap configuration without generating output.
+ * @module
  */
 
 import type { Command } from "commander";
@@ -19,6 +20,17 @@ import {
 
 /**
  * Register the validate command.
+ * Adds the 'validate' command to the CLI program for route validation.
+ *
+ * @param {Command} program - Commander program instance
+ *
+ * @example
+ * import { Command } from 'commander';
+ * const program = new Command();
+ * registerValidateCommand(program);
+ * program.parse();
+ *
+ * @since 0.1.0
  */
 export function registerValidateCommand(program: Command): void {
   program
@@ -105,6 +117,14 @@ export function registerValidateCommand(program: Command): void {
 
 /**
  * Prepend hostname to relative URLs in routes.
+ * Converts relative URLs to absolute URLs for validation.
+ *
+ * @param {Route[]} routes - Routes to process
+ * @param {string} hostname - Hostname to prepend
+ * @returns {Route[]} Routes with absolute URLs
+ *
+ * @since 0.1.0
+ * @private
  */
 function prependHostname(routes: Route[], hostname: string): Route[] {
   return routes.map((route) => ({

@@ -12,28 +12,59 @@
  * TZD formats:
  * - Z (UTC)
  * - +hh:mm or -hh:mm (offset from UTC)
+ *
+ * @module
  */
 
 /**
  * Regex pattern for W3C Datetime format.
  * Supports: YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDThh:mm:ss.sssZ, YYYY-MM-DDThh:mm:ss.sss±hh:mm
  * Also supports new Date().toISOString() output (e.g., 2024-01-15T10:30:00.000Z)
+ *
+ * @constant {RegExp}
+ * @see {@link https://www.w3.org/TR/NOTE-datetime}
+ * @since 0.1.0
  */
 export const W3C_DATETIME_REGEX =
   /^\d{4}(?:-\d{2})?(?:-\d{2})?(?:T\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
 
 /**
  * Date validation result.
+ *
+ * @interface DateValidationResult
+ * @since 0.1.0
  */
 export interface DateValidationResult {
+  /**
+   * Error message if validation failed.
+   */
   error?: string;
+  /**
+   * Example valid date formats.
+   */
   examples?: string[];
+  /**
+   * Suggestion for fixing the error.
+   */
   suggestion?: string;
+  /**
+   * Whether the date is valid.
+   */
   valid: boolean;
 }
 
 /**
  * Get current date in W3C Datetime format (YYYY-MM-DD).
+ * Returns today's date in the standard sitemap date format.
+ *
+ * @returns {string} Current date in YYYY-MM-DD format
+ *
+ * @example
+ * const today = getCurrentW3CDate();
+ * console.log(today); // '2024-01-15'
+ *
+ * @see {@link https://www.w3.org/TR/NOTE-datetime}
+ * @since 0.1.0
  */
 export function getCurrentW3CDate(): string {
   return new Date().toISOString().split("T")[0] ?? "";
@@ -41,6 +72,16 @@ export function getCurrentW3CDate(): string {
 
 /**
  * Check if a date is in the future (warning, not error).
+ * Used to warn about potentially incorrect lastmod dates.
+ *
+ * @param {string} date - Date string to check
+ * @returns {boolean} True if the date is in the future
+ *
+ * @example
+ * isFutureDate('2099-12-31'); // true
+ * isFutureDate('2020-01-01'); // false
+ *
+ * @since 0.1.0
  */
 export function isFutureDate(date: string): boolean {
   try {
@@ -53,7 +94,19 @@ export function isFutureDate(date: string): boolean {
 
 /**
  * Validate a date string for W3C Datetime compliance.
- * @returns true if valid, false otherwise
+ * Checks format and validates that date values are in valid ranges.
+ *
+ * @param {string} date - Date string to validate
+ * @returns {boolean} True if valid W3C Datetime format, false otherwise
+ *
+ * @example
+ * isValidW3CDatetime('2024-01-15'); // true
+ * isValidW3CDatetime('2024-01-15T10:30:00Z'); // true
+ * isValidW3CDatetime('invalid'); // false
+ * isValidW3CDatetime('2024-13-01'); // false (invalid month)
+ *
+ * @see {@link https://www.w3.org/TR/NOTE-datetime}
+ * @since 0.1.0
  */
 export function isValidW3CDatetime(date: string): boolean {
   if (!date || typeof date !== "string") {
@@ -91,6 +144,22 @@ export function isValidW3CDatetime(date: string): boolean {
 
 /**
  * Validate date and return detailed result.
+ * Provides comprehensive validation with helpful error messages and suggestions.
+ *
+ * @param {string} date - Date string to validate
+ * @returns {DateValidationResult} Validation result with error details and suggestions
+ *
+ * @example
+ * const result = validateW3CDatetime('2024-01-15');
+ * if (result.valid) {
+ *   console.log('Valid date!');
+ * } else {
+ *   console.error(result.error);
+ *   console.log('Suggestion:', result.suggestion);
+ * }
+ *
+ * @see {@link https://www.w3.org/TR/NOTE-datetime}
+ * @since 0.1.0
  */
 export function validateW3CDatetime(date: string): DateValidationResult {
   if (!date || typeof date !== "string") {

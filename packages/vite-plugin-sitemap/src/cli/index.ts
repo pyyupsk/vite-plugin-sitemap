@@ -2,7 +2,8 @@
 
 /**
  * CLI entry point for vite-sitemap.
- * Provides commands for validating and previewing sitemaps.
+ * Provides commands for validating, previewing, and generating sitemaps.
+ * @module
  */
 
 import { Command } from "commander";
@@ -15,6 +16,16 @@ import { colors } from "./utils";
 
 /**
  * Create and configure the CLI program.
+ * Sets up the main Commander program with global options and all subcommands.
+ *
+ * @returns {Command} Configured Commander program instance
+ *
+ * @example
+ * const program = createProgram();
+ * await program.parseAsync(process.argv);
+ *
+ * @since 0.1.0
+ * @private
  */
 function createProgram(): Command {
   const program = new Command();
@@ -39,6 +50,17 @@ function createProgram(): Command {
 
 /**
  * Main CLI entry point.
+ * Initializes the CLI program and handles top-level errors.
+ *
+ * @returns {Promise<void>} Resolves when CLI execution completes
+ * @throws {Error} Exits process with code 1 on error
+ *
+ * @example
+ * // Called automatically when script is executed
+ * main();
+ *
+ * @since 0.1.0
+ * @private
  */
 async function main(): Promise<void> {
   const program = createProgram();

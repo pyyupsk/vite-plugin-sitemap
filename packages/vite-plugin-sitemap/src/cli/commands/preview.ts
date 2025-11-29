@@ -1,6 +1,7 @@
 /**
  * CLI preview command.
  * Preview generated sitemap XML without writing files.
+ * @module
  */
 
 import type { Command } from "commander";
@@ -11,6 +12,17 @@ import { colors, formatBytes, formatDuration, loadRoutesFromSitemap, logger } fr
 
 /**
  * Register the preview command.
+ * Adds the 'preview' command to the CLI program for previewing sitemap XML.
+ *
+ * @param {Command} program - Commander program instance
+ *
+ * @example
+ * import { Command } from 'commander';
+ * const program = new Command();
+ * registerPreviewCommand(program);
+ * program.parse();
+ *
+ * @since 0.1.0
  */
 export function registerPreviewCommand(program: Command): void {
   program

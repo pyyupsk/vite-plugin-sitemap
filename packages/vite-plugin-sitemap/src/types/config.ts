@@ -1,7 +1,15 @@
+/**
+ * Plugin configuration type definitions.
+ * @module
+ */
+
 import type { ChangeFrequency, Route } from "./sitemap";
 
 /**
  * Plugin configuration options.
+ *
+ * @interface PluginOptions
+ * @since 0.1.0
  */
 export interface PluginOptions {
   /**
@@ -69,35 +77,85 @@ export interface PluginOptions {
 
 /**
  * Resolved plugin options with defaults applied.
+ *
+ * @interface ResolvedPluginOptions
+ * @since 0.1.0
  */
 export interface ResolvedPluginOptions {
+  /**
+   * Default change frequency for all routes.
+   */
   changefreq: ChangeFrequency | undefined;
+  /**
+   * URL patterns to exclude from the sitemap.
+   */
   exclude: Array<RegExp | string>;
+  /**
+   * Name of the output sitemap file.
+   */
   filename: string;
+  /**
+   * Whether to generate or update robots.txt.
+   */
   generateRobotsTxt: boolean;
+  /**
+   * Base URL of the site.
+   */
   hostname: string | undefined;
+  /**
+   * Default last modified date for all routes.
+   */
   lastmod: string | undefined;
+  /**
+   * Output directory for generated files.
+   */
   outDir: string;
+  /**
+   * Default priority for all routes.
+   */
   priority: number | undefined;
+  /**
+   * Custom XML serialization function.
+   */
   serialize: undefined | XmlSerializer;
+  /**
+   * Path to the sitemap definition file.
+   */
   sitemapFile: string | undefined;
+  /**
+   * Transform function applied to each route.
+   */
   transform: RouteTransformer | undefined;
 }
 
 /**
  * Function to transform routes before XML generation.
  * Return null to exclude the route from the sitemap.
+ *
+ * @callback RouteTransformer
+ * @param {Route} route - Route to transform
+ * @returns {Route | null | Promise<Route | null>} Transformed route, null to exclude, or promise
+ * @since 0.1.0
  */
 export type RouteTransformer = (route: Route) => null | Promise<null | Route> | Route;
 
 /**
  * Custom XML serializer function.
  * Receives all routes and returns the complete XML string.
+ *
+ * @callback XmlSerializer
+ * @param {Route[]} routes - Array of routes to serialize
+ * @returns {string | Promise<string>} Complete XML string or promise
+ * @since 0.1.0
  */
 export type XmlSerializer = (routes: Route[]) => Promise<string> | string;
 
 /**
  * Default plugin options.
+ * Used when user doesn't provide specific configuration values.
+ *
+ * @constant
+ * @since 0.1.0
  */
 export const defaultOptions: Omit<ResolvedPluginOptions, "outDir" | "sitemapFile"> & {
   sitemapFile: string | undefined;
@@ -116,6 +174,19 @@ export const defaultOptions: Omit<ResolvedPluginOptions, "outDir" | "sitemapFile
 
 /**
  * Resolve plugin options with defaults.
+ * Merges user-provided options with default values to create a fully resolved configuration.
+ *
+ * @param {PluginOptions} options - User-provided plugin options
+ * @param {string} outDir - Default output directory (typically from Vite's build.outDir)
+ * @returns {ResolvedPluginOptions} Fully resolved options with all defaults applied
+ *
+ * @example
+ * const userOptions = { hostname: 'https://example.com', generateRobotsTxt: true };
+ * const resolved = resolveOptions(userOptions, 'dist');
+ * console.log(resolved.filename); // 'sitemap.xml' (default)
+ * console.log(resolved.hostname); // 'https://example.com'
+ *
+ * @since 0.1.0
  */
 export function resolveOptions(options: PluginOptions, outDir: string): ResolvedPluginOptions {
   return {

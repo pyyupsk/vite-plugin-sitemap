@@ -1,6 +1,7 @@
 /**
  * Vite plugin for sitemap generation.
  * Generates sitemap.xml during build using the closeBundle hook.
+ * @module
  */
 
 import type { ResolvedConfig, ViteDevServer } from "vite";
@@ -22,6 +23,10 @@ import { formatResultForConsole } from "./validation/errors";
 
 /**
  * Plugin name for identification.
+ * Used for Vite plugin registry and debugging.
+ *
+ * @constant {string}
+ * @since 0.1.0
  */
 export const PLUGIN_NAME = "vite-plugin-sitemap";
 
@@ -29,19 +34,47 @@ export const PLUGIN_NAME = "vite-plugin-sitemap";
  * Symbol key for storing plugin options.
  * Uses Symbol.for() to ensure the same symbol is used across module boundaries
  * (e.g., when CLI loads vite.config.ts in a separate context).
+ *
+ * @constant {symbol}
+ * @since 0.1.0
+ * @private
  */
 const PLUGIN_OPTIONS_KEY = Symbol.for("vite-plugin-sitemap:options");
 
 /**
  * Vite plugin return type without exposing Vite's internal types.
  * This prevents type conflicts when users have different Vite versions.
+ *
+ * @interface SitemapPlugin
+ * @since 0.3.0
  */
 export interface SitemapPlugin {
+  /**
+   * Called after the bundle is fully generated.
+   * Generates sitemap files at this point.
+   *
+   * @since 0.1.0
+   */
   closeBundle: () => Promise<void>;
+  /**
+   * Called when Vite config is resolved.
+   * Stores resolved config for later use.
+   *
+   * @since 0.1.0
+   */
   // eslint-disable-next-line no-unused-vars
   configResolved: (resolvedConfig: unknown) => void;
+  /**
+   * Called to configure the dev server.
+   * Sets up middleware for serving sitemaps in dev mode.
+   *
+   * @since 0.2.0
+   */
   // eslint-disable-next-line no-unused-vars
   configureServer: (server: unknown) => void;
+  /**
+   * Plugin name for identification.
+   */
   name: string;
 }
 
@@ -49,8 +82,15 @@ export interface SitemapPlugin {
  * Get plugin options from a plugin instance.
  * Used by CLI to read config from vite.config.ts.
  *
- * @param plugin Plugin instance
- * @returns Plugin options or undefined
+ * @param {unknown} plugin - Plugin instance
+ * @returns {PluginOptions | undefined} Plugin options or undefined
+ *
+ * @example
+ * const config = await loadConfigFromFile(...);
+ * const sitemapPlugin = config.plugins.find(p => p.name === 'vite-plugin-sitemap');
+ * const options = getPluginOptions(sitemapPlugin);
+ *
+ * @since 0.1.0
  */
 export function getPluginOptions(plugin: unknown): PluginOptions | undefined {
   if (plugin && typeof plugin === "object" && PLUGIN_OPTIONS_KEY in plugin) {
@@ -61,9 +101,26 @@ export function getPluginOptions(plugin: unknown): PluginOptions | undefined {
 
 /**
  * Create the Vite sitemap plugin.
+ * Main plugin factory function that integrates sitemap generation into Vite builds.
  *
- * @param userOptions Plugin options
- * @returns Vite plugin
+ * @param {PluginOptions} [userOptions={}] - Plugin configuration options
+ * @returns {SitemapPlugin} Configured Vite plugin instance
+ *
+ * @example
+ * // vite.config.ts
+ * import { defineConfig } from 'vite';
+ * import sitemap from '@pyyupsk/vite-plugin-sitemap';
+ *
+ * export default defineConfig({
+ *   plugins: [
+ *     sitemap({
+ *       hostname: 'https://example.com',
+ *       generateRobotsTxt: true
+ *     })
+ *   ]
+ * });
+ *
+ * @since 0.1.0
  */
 export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
   let config: ResolvedConfig;
@@ -366,5 +423,9 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
 
 /**
  * Default export for convenience.
+ * Allows importing as `import sitemap from '@pyyupsk/vite-plugin-sitemap'`.
+ *
+ * @see {@link sitemapPlugin}
+ * @since 0.1.0
  */
 export default sitemapPlugin;

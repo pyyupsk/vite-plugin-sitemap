@@ -1,28 +1,60 @@
 /**
  * URL validation utilities for sitemap protocol compliance.
  * URLs must be absolute and use http(s) protocol per RFC 3986.
+ * @module
  */
 
 import picomatch from "picomatch";
 
 /**
  * Maximum URL length per sitemap protocol.
+ *
+ * @constant {number}
+ * @see {@link https://www.sitemaps.org/protocol.html}
+ * @since 0.1.0
  */
 export const MAX_URL_LENGTH = 2048;
 
 /**
  * URL validation result.
+ *
+ * @interface UrlValidationResult
+ * @since 0.1.0
  */
 export interface UrlValidationResult {
+  /**
+   * Error message if validation failed.
+   */
   error?: string;
+  /**
+   * Normalized URL after parsing.
+   */
   normalizedUrl?: string;
+  /**
+   * Suggestion for fixing the error.
+   */
   suggestion?: string;
+  /**
+   * Whether the URL is valid.
+   */
   valid: boolean;
 }
 
 /**
  * Validate a URL for sitemap compliance.
- * @returns true if valid, false otherwise
+ * Checks that URL is absolute, uses http(s) protocol, and meets length requirements.
+ *
+ * @param {string} url - URL to validate
+ * @returns {boolean} True if valid for sitemap, false otherwise
+ *
+ * @example
+ * isValidUrl('https://example.com'); // true
+ * isValidUrl('http://example.com/page'); // true
+ * isValidUrl('/relative/path'); // false
+ * isValidUrl('ftp://example.com'); // false
+ *
+ * @see {@link https://www.sitemaps.org/protocol.html#escaping}
+ * @since 0.1.0
  */
 export function isValidUrl(url: string): boolean {
   if (!url || typeof url !== "string") {
@@ -55,7 +87,18 @@ export function isValidUrl(url: string): boolean {
 
 /**
  * Check if a URL matches any exclusion pattern.
- * Supports glob patterns (*, **, ?) and RegExp.
+ * Supports glob patterns (*, **, ?) and RegExp for flexible URL filtering.
+ *
+ * @param {string} url - URL to test against patterns
+ * @param {Array<RegExp | string>} patterns - Array of glob patterns or RegExp
+ * @returns {boolean} True if URL matches any pattern, false otherwise
+ *
+ * @example
+ * matchesExcludePattern('https://example.com/admin', ['/admin']); // true
+ * matchesExcludePattern('https://example.com/api/users', ['/api/*']); // true
+ * matchesExcludePattern('https://example.com/page', [/\/admin/]); // false
+ *
+ * @since 0.1.0
  */
 export function matchesExcludePattern(url: string, patterns: Array<RegExp | string>): boolean {
   for (const pattern of patterns) {
@@ -74,6 +117,22 @@ export function matchesExcludePattern(url: string, patterns: Array<RegExp | stri
 
 /**
  * Validate URL and return detailed result.
+ * Provides comprehensive validation with helpful error messages and suggestions.
+ *
+ * @param {string} url - URL to validate
+ * @returns {UrlValidationResult} Validation result with error details and normalized URL
+ *
+ * @example
+ * const result = validateUrl('https://example.com');
+ * if (result.valid) {
+ *   console.log('Normalized URL:', result.normalizedUrl);
+ * } else {
+ *   console.error(result.error);
+ *   console.log('Suggestion:', result.suggestion);
+ * }
+ *
+ * @see {@link https://www.sitemaps.org/protocol.html#escaping}
+ * @since 0.1.0
  */
 export function validateUrl(url: string): UrlValidationResult {
   if (!url || typeof url !== "string") {

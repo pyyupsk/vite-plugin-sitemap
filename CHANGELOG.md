@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extract `formatBytes` to shared utility module (DRY refactor)
 - Add explicit guard for empty routes array in `splitRoutes()`
 - Add `SitemapPlugin` interface to prevent Vite types leaking into public API
+- Add comprehensive JSDoc documentation with `@since` version tags based on git history
 
 ## [0.2.0] - 2025-11-29
 

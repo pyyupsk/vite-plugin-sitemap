@@ -1,6 +1,7 @@
 /**
  * robots.txt generation and management utilities.
  * Handles reading, updating, and creating robots.txt files with Sitemap directives.
+ * @module
  */
 
 import { existsSync } from "node:fs";
@@ -23,11 +24,18 @@ export interface RobotsTxtResult {
 
 /**
  * Append a Sitemap directive to robots.txt content.
- * Ensures proper formatting with newline at end.
+ * Ensures proper formatting with newlines and preserves existing content.
  *
- * @param content Current robots.txt content (may be empty)
- * @param sitemapUrl URL of the sitemap to add
- * @returns Updated robots.txt content
+ * @param {string} content - Current robots.txt content (may be empty)
+ * @param {string} sitemapUrl - URL of the sitemap to add
+ * @returns {string} Updated robots.txt content with Sitemap directive appended
+ *
+ * @example
+ * const content = 'User-agent: *\nAllow: /\n';
+ * const updated = appendSitemapDirective(content, 'https://example.com/sitemap.xml');
+ * // Result: 'User-agent: *\nAllow: /\nSitemap: https://example.com/sitemap.xml\n'
+ *
+ * @since 0.1.0
  */
 export function appendSitemapDirective(content: string, sitemapUrl: string): string {
   const directive = `Sitemap: ${sitemapUrl}`;
@@ -45,10 +53,20 @@ export function appendSitemapDirective(content: string, sitemapUrl: string): str
 
 /**
  * Build the absolute sitemap URL from hostname and filename.
+ * Handles trailing slashes and leading slashes to produce a valid URL.
  *
- * @param hostname Base hostname (e.g., 'https://example.com')
- * @param filename Sitemap filename (e.g., 'sitemap.xml' or 'sitemap-index.xml')
- * @returns Absolute sitemap URL
+ * @param {string} hostname - Base hostname (e.g., 'https://example.com')
+ * @param {string} filename - Sitemap filename (e.g., 'sitemap.xml' or 'sitemap-index.xml')
+ * @returns {string} Absolute sitemap URL
+ *
+ * @example
+ * buildSitemapUrl('https://example.com', 'sitemap.xml');
+ * // Returns: 'https://example.com/sitemap.xml'
+ *
+ * buildSitemapUrl('https://example.com/', '/sitemap-index.xml');
+ * // Returns: 'https://example.com/sitemap-index.xml'
+ *
+ * @since 0.1.0
  */
 export function buildSitemapUrl(hostname: string, filename: string): string {
   // Ensure hostname doesn't end with slash
@@ -62,10 +80,20 @@ export function buildSitemapUrl(hostname: string, filename: string): string {
 
 /**
  * Create a minimal robots.txt with Sitemap directive.
- * Includes a default User-agent: * rule.
+ * Includes a default User-agent: * rule allowing all crawlers.
  *
- * @param sitemapUrl URL of the sitemap
- * @returns Complete robots.txt content
+ * @param {string} sitemapUrl - Absolute URL of the sitemap
+ * @returns {string} Complete robots.txt content with User-agent rule and Sitemap directive
+ *
+ * @example
+ * const content = createMinimalRobotsTxt('https://example.com/sitemap.xml');
+ * // Returns:
+ * // User-agent: *
+ * // Allow: /
+ * //
+ * // Sitemap: https://example.com/sitemap.xml
+ *
+ * @since 0.1.0
  */
 export function createMinimalRobotsTxt(sitemapUrl: string): string {
   return `User-agent: *
@@ -77,9 +105,17 @@ Sitemap: ${sitemapUrl}
 
 /**
  * Extract all Sitemap URLs from robots.txt content.
+ * Parses the content line by line to find all Sitemap directives.
  *
- * @param content robots.txt content
- * @returns Array of sitemap URLs found
+ * @param {string} content - robots.txt content to parse
+ * @returns {string[]} Array of sitemap URLs found in the content
+ *
+ * @example
+ * const content = 'User-agent: *\nSitemap: https://example.com/sitemap.xml\n';
+ * const urls = extractSitemapUrls(content);
+ * // Returns: ['https://example.com/sitemap.xml']
+ *
+ * @since 0.1.0
  */
 export function extractSitemapUrls(content: string): string[] {
   const urls: string[] = [];
@@ -98,10 +134,18 @@ export function extractSitemapUrls(content: string): string[] {
 
 /**
  * Check if robots.txt contains a Sitemap directive for the given URL.
+ * Performs case-insensitive matching per the robots.txt specification.
  *
- * @param content Current robots.txt content
- * @param sitemapUrl URL of the sitemap to check for
- * @returns true if the sitemap URL is already present
+ * @param {string} content - Current robots.txt content
+ * @param {string} sitemapUrl - URL of the sitemap to check for
+ * @returns {boolean} True if the sitemap URL is already present
+ *
+ * @example
+ * const content = 'Sitemap: https://example.com/sitemap.xml\n';
+ * hasSitemapDirective(content, 'https://example.com/sitemap.xml'); // true
+ * hasSitemapDirective(content, 'https://example.com/other.xml'); // false
+ *
+ * @since 0.1.0
  */
 export function hasSitemapDirective(content: string, sitemapUrl: string): boolean {
   // Normalize the URL for comparison (trim whitespace)
@@ -128,11 +172,21 @@ export function hasSitemapDirective(content: string, sitemapUrl: string): boolea
 
 /**
  * Update or create robots.txt with a Sitemap directive.
+ * Reads existing robots.txt, checks for existing directive, and updates or creates as needed.
  *
- * @param outDir Output directory where robots.txt should be written
- * @param sitemapUrl Absolute URL of the sitemap
- * @param options Optional configuration
- * @returns Result of the operation
+ * @param {string} outDir - Output directory where robots.txt should be written
+ * @param {string} sitemapUrl - Absolute URL of the sitemap
+ * @param {Object} [options={}] - Optional configuration
+ * @param {boolean} [options.createIfMissing=true] - If true, create a minimal robots.txt if one doesn't exist
+ * @returns {Promise<RobotsTxtResult>} Result of the operation with action taken
+ *
+ * @example
+ * const result = await updateRobotsTxt('/dist', 'https://example.com/sitemap.xml');
+ * if (result.success) {
+ *   console.log(`Action: ${result.action}`); // 'created', 'updated', or 'unchanged'
+ * }
+ *
+ * @since 0.1.0
  */
 export async function updateRobotsTxt(
   outDir: string,
