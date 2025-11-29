@@ -3,11 +3,14 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "cp ../../llms.txt ../../llms-full.txt docs/public/ && vitepress build docs",
+    "build": "vitepress build docs",
     "dev": "vitepress dev docs",
+    "postbuild": "vite-sitemap generate -o docs/.vitepress/dist -h https://pyyupsk.github.io/vite-plugin-sitemap --robots-txt",
+    "prebuild": "cp ../../llms.txt ../../llms-full.txt docs/public/",
     "preview": "vitepress preview docs"
   },
   "devDependencies": {
+    "@pyyupsk/vite-plugin-sitemap": "workspace:*",
     "vitepress": "^1.6.4"
   }
 }

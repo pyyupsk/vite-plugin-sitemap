@@ -38,6 +38,8 @@ features:
   - icon: 🤖
     title: LLM-Friendly Docs
     details: Machine-readable documentation via llms.txt for AI assistants and code generation tools.
+    link: /llms.txt
+    linkText: View llms.txt
 ---
 
 <style>

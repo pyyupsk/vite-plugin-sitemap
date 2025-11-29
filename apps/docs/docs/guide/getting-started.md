@@ -141,3 +141,10 @@ When `generateRobotsTxt` is enabled, `robots.txt` is also served during developm
 - Explore [Configuration](/guide/configuration) options
 - Add [Google Extensions](/guide/extensions/images) for images, videos, and news
 - Use the [CLI](/guide/cli) for validation and preview
+
+## LLM-Friendly Documentation
+
+For AI assistants and code generation tools, we provide machine-readable documentation:
+
+- [llms.txt](/llms.txt) - Quick reference with links to documentation
+- [llms-full.txt](/llms-full.txt) - Complete documentation in a single file

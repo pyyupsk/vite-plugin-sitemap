@@ -17,6 +17,7 @@
     "apps/docs": {
       "name": "@repo/docs",
       "devDependencies": {
+        "@pyyupsk/vite-plugin-sitemap": "workspace:*",
         "vitepress": "^1.6.4",
       },
     },
@@ -40,9 +41,9 @@
     },
     "packages/vite-plugin-sitemap": {
       "name": "@pyyupsk/vite-plugin-sitemap",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "bin": {
-        "vite-sitemap": "./dist/cli/index.mjs",
+        "vite-sitemap": "dist/cli/index.mjs",
       },
       "dependencies": {
         "commander": "^14.0.2",

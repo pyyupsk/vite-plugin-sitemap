@@ -24,6 +24,13 @@ export default defineConfig({
       { text: "Config", link: "/config/" },
       { text: "API", link: "/api/" },
       {
+        text: "LLMs",
+        items: [
+          { text: "llms.txt", link: "/llms.txt" },
+          { text: "llms-full.txt", link: "/llms-full.txt" },
+        ],
+      },
+      {
         text: "v0.2.0",
         items: [
           {
