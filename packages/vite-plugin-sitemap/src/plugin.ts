@@ -226,7 +226,13 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
               // Write sitemap index
               const indexFilename = getSitemapIndexFilename(baseFilename);
               const indexPath = join(outputDir, indexFilename);
-              await writeFile(indexPath, result.splitResult.indexXml!, "utf-8");
+              if (!result.splitResult.indexXml) {
+                logger.error(
+                  `${pc.red("✗")} Index XML was not generated for split sitemap '${name}'`,
+                );
+                continue;
+              }
+              await writeFile(indexPath, result.splitResult.indexXml, "utf-8");
               totalFiles++;
 
               logger.info(

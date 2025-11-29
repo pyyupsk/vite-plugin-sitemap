@@ -184,7 +184,11 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
         // Write sitemap index
         const indexFilename = getSitemapIndexFilename(baseFilename);
         const indexPath = join(outputDir, indexFilename);
-        await writeFile(indexPath, genResult.splitResult.indexXml!, "utf-8");
+        if (!genResult.splitResult.indexXml) {
+          logger.error(`Index XML was not generated for split sitemap '${name}'`);
+          continue;
+        }
+        await writeFile(indexPath, genResult.splitResult.indexXml, "utf-8");
         totalFiles++;
         generatedFiles.push(indexFilename);
 
