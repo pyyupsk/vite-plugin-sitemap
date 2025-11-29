@@ -46,7 +46,7 @@ const PLUGIN_OPTIONS_KEY = Symbol.for("vite-plugin-sitemap:options");
  * This prevents type conflicts when users have different Vite versions.
  *
  * @interface SitemapPlugin
- * @since 0.3.0
+ * @since 0.2.1
  */
 export interface SitemapPlugin {
   /**

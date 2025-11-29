@@ -15,7 +15,7 @@
  * formatBytes(1536); // "1.5 KB"
  * formatBytes(2457600); // "2.3 MB"
  *
- * @since 0.3.0
+ * @since 0.2.1
  */
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
