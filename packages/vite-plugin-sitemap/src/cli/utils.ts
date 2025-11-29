@@ -13,6 +13,7 @@ import { createServer, loadConfigFromFile, type ViteDevServer } from "vite";
 export const colors = picocolors;
 
 import type { PluginOptions } from "../types/config";
+export { formatBytes } from "../utils/format";
 
 import { discoverSitemapFile, formatNotFoundError } from "../core/discovery";
 import { loadSitemapFile, type ResolvedRoutes, resolveRoutes } from "../core/loader";
@@ -53,15 +54,6 @@ export function findViteConfig(root: string): null | string {
   }
 
   return null;
-}
-
-/**
- * Format bytes as human-readable string.
- */
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /**

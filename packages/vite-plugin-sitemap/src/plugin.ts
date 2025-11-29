@@ -17,6 +17,7 @@ import { getSitemapFilename, loadSitemapFile, resolveRoutes } from "./core/loade
 import { buildSitemapUrl, updateRobotsTxt } from "./core/robots";
 import { getSitemapIndexFilename } from "./core/splitter";
 import { resolveOptions } from "./types/config";
+import { formatBytes } from "./utils/format";
 import { formatResultForConsole } from "./validation/errors";
 
 /**
@@ -348,15 +349,6 @@ export function sitemapPlugin(userOptions: PluginOptions = {}) {
   };
 
   return plugin;
-}
-
-/**
- * Format bytes as human-readable string.
- */
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /**
