@@ -26,8 +26,8 @@ export default defineConfig({
       {
         text: "LLMs",
         items: [
-          { text: "llms.txt", link: "/llms.txt" },
-          { text: "llms-full.txt", link: "/llms-full.txt" },
+          { text: "llms.txt", link: "/vite-plugin-sitemap/llms.txt" },
+          { text: "llms-full.txt", link: "/vite-plugin-sitemap/llms-full.txt" },
         ],
       },
       {

@@ -38,7 +38,7 @@ features:
   - icon: 🤖
     title: LLM-Friendly Docs
     details: Machine-readable documentation via llms.txt for AI assistants and code generation tools.
-    link: /llms.txt
+    link: /vite-plugin-sitemap/llms.txt
     linkText: View llms.txt
 ---
 
