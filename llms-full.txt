@@ -1,0 +1,4150 @@
+-----
+# Why This Plugin
+
+There are several sitemap plugins for Vite. Here's why `@pyyupsk/vite-plugin-sitemap` stands out.
+
+## Key Differentiators
+
+### Full Google Extensions Support
+
+Most sitemap plugins only support basic URL entries. This plugin provides first-class support for:
+
+- **Image sitemaps** - Help Google discover images on your pages
+- **Video sitemaps** - Provide rich metadata for video content
+- **News sitemaps** - Optimize for Google News indexing
+- **Internationalization** - hreflang annotations for multi-language sites
+
+### Type-Safe Configuration
+
+Built with TypeScript from the ground up:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+// Full IntelliSense and compile-time checking
+const routes: Route[] = [
+  {
+    url: "/video",
+    videos: [
+      {
+        title: "Tutorial",
+        description: "Learn how to use our product",
+        thumbnail_loc: "https://example.com/thumb.jpg",
+        // TypeScript will catch missing required fields
+      },
+    ],
+  },
+];
+```
+
+### Runtime Validation
+
+Zod-powered validation catches errors before they reach production:
+
+```bash
+$ vite-sitemap validate
+
+✗ Validation failed:
+  Route "/blog/post-1":
+    - lastmod: Invalid W3C Datetime format
+      Received: "2025-13-45"
+      Suggestion: Use ISO 8601 format like "2025-01-15" or "2025-01-15T10:30:00Z"
+```
+
+### Async Route Generation
+
+Fetch routes from any data source at build time:
+
+```typescript
+export default async function getRoutes() {
+  const posts = await fetch("https://api.example.com/posts").then((r) => r.json());
+
+  return posts.map((post) => ({
+    url: `/blog/${post.slug}`,
+    lastmod: post.updatedAt,
+  }));
+}
+```
+
+### Automatic Sitemap Splitting
+
+Large sites with 50,000+ URLs are automatically split into multiple sitemaps with an index file, following Google's guidelines.
+
+### Powerful CLI
+
+Validate, preview, and generate sitemaps without running a full Vite build:
+
+```bash
+# Validate configuration
+vite-sitemap validate
+
+# Preview generated XML
+vite-sitemap preview
+
+# Generate without full build
+vite-sitemap generate --hostname https://example.com
+```
+
+### Dev Mode Support
+
+Preview your sitemap during development without running a build. The plugin serves `/sitemap.xml` and `/robots.txt` dynamically:
+
+```bash
+# Start dev server
+npm run dev
+
+# Access in browser
+http://localhost:5173/sitemap.xml
+http://localhost:5173/robots.txt
+```
+
+This allows you to verify your sitemap configuration in real-time as you develop.
+
+## Comparison
+
+| Feature              | vite-plugin-sitemap | Others  |
+| -------------------- | ------------------- | ------- |
+| TypeScript           | Full support        | Partial |
+| Google Image Sitemap | Yes                 | No      |
+| Google Video Sitemap | Yes                 | No      |
+| Google News Sitemap  | Yes                 | No      |
+| hreflang Support     | Yes                 | Partial |
+| Runtime Validation   | Zod-powered         | None    |
+| Async Routes         | Yes                 | Limited |
+| Auto-splitting       | Yes                 | No      |
+| CLI Tools            | Full suite          | None    |
+| Dev Mode Support     | Yes                 | No      |
+| Zero Runtime         | Yes                 | Yes     |
+
+## When to Use This Plugin
+
+This plugin is ideal if you:
+
+- Need Google extensions (images, videos, news)
+- Want comprehensive type safety
+- Have large sites requiring sitemap splitting
+- Need to validate sitemaps in CI/CD
+- Want to fetch routes from APIs at build time
+- Value detailed error messages and suggestions
+
+## When to Consider Alternatives
+
+You might prefer a simpler solution if:
+
+- You only need basic sitemaps with no extensions
+- You're using a framework with built-in sitemap support (Next.js, Nuxt, etc.)
+- You prefer minimal configuration over flexibility
+
+-----
+# Getting Started
+
+This guide will help you set up `@pyyupsk/vite-plugin-sitemap` in your Vite project.
+
+## Prerequisites
+
+- Node.js 20 or higher
+- Vite 7.x
+
+## Installation
+
+```bash
+# npm
+npm install @pyyupsk/vite-plugin-sitemap
+
+# pnpm
+pnpm add @pyyupsk/vite-plugin-sitemap
+
+# yarn
+yarn add @pyyupsk/vite-plugin-sitemap
+
+# bun
+bun add @pyyupsk/vite-plugin-sitemap
+```
+
+## Basic Setup
+
+### 1. Configure the Plugin
+
+Add the plugin to your `vite.config.ts`:
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+    }),
+  ],
+});
+```
+
+### 2. Create a Sitemap File
+
+Create a `src/sitemap.ts` file to define your routes:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  { url: "/", priority: 1.0, changefreq: "daily" },
+  { url: "/about", priority: 0.8 },
+  { url: "/blog", priority: 0.9, changefreq: "weekly" },
+  { url: "/contact", priority: 0.5 },
+] satisfies Route[];
+```
+
+### 3. Build Your Project
+
+Run your Vite build:
+
+```bash
+npm run build
+```
+
+The plugin will generate `sitemap.xml` in your output directory (`dist/` by default).
+
+## Generated Output
+
+After building, you'll find a `sitemap.xml` file like this:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://example.com/about</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://example.com/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://example.com/contact</loc>
+    <priority>0.5</priority>
+  </url>
+</urlset>
+```
+
+## Adding robots.txt
+
+Enable automatic `robots.txt` generation:
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+  generateRobotsTxt: true,
+});
+```
+
+This creates or updates `robots.txt` with a Sitemap directive:
+
+```txt
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+## Next Steps
+
+- Learn about Route Definition options
+- Explore Configuration options
+- Add Google Extensions for images, videos, and news
+- Use the CLI for validation and preview
+
+-----
+# Configuration
+
+Configure the plugin in your `vite.config.ts` file.
+
+## Basic Configuration
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+    }),
+  ],
+});
+```
+
+## All Options
+
+```typescript
+sitemap({
+  // Base URL (required for relative URLs)
+  hostname: "https://example.com",
+
+  // Path to sitemap definition file
+  sitemapFile: "src/sitemap",
+
+  // Output directory (defaults to Vite's build.outDir)
+  outDir: "dist",
+
+  // Output filename
+  filename: "sitemap.xml",
+
+  // Default values for all routes
+  changefreq: "weekly",
+  priority: 0.5,
+  lastmod: "2025-01-15",
+
+  // URL patterns to exclude
+  exclude: ["/admin/*", /^\/private/],
+
+  // Transform routes before generation
+  transform: (route) => route,
+
+  // Custom XML serializer
+  serialize: (routes) => "...",
+
+  // Generate robots.txt
+  generateRobotsTxt: true,
+});
+```
+
+## Options Reference
+
+### hostname
+
+- **Type:** `string`
+- **Required:** Yes (for relative URLs)
+
+The base URL of your site. Prepended to relative URLs:
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+});
+
+// Route { url: "/about" } becomes "https://example.com/about"
+```
+
+### sitemapFile
+
+- **Type:** `string`
+- **Default:** Auto-discovered
+
+Path to your sitemap definition file (without extension):
+
+```typescript
+sitemap({
+  sitemapFile: "config/sitemap", // Loads config/sitemap.ts
+});
+```
+
+If not specified, the plugin searches:
+
+1. `src/sitemap.{ts,js,mts,mjs}`
+2. `sitemap.{ts,js,mts,mjs}` (project root)
+
+### outDir
+
+- **Type:** `string`
+- **Default:** Vite's `build.outDir`
+
+Output directory for generated files:
+
+```typescript
+sitemap({
+  outDir: "public", // Output to public/ instead of dist/
+});
+```
+
+### filename
+
+- **Type:** `string`
+- **Default:** `"sitemap.xml"`
+
+Name of the output sitemap file:
+
+```typescript
+sitemap({
+  filename: "urlset.xml",
+});
+```
+
+### changefreq
+
+- **Type:** `ChangeFrequency`
+- **Default:** `undefined`
+
+Default change frequency applied to all routes:
+
+```typescript
+sitemap({
+  changefreq: "weekly",
+});
+```
+
+### priority
+
+- **Type:** `number` (0.0 - 1.0)
+- **Default:** `undefined`
+
+Default priority applied to all routes:
+
+```typescript
+sitemap({
+  priority: 0.5,
+});
+```
+
+### lastmod
+
+- **Type:** `string` (W3C Datetime)
+- **Default:** `undefined`
+
+Default last modified date applied to all routes:
+
+```typescript
+sitemap({
+  lastmod: new Date().toISOString().split("T")[0],
+});
+```
+
+### exclude
+
+- **Type:** `Array<string | RegExp>`
+- **Default:** `[]`
+
+URL patterns to exclude from the sitemap:
+
+```typescript
+sitemap({
+  exclude: [
+    // String patterns (glob-like)
+    "/admin/*",
+    "/api/*",
+    "/internal/*",
+
+    // Regular expressions
+    /^\/private/,
+    /\/draft-/,
+  ],
+});
+```
+
+### transform
+
+- **Type:** `(route: Route) => Route | null | Promise<Route | null>`
+- **Default:** `undefined`
+
+Transform each route before XML generation. Return `null` to exclude:
+
+```typescript
+sitemap({
+  transform: (route) => {
+    // Add trailing slashes
+    if (!route.url.endsWith("/")) {
+      return { ...route, url: `${route.url}/` };
+    }
+    return route;
+  },
+});
+```
+
+```typescript
+sitemap({
+  transform: async (route) => {
+    // Fetch additional metadata
+    const meta = await fetchPageMeta(route.url);
+
+    // Exclude unpublished pages
+    if (!meta.published) {
+      return null;
+    }
+
+    return {
+      ...route,
+      lastmod: meta.updatedAt,
+    };
+  },
+});
+```
+
+### serialize
+
+- **Type:** `(routes: Route[]) => string | Promise<string>`
+- **Default:** `undefined`
+
+Custom XML serialization function:
+
+```typescript
+sitemap({
+  serialize: (routes) => {
+    // Return custom XML
+    return `<?xml version="1.0"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  ${routes.map((r) => `<url><loc>${r.url}</loc></url>`).join("\n  ")}
+</urlset>`;
+  },
+});
+```
+
+### generateRobotsTxt
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Generate or update `robots.txt` with Sitemap directive:
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+  generateRobotsTxt: true,
+});
+```
+
+Creates:
+
+```txt
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+Or appends to existing `robots.txt`:
+
+```txt
+# Your existing rules...
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+## TypeScript Configuration
+
+For full type safety, import the plugin types:
+
+```typescript
+import type { PluginOptions } from "@pyyupsk/vite-plugin-sitemap";
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+const sitemapOptions: PluginOptions = {
+  hostname: "https://example.com",
+  changefreq: "weekly",
+};
+
+export default defineConfig({
+  plugins: [sitemap(sitemapOptions)],
+});
+```
+
+## Environment-Specific Configuration
+
+Use Vite's mode for different environments:
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    sitemap({
+      hostname: mode === "production" ? "https://example.com" : "https://staging.example.com",
+    }),
+  ],
+}));
+```
+
+-----
+# Route Definition
+
+Routes define the URLs in your sitemap. This guide covers all the ways to define routes.
+
+## Basic Structure
+
+Create a `src/sitemap.ts` file (or `sitemap.ts` in your project root):
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [{ url: "/" }, { url: "/about" }, { url: "/contact" }] satisfies Route[];
+```
+
+## Route Properties
+
+Each route can have the following properties:
+
+```typescript
+interface Route {
+  // Required
+  url: string;
+
+  // Optional standard properties
+  lastmod?: string;
+  changefreq?: ChangeFrequency;
+  priority?: number;
+
+  // Optional Google extensions
+  images?: Image[];
+  videos?: Video[];
+  news?: News;
+  alternates?: Alternate[];
+}
+```
+
+### url (required)
+
+The URL of the page. Can be absolute or relative:
+
+```typescript
+// Relative URLs (hostname prepended automatically)
+{ url: "/" }
+{ url: "/about" }
+{ url: "/blog/post-1" }
+
+// Absolute URLs
+{ url: "https://example.com/page" }
+```
+
+URL Requirements:
+- Maximum 2,048 characters
+- Must use `http://` or `https://` protocol (after hostname resolution)
+- Cannot contain URL fragments (`#`)
+
+### lastmod
+
+The date the page was last modified. Must be in W3C Datetime format:
+
+```typescript
+// Date only
+{ url: "/", lastmod: "2025-01-15" }
+
+// With time and timezone
+{ url: "/", lastmod: "2025-01-15T10:30:00Z" }
+{ url: "/", lastmod: "2025-01-15T10:30:00+05:30" }
+
+// Dynamic using JavaScript
+{ url: "/", lastmod: new Date().toISOString().split("T")[0] }
+```
+
+### changefreq
+
+How frequently the page is likely to change:
+
+```typescript
+type ChangeFrequency =
+  | "always"
+  | "hourly"
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "yearly"
+  | "never";
+
+{ url: "/", changefreq: "daily" }
+{ url: "/about", changefreq: "monthly" }
+{ url: "/archive/2020", changefreq: "never" }
+```
+
+### priority
+
+The priority of this URL relative to other URLs on your site:
+
+```typescript
+// Values from 0.0 to 1.0
+{ url: "/", priority: 1.0 }        // Highest priority
+{ url: "/about", priority: 0.8 }
+{ url: "/contact", priority: 0.5 } // Default
+{ url: "/terms", priority: 0.3 }   // Lower priority
+```
+
+Priority is relative to other pages on your site, not absolute. A priority of `1.0` doesn't guarantee top search ranking.
+
+## Async Route Generation
+
+For dynamic content, export an async function:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default async function getRoutes(): Promise<Route[]> {
+  // Fetch from API
+  const posts = await fetch("https://api.example.com/posts").then((r) => r.json());
+
+  // Fetch from database
+  const products = await db.product.findMany();
+
+  return [
+    { url: "/", priority: 1.0 },
+    ...posts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      lastmod: post.updatedAt,
+      changefreq: "weekly" as const,
+    })),
+    ...products.map((product) => ({
+      url: `/products/${product.id}`,
+      lastmod: product.modifiedAt,
+    })),
+  ];
+}
+```
+
+## Multiple Sitemaps
+
+Use named exports to generate multiple sitemap files:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+// Generates sitemap-pages.xml
+export const pages: Route[] = [{ url: "/", priority: 1.0 }, { url: "/about" }, { url: "/contact" }];
+
+// Generates sitemap-blog.xml
+export const blog: Route[] = [
+  { url: "/blog", priority: 0.9 },
+  { url: "/blog/post-1" },
+  { url: "/blog/post-2" },
+];
+
+// Generates sitemap-products.xml (async)
+export async function products(): Promise<Route[]> {
+  const items = await fetchProducts();
+  return items.map((p) => ({ url: `/products/${p.id}` }));
+}
+```
+
+This generates:
+
+- `sitemap-pages.xml`
+- `sitemap-blog.xml`
+- `sitemap-products.xml`
+- `sitemap-index.xml` (referencing all three)
+
+## File Discovery
+
+The plugin searches for your sitemap file in this order:
+
+1. Custom path (if `sitemapFile` option is set)
+2. `src/sitemap.{ts,js,mts,mjs}`
+3. `sitemap.{ts,js,mts,mjs}` (project root)
+
+## Full Example
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+// Static pages
+export const pages: Route[] = [
+  {
+    url: "/",
+    priority: 1.0,
+    changefreq: "daily",
+    lastmod: "2025-01-15",
+  },
+  {
+    url: "/about",
+    priority: 0.8,
+    changefreq: "monthly",
+  },
+  {
+    url: "/gallery",
+    priority: 0.7,
+    images: [
+      {
+        loc: "https://example.com/images/hero.jpg",
+        title: "Hero Image",
+        caption: "Our main hero image",
+      },
+    ],
+  },
+];
+
+// Dynamic blog posts
+export async function blog(): Promise<Route[]> {
+  const posts = await fetch("https://api.example.com/posts").then((r) => r.json());
+
+  return [
+    { url: "/blog", priority: 0.9, changefreq: "daily" },
+    ...posts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      lastmod: post.updatedAt,
+      changefreq: "weekly" as const,
+      priority: 0.6,
+    })),
+  ];
+}
+```
+
+-----
+# CLI
+
+The `vite-sitemap` CLI provides commands for validating, previewing, and generating sitemaps without running a full Vite build.
+
+## Installation
+
+The CLI is included when you install the package:
+
+```bash
+npm install @pyyupsk/vite-plugin-sitemap
+```
+
+Run with `npx`:
+
+```bash
+npx vite-sitemap <command>
+```
+
+Or add scripts to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "sitemap:validate": "vite-sitemap validate",
+    "sitemap:preview": "vite-sitemap preview",
+    "sitemap:generate": "vite-sitemap generate"
+  }
+}
+```
+
+## Commands
+
+### validate
+
+Validate your sitemap configuration without generating files.
+
+```bash
+vite-sitemap validate [options]
+```
+
+**Options:**
+
+| Option                 | Description                | Default         |
+| ---------------------- | -------------------------- | --------------- |
+| `-r, --root <path>`    | Project root directory     | `process.cwd()` |
+| `-s, --sitemap <path>` | Path to sitemap file       | Auto-discovered |
+| `-h, --hostname <url>` | Hostname for relative URLs | From config     |
+| `-v, --verbose`        | Show detailed output       | `false`         |
+
+**Examples:**
+
+```bash
+# Basic validation
+vite-sitemap validate
+
+# With custom root
+vite-sitemap validate --root ./my-project
+
+# With custom sitemap file
+vite-sitemap validate --sitemap config/sitemap.ts
+
+# Verbose output
+vite-sitemap validate --verbose
+```
+
+**Output:**
+
+```bash
+$ vite-sitemap validate
+
+i Validating sitemap configuration...
+
+✓ Validation passed! 42 routes validated in 156ms
+```
+
+On error:
+
+```bash
+$ vite-sitemap validate
+
+i Validating sitemap configuration...
+
+✗ Validation failed for default:
+
+  Route "/blog/post-1":
+    - lastmod: Invalid W3C Datetime format
+      Received: "2025-13-45"
+      Suggestion: Use format like "2025-01-15" or "2025-01-15T10:30:00Z"
+
+  Route "/products/widget":
+    - priority: Must be between 0.0 and 1.0
+      Received: 1.5
+```
+
+### preview
+
+Preview the generated XML without writing files.
+
+```bash
+vite-sitemap preview [options]
+```
+
+**Options:**
+
+| Option                 | Description                   | Default         |
+| ---------------------- | ----------------------------- | --------------- |
+| `-r, --root <path>`    | Project root directory        | `process.cwd()` |
+| `-s, --sitemap <path>` | Path to sitemap file          | Auto-discovered |
+| `-h, --hostname <url>` | Hostname for URLs             | From config     |
+| `-n, --name <name>`    | Preview specific named export | All             |
+| `-l, --limit <number>` | Limit output lines            | `50`            |
+| `-f, --full`           | Show full XML output          | `false`         |
+| `-v, --verbose`        | Show detailed output          | `false`         |
+
+**Examples:**
+
+```bash
+# Preview all sitemaps
+vite-sitemap preview
+
+# Preview specific export
+vite-sitemap preview --name blog
+
+# Full output (no truncation)
+vite-sitemap preview --full
+
+# Custom hostname
+vite-sitemap preview --hostname https://staging.example.com
+```
+
+**Output:**
+
+```bash
+$ vite-sitemap preview
+
+i Loading sitemap configuration...
+
+i Preview: default (5 routes)
+
+------------------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://example.com/about</loc>
+    <priority>0.8</priority>
+  </url>
+  ...
+------------------------------------------------------------
+
+Size: 1.2 KB
+Routes: 5
+
+✓ Preview complete in 89ms
+```
+
+### generate
+
+Generate sitemap files without running a full Vite build.
+
+```bash
+vite-sitemap generate [options]
+```
+
+**Options:**
+
+| Option                 | Description            | Default         |
+| ---------------------- | ---------------------- | --------------- |
+| `-r, --root <path>`    | Project root directory | `process.cwd()` |
+| `-s, --sitemap <path>` | Path to sitemap file   | Auto-discovered |
+| `-o, --output <dir>`   | Output directory       | `dist`          |
+| `-h, --hostname <url>` | Base hostname          | From config     |
+| `--robots-txt`         | Generate robots.txt    | From config     |
+| `-v, --verbose`        | Show detailed output   | `false`         |
+
+**Examples:**
+
+```bash
+# Basic generation
+vite-sitemap generate --hostname https://example.com
+
+# Custom output directory
+vite-sitemap generate -h https://example.com -o public
+
+# With robots.txt
+vite-sitemap generate -h https://example.com --robots-txt
+
+# Verbose output
+vite-sitemap generate -h https://example.com --verbose
+```
+
+**Output:**
+
+```bash
+$ vite-sitemap generate -h https://example.com --robots-txt --verbose
+
+i Generating sitemap...
+  Working directory: /home/user/project
+  Output directory: dist
+
+i sitemap.xml (42 URLs, 8.5 KB)
+
+✓ Created robots.txt with Sitemap directive
+
+------------------------------------------------------
+✓ built 1 sitemap(s) with 42 URLs in 234ms
+
+Generated files:
+  -> dist/sitemap.xml
+  -> dist/robots.txt
+```
+
+## Global Options
+
+These options work with all commands:
+
+| Option                | Description              |
+| --------------------- | ------------------------ |
+| `-c, --config <path>` | Path to vite.config file |
+| `--verbose`           | Enable verbose output    |
+| `-V, --version`       | Display version number   |
+| `--help`              | Display help for command |
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: Validate Sitemap
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx vite-sitemap validate
+```
+
+### Pre-commit Hook
+
+Using husky:
+
+```bash
+# .husky/pre-commit
+npx vite-sitemap validate
+```
+
+### Build Script
+
+```json
+{
+  "scripts": {
+    "build": "vite build && vite-sitemap generate -h https://example.com",
+    "prebuild": "vite-sitemap validate"
+  }
+}
+```
+
+## Config File Integration
+
+The CLI automatically reads options from your `vite.config.ts`:
+
+```typescript
+// vite.config.ts
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+      generateRobotsTxt: true,
+    }),
+  ],
+});
+```
+
+CLI commands will use these options as defaults:
+
+```bash
+# Uses hostname from vite.config.ts
+vite-sitemap validate
+
+# Override with CLI option
+vite-sitemap validate --hostname https://staging.example.com
+```
+
+## Exit Codes
+
+| Code | Description                 |
+| ---- | --------------------------- |
+| `0`  | Success                     |
+| `1`  | Validation error or failure |
+
+Use exit codes in scripts:
+
+```bash
+vite-sitemap validate && echo "Valid!" || echo "Invalid!"
+```
+
+-----
+# Large Sitemaps
+
+When your site has thousands of URLs, the plugin automatically handles sitemap splitting according to Google's guidelines.
+
+## Automatic Splitting
+
+The plugin automatically splits sitemaps when they exceed:
+
+- **50,000 URLs** per sitemap file
+- **45 MB** file size (with 5 MB buffer from Google's 50 MB limit)
+
+No configuration required - it just works.
+
+## How It Works
+
+When splitting is triggered:
+
+1. Routes are distributed across multiple sitemap files
+2. Each file is named sequentially: `sitemap-0.xml`, `sitemap-1.xml`, etc.
+3. A `sitemap-index.xml` is generated referencing all sitemap files
+
+## Example Output
+
+For a site with 120,000 URLs:
+
+```
+dist/
+├── sitemap-0.xml        # URLs 1-50,000
+├── sitemap-1.xml        # URLs 50,001-100,000
+├── sitemap-2.xml        # URLs 100,001-120,000
+└── sitemap-index.xml    # References all sitemaps
+```
+
+### Generated Index File
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://example.com/sitemap-0.xml</loc>
+    <lastmod>2025-01-15</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap-1.xml</loc>
+    <lastmod>2025-01-15</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://example.com/sitemap-2.xml</loc>
+    <lastmod>2025-01-15</lastmod>
+  </sitemap>
+</sitemapindex>
+```
+
+## Named Exports with Splitting
+
+When using named exports, each export can be split independently:
+
+```typescript
+// Large product catalog
+export async function products(): Promise<Route[]> {
+  // Returns 75,000 routes
+  return await fetchAllProducts();
+}
+
+// Large blog archive
+export async function blog(): Promise<Route[]> {
+  // Returns 60,000 routes
+  return await fetchAllPosts();
+}
+```
+
+**Output:**
+
+```
+dist/
+├── sitemap-products-0.xml    # Products 1-50,000
+├── sitemap-products-1.xml    # Products 50,001-75,000
+├── sitemap-blog-0.xml        # Posts 1-50,000
+├── sitemap-blog-1.xml        # Posts 50,001-60,000
+└── sitemap-index.xml         # References all 4 sitemaps
+```
+
+## Performance Considerations
+
+### Memory Usage
+
+For extremely large sitemaps, consider:
+
+1. **Streaming data** - Don't load all routes into memory at once
+2. **Pagination** - Fetch routes in batches
+
+```typescript
+export default async function getRoutes(): Promise<Route[]> {
+  const routes: Route[] = [];
+  let page = 1;
+  const pageSize = 10000;
+
+  while (true) {
+    const batch = await fetchRoutes({ page, pageSize });
+    if (batch.length === 0) break;
+
+    routes.push(...batch);
+    page++;
+  }
+
+  return routes;
+}
+```
+
+### Build Time
+
+Large sitemaps increase build time. To optimize:
+
+1. **Cache API responses** - Store fetched data locally during development
+2. **Parallel fetching** - Use `Promise.all` for independent data sources
+
+```typescript
+export default async function getRoutes(): Promise<Route[]> {
+  // Parallel fetching
+  const [products, posts, pages] = await Promise.all([fetchProducts(), fetchPosts(), fetchPages()]);
+
+  return [...products, ...posts, ...pages];
+}
+```
+
+## robots.txt with Split Sitemaps
+
+When `generateRobotsTxt` is enabled with split sitemaps, the Sitemap directive points to the index file:
+
+```txt
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap-index.xml
+```
+
+## Monitoring Sitemap Size
+
+Use the CLI to check sitemap sizes without building:
+
+```bash
+vite-sitemap preview --verbose
+```
+
+Output shows size information:
+
+```bash
+i Preview: default (75,000 routes)
+
+Size: 12.4 MB
+Routes: 75,000
+
+! Sitemap will be split into 2 files (exceeds 50,000 URL limit)
+```
+
+## Google Search Console
+
+After deploying split sitemaps:
+
+1. Submit `sitemap-index.xml` to Google Search Console
+2. Google will automatically discover all child sitemaps
+3. Monitor indexing status for each sitemap file
+
+## Best Practices
+
+1. **Use the index file** - Always submit the index, not individual sitemaps
+2. **Keep URLs consistent** - Don't change URL structures between builds
+3. **Update incrementally** - Only regenerate sitemaps when content changes
+4. **Monitor coverage** - Check Search Console for indexing issues
+
+-----
+# Dynamic Routes
+
+Generate sitemap routes dynamically from APIs, databases, CMSs, or any async data source at build time.
+
+## Basic Async Routes
+
+Export an async function from your sitemap file:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default async function getRoutes(): Promise<Route[]> {
+  const posts = await fetch("https://api.example.com/posts").then((r) => r.json());
+
+  return [
+    { url: "/", priority: 1.0 },
+    { url: "/blog", priority: 0.9 },
+    ...posts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      lastmod: post.updatedAt,
+    })),
+  ];
+}
+```
+
+## Multiple Data Sources
+
+Combine data from multiple sources:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default async function getRoutes(): Promise<Route[]> {
+  // Fetch from multiple APIs in parallel
+  const [posts, products, categories] = await Promise.all([
+    fetch("https://api.example.com/posts").then((r) => r.json()),
+    fetch("https://api.example.com/products").then((r) => r.json()),
+    fetch("https://api.example.com/categories").then((r) => r.json()),
+  ]);
+
+  return [
+    // Static pages
+    { url: "/", priority: 1.0 },
+    { url: "/about", priority: 0.8 },
+
+    // Blog posts
+    ...posts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      lastmod: post.updatedAt,
+      changefreq: "weekly" as const,
+    })),
+
+    // Products
+    ...products.map((product) => ({
+      url: `/products/${product.id}`,
+      lastmod: product.modifiedAt,
+      images: product.images.map((img) => ({ loc: img.url })),
+    })),
+
+    // Categories
+    ...categories.map((category) => ({
+      url: `/category/${category.slug}`,
+      changefreq: "daily" as const,
+    })),
+  ];
+}
+```
+
+## Database Integration
+
+### Prisma
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+export default async function getRoutes(): Promise<Route[]> {
+  const [posts, products] = await Promise.all([
+    prisma.post.findMany({
+      where: { published: true },
+      select: { slug: true, updatedAt: true },
+    }),
+    prisma.product.findMany({
+      where: { active: true },
+      select: { id: true, updatedAt: true },
+    }),
+  ]);
+
+  await prisma.$disconnect();
+
+  return [
+    { url: "/", priority: 1.0 },
+    ...posts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      lastmod: post.updatedAt.toISOString(),
+    })),
+    ...products.map((product) => ({
+      url: `/products/${product.id}`,
+      lastmod: product.updatedAt.toISOString(),
+    })),
+  ];
+}
+```
+
+### Drizzle
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+import { db } from "./db";
+import { posts, products } from "./schema";
+import { eq } from "drizzle-orm";
+
+export default async function getRoutes(): Promise<Route[]> {
+  const [allPosts, allProducts] = await Promise.all([
+    db.select().from(posts).where(eq(posts.published, true)),
+    db.select().from(products).where(eq(products.active, true)),
+  ]);
+
+  return [
+    { url: "/" },
+    ...allPosts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      lastmod: post.updatedAt,
+    })),
+    ...allProducts.map((product) => ({
+      url: `/products/${product.id}`,
+      lastmod: product.updatedAt,
+    })),
+  ];
+}
+```
+
+## CMS Integration
+
+### Contentful
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+import { createClient } from "contentful";
+
+const client = createClient({
+  space: process.env.CONTENTFUL_SPACE_ID!,
+  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN!,
+});
+
+export default async function getRoutes(): Promise<Route[]> {
+  const entries = await client.getEntries({
+    content_type: "blogPost",
+    limit: 1000,
+  });
+
+  return [
+    { url: "/", priority: 1.0 },
+    { url: "/blog", priority: 0.9 },
+    ...entries.items.map((entry) => ({
+      url: `/blog/${entry.fields.slug}`,
+      lastmod: entry.sys.updatedAt,
+    })),
+  ];
+}
+```
+
+### Sanity
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+import { createClient } from "@sanity/client";
+
+const client = createClient({
+  projectId: process.env.SANITY_PROJECT_ID!,
+  dataset: "production",
+  apiVersion: "2024-01-01",
+  useCdn: true,
+});
+
+export default async function getRoutes(): Promise<Route[]> {
+  const posts = await client.fetch(`
+    *[_type == "post" && defined(slug.current)] {
+      "slug": slug.current,
+      _updatedAt
+    }
+  `);
+
+  return [
+    { url: "/" },
+    ...posts.map((post) => ({
+      url: `/blog/${post.slug}`,
+      lastmod: post._updatedAt,
+    })),
+  ];
+}
+```
+
+### Strapi
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+const STRAPI_URL = process.env.STRAPI_URL || "http://localhost:1337";
+
+export default async function getRoutes(): Promise<Route[]> {
+  const response = await fetch(`${STRAPI_URL}/api/posts?populate=*`);
+  const { data } = await response.json();
+
+  return [
+    { url: "/" },
+    ...data.map((post) => ({
+      url: `/blog/${post.attributes.slug}`,
+      lastmod: post.attributes.updatedAt,
+    })),
+  ];
+}
+```
+
+## Named Exports with Async
+
+Each named export can be a separate async function:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+// Static pages
+export const pages: Route[] = [{ url: "/", priority: 1.0 }, { url: "/about" }, { url: "/contact" }];
+
+// Dynamic blog posts
+export async function blog(): Promise<Route[]> {
+  const posts = await fetchBlogPosts();
+  return posts.map((post) => ({
+    url: `/blog/${post.slug}`,
+    lastmod: post.updatedAt,
+  }));
+}
+
+// Dynamic products
+export async function products(): Promise<Route[]> {
+  const products = await fetchProducts();
+  return products.map((product) => ({
+    url: `/products/${product.id}`,
+    lastmod: product.modifiedAt,
+  }));
+}
+```
+
+## Error Handling
+
+Handle API failures gracefully:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default async function getRoutes(): Promise<Route[]> {
+  const staticRoutes: Route[] = [{ url: "/", priority: 1.0 }, { url: "/about" }];
+
+  try {
+    const posts = await fetch("https://api.example.com/posts").then((r) => {
+      if (!r.ok) throw new Error(`API returned ${r.status}`);
+      return r.json();
+    });
+
+    return [
+      ...staticRoutes,
+      ...posts.map((post) => ({
+        url: `/blog/${post.slug}`,
+        lastmod: post.updatedAt,
+      })),
+    ];
+  } catch (error) {
+    console.error("Failed to fetch posts:", error);
+    // Return static routes only on failure
+    return staticRoutes;
+  }
+}
+```
+
+## Caching
+
+Cache API responses during development:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+import { readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+
+const CACHE_FILE = ".sitemap-cache.json";
+const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
+
+async function getCachedOrFetch<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  if (process.env.NODE_ENV === "development" && existsSync(CACHE_FILE)) {
+    const cache = JSON.parse(await readFile(CACHE_FILE, "utf-8"));
+    if (cache[key] && Date.now() - cache[key].timestamp < CACHE_TTL) {
+      return cache[key].data;
+    }
+  }
+
+  const data = await fetcher();
+
+  if (process.env.NODE_ENV === "development") {
+    const cache = existsSync(CACHE_FILE) ? JSON.parse(await readFile(CACHE_FILE, "utf-8")) : {};
+    cache[key] = { data, timestamp: Date.now() };
+    await writeFile(CACHE_FILE, JSON.stringify(cache, null, 2));
+  }
+
+  return data;
+}
+
+export default async function getRoutes(): Promise<Route[]> {
+  const posts = await getCachedOrFetch("posts", () =>
+    fetch("https://api.example.com/posts").then((r) => r.json()),
+  );
+
+  return [{ url: "/" }, ...posts.map((post) => ({ url: `/blog/${post.slug}` }))];
+}
+```
+
+## Environment Variables
+
+Use environment variables for API keys and URLs:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+const API_URL = process.env.API_URL || "https://api.example.com";
+const API_KEY = process.env.API_KEY;
+
+export default async function getRoutes(): Promise<Route[]> {
+  const response = await fetch(`${API_URL}/posts`, {
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+    },
+  });
+
+  const posts = await response.json();
+  return posts.map((post) => ({ url: `/blog/${post.slug}` }));
+}
+```
+
+-----
+# Custom Serialization
+
+Override the default XML generation with your own serialization logic.
+
+## Basic Usage
+
+Use the `serialize` option to provide a custom XML serializer:
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+      serialize: (routes) => {
+        // Return custom XML string
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  ${routes.map((route) => `<url><loc>${route.url}</loc></url>`).join("\n  ")}
+</urlset>`;
+      },
+    }),
+  ],
+});
+```
+
+## Function Signature
+
+```typescript
+type XmlSerializer = (routes: Route[]) => string | Promise<string>;
+```
+
+The function receives an array of validated routes and must return the complete XML string.
+
+## Using Built-in Helpers
+
+Import helper functions for building XML elements:
+
+```typescript
+import sitemap, { buildSitemapXml } from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+      serialize: (routes) => {
+        // Use the built-in helper for consistent output
+        return buildSitemapXml(routes);
+      },
+    }),
+  ],
+});
+```
+
+## Async Serialization
+
+The serializer can be async:
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+  serialize: async (routes) => {
+    // Fetch additional data
+    const metadata = await fetchSiteMetadata();
+
+    // Generate XML with additional context
+    return generateCustomXml(routes, metadata);
+  },
+});
+```
+
+## Adding Custom Elements
+
+Add custom XML elements not supported by default:
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+  serialize: (routes) => {
+    const urls = routes
+      .map(
+        (route) => `
+  <url>
+    <loc>${escapeXml(route.url)}</loc>
+    ${route.lastmod ? `<lastmod>${route.lastmod}</lastmod>` : ""}
+    ${route.changefreq ? `<changefreq>${route.changefreq}</changefreq>` : ""}
+    ${route.priority ? `<priority>${route.priority}</priority>` : ""}
+    <!-- Custom extension -->
+    <custom:rating>${route.rating || 0}</custom:rating>
+  </url>`,
+      )
+      .join("");
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:custom="http://example.com/custom">
+${urls}
+</urlset>`;
+  },
+});
+```
+
+## XML Escaping
+
+When building custom XML, properly escape special characters:
+
+```typescript
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+```
+
+The built-in XML builders (`buildSitemapXml`, `buildUrlElement`) automatically handle XML escaping.
+
+## Filtering Routes
+
+Filter routes during serialization:
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+  serialize: (routes) => {
+    // Only include high-priority routes
+    const filteredRoutes = routes.filter((r) => (r.priority || 0.5) >= 0.7);
+
+    return buildSitemapXml(filteredRoutes);
+  },
+});
+```
+
+Prefer using the `transform` option or `exclude` patterns for filtering. They run before validation and are more efficient.
+
+## Sorting Routes
+
+Sort routes in the output:
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+  serialize: (routes) => {
+    // Sort by priority (highest first)
+    const sorted = [...routes].sort((a, b) => (b.priority || 0.5) - (a.priority || 0.5));
+
+    return buildSitemapXml(sorted);
+  },
+});
+```
+
+## Adding Comments
+
+Add XML comments for documentation:
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+  serialize: (routes) => {
+    const now = new Date().toISOString();
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated by @pyyupsk/vite-plugin-sitemap -->
+<!-- Last updated: ${now} -->
+<!-- Total URLs: ${routes.length} -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${routes.map((r) => `  <url><loc>${escapeXml(r.url)}</loc></url>`).join("\n")}
+</urlset>`;
+  },
+});
+```
+
+## Alternative Output Formats
+
+Generate non-XML formats (though not standard sitemap format):
+
+```typescript
+// JSON output (for debugging)
+sitemap({
+  hostname: "https://example.com",
+  filename: "sitemap.json",
+  serialize: (routes) => JSON.stringify(routes, null, 2),
+});
+
+// Plain text URL list
+sitemap({
+  hostname: "https://example.com",
+  filename: "urls.txt",
+  serialize: (routes) => routes.map((r) => r.url).join("\n"),
+});
+```
+
+Non-XML formats won't be recognized by search engines as valid sitemaps.
+
+## Full Example
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+// Local escape function for custom XML
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+      serialize: (routes) => {
+        const timestamp = new Date().toISOString();
+
+        // Group routes by section
+        const sections = {
+          pages: routes.filter((r) => !r.url.includes("/blog/")),
+          blog: routes.filter((r) => r.url.includes("/blog/")),
+        };
+
+        const buildUrl = (route) => {
+          const elements = [`    <loc>${escapeXml(route.url)}</loc>`];
+
+          if (route.lastmod) {
+            elements.push(`    <lastmod>${route.lastmod}</lastmod>`);
+          }
+          if (route.changefreq) {
+            elements.push(`    <changefreq>${route.changefreq}</changefreq>`);
+          }
+          if (route.priority !== undefined) {
+            elements.push(`    <priority>${route.priority}</priority>`);
+          }
+
+          return `  <url>\n${elements.join("\n")}\n  </url>`;
+        };
+
+        return `<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sitemap for example.com
+  Generated: ${timestamp}
+  Pages: ${sections.pages.length}
+  Blog posts: ${sections.blog.length}
+  Total: ${routes.length}
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Main pages -->
+${sections.pages.map(buildUrl).join("\n")}
+
+  <!-- Blog posts -->
+${sections.blog.map(buildUrl).join("\n")}
+</urlset>`;
+      },
+    }),
+  ],
+});
+```
+
+-----
+# Image Sitemaps
+
+Image sitemaps help Google discover images on your pages. This is especially useful for JavaScript-rendered images that might not be discovered during crawling.
+
+## Basic Usage
+
+Add an `images` array to any route:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  {
+    url: "/gallery",
+    images: [
+      {
+        loc: "https://example.com/images/photo1.jpg",
+      },
+      {
+        loc: "https://example.com/images/photo2.jpg",
+      },
+    ],
+  },
+] satisfies Route[];
+```
+
+## Image Properties
+
+```typescript
+interface Image {
+  // Required
+  loc: string;
+
+  // Optional
+  title?: string;
+  caption?: string;
+  geo_location?: string;
+  license?: string;
+}
+```
+
+### loc (required)
+
+The URL of the image. Must be an absolute URL:
+
+```typescript
+{ loc: "https://example.com/images/hero.jpg" }
+```
+
+### title
+
+The title of the image:
+
+```typescript
+{
+  loc: "https://example.com/images/hero.jpg",
+  title: "Beautiful Mountain Landscape"
+}
+```
+
+### caption
+
+A caption describing the image:
+
+```typescript
+{
+  loc: "https://example.com/images/hero.jpg",
+  title: "Mountain Landscape",
+  caption: "A stunning view of the Swiss Alps at sunset"
+}
+```
+
+### geo_location
+
+The geographic location where the image was taken:
+
+```typescript
+{
+  loc: "https://example.com/images/hero.jpg",
+  geo_location: "Swiss Alps, Switzerland"
+}
+```
+
+### license
+
+A URL to the license of the image:
+
+```typescript
+{
+  loc: "https://example.com/images/hero.jpg",
+  license: "https://example.com/image-license"
+}
+```
+
+## Full Example
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  {
+    url: "/gallery",
+    priority: 0.8,
+    changefreq: "weekly",
+    images: [
+      {
+        loc: "https://example.com/images/landscape.jpg",
+        title: "Mountain Landscape",
+        caption: "A stunning view of the Swiss Alps at sunset",
+        geo_location: "Swiss Alps, Switzerland",
+        license: "https://example.com/license",
+      },
+      {
+        loc: "https://example.com/images/city.jpg",
+        title: "City Skyline",
+        caption: "Downtown skyline at night",
+        geo_location: "New York, USA",
+      },
+    ],
+  },
+  {
+    url: "/products/widget",
+    images: [
+      {
+        loc: "https://example.com/products/widget-front.jpg",
+        title: "Widget - Front View",
+      },
+      {
+        loc: "https://example.com/products/widget-side.jpg",
+        title: "Widget - Side View",
+      },
+    ],
+  },
+] satisfies Route[];
+```
+
+## Generated XML
+
+The above configuration generates:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://example.com/gallery</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://example.com/images/landscape.jpg</image:loc>
+      <image:title>Mountain Landscape</image:title>
+      <image:caption>A stunning view of the Swiss Alps at sunset</image:caption>
+      <image:geo_location>Swiss Alps, Switzerland</image:geo_location>
+      <image:license>https://example.com/license</image:license>
+    </image:image>
+    <image:image>
+      <image:loc>https://example.com/images/city.jpg</image:loc>
+      <image:title>City Skyline</image:title>
+      <image:caption>Downtown skyline at night</image:caption>
+      <image:geo_location>New York, USA</image:geo_location>
+    </image:image>
+  </url>
+</urlset>
+```
+
+## Dynamic Image Generation
+
+Fetch images from an API or CMS:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default async function getRoutes(): Promise<Route[]> {
+  const galleries = await fetch("https://api.example.com/galleries").then((r) => r.json());
+
+  return galleries.map((gallery) => ({
+    url: `/gallery/${gallery.slug}`,
+    lastmod: gallery.updatedAt,
+    images: gallery.photos.map((photo) => ({
+      loc: photo.url,
+      title: photo.title,
+      caption: photo.description,
+      geo_location: photo.location,
+    })),
+  }));
+}
+```
+
+## Best Practices
+
+1. **Use descriptive titles and captions** - Help search engines understand your images
+2. **Include geo_location** - Useful for location-based image searches
+3. **Maximum 1,000 images per URL** - Google's limit per page
+4. **Use absolute URLs** - All image URLs must be absolute
+
+-----
+# Video Sitemaps
+
+Video sitemaps provide rich metadata about video content on your pages, helping Google understand and index your videos.
+
+## Basic Usage
+
+Add a `videos` array to any route:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  {
+    url: "/tutorials/getting-started",
+    videos: [
+      {
+        title: "Getting Started Tutorial",
+        description: "Learn how to set up and use our product",
+        thumbnail_loc: "https://example.com/thumbnails/tutorial.jpg",
+        content_loc: "https://example.com/videos/tutorial.mp4",
+      },
+    ],
+  },
+] satisfies Route[];
+```
+
+## Video Properties
+
+```typescript
+interface Video {
+  // Required
+  title: string;
+  description: string;
+  thumbnail_loc: string;
+
+  // Location (at least one required)
+  content_loc?: string;
+  player_loc?: string;
+
+  // Optional
+  duration?: number;
+  expiration_date?: string;
+  rating?: number;
+  view_count?: number;
+  publication_date?: string;
+  family_friendly?: boolean;
+  restriction?: VideoRestriction;
+  platform?: VideoPlatform;
+  requires_subscription?: boolean;
+  uploader?: VideoUploader;
+  live?: boolean;
+  tag?: string[];
+}
+```
+
+### Required Properties
+
+#### title
+
+The title of the video (max 100 characters):
+
+```typescript
+{ title: "Getting Started with Our Product" }
+```
+
+#### description
+
+A description of the video (max 2,048 characters):
+
+```typescript
+{ description: "In this comprehensive guide, you'll learn how to set up and configure our product for your specific use case." }
+```
+
+#### thumbnail_loc
+
+URL to the video thumbnail image:
+
+```typescript
+{ thumbnail_loc: "https://example.com/thumbnails/video.jpg" }
+```
+
+### Location Properties
+
+At least one of `content_loc` or `player_loc` is required.
+
+#### content_loc
+
+Direct URL to the video file:
+
+```typescript
+{ content_loc: "https://example.com/videos/tutorial.mp4" }
+```
+
+#### player_loc
+
+URL to a player for the video:
+
+```typescript
+{ player_loc: "https://example.com/player?video=tutorial" }
+```
+
+### Optional Properties
+
+#### duration
+
+Video duration in seconds (1 to 28,800):
+
+```typescript
+{ duration: 300 } // 5 minutes
+```
+
+#### rating
+
+Video rating from 0.0 to 5.0:
+
+```typescript
+{ rating: 4.5 }
+```
+
+#### view_count
+
+Number of times the video has been viewed:
+
+```typescript
+{ view_count: 15000 }
+```
+
+#### publication_date
+
+When the video was first published (W3C Datetime):
+
+```typescript
+{ publication_date: "2025-01-15" }
+```
+
+#### expiration_date
+
+When the video will no longer be available:
+
+```typescript
+{ expiration_date: "2025-12-31" }
+```
+
+#### family_friendly
+
+Whether the video is suitable for all ages:
+
+```typescript
+{ family_friendly: true }
+```
+
+#### live
+
+Whether the video is a live stream:
+
+```typescript
+{ live: false }
+```
+
+#### requires_subscription
+
+Whether a subscription is required to view:
+
+```typescript
+{ requires_subscription: false }
+```
+
+#### tag
+
+Tags associated with the video (max 32 tags):
+
+```typescript
+{ tag: ["tutorial", "beginner", "guide", "setup"] }
+```
+
+### Complex Properties
+
+#### restriction
+
+Geographic restrictions:
+
+```typescript
+{
+  restriction: {
+    relationship: "allow",
+    countries: ["US", "CA", "GB"]
+  }
+}
+
+// Or deny specific countries
+{
+  restriction: {
+    relationship: "deny",
+    countries: ["CN", "RU"]
+  }
+}
+```
+
+#### platform
+
+Platform restrictions:
+
+```typescript
+{
+  platform: {
+    relationship: "allow",
+    platforms: ["web", "mobile"]  // "web" | "mobile" | "tv"
+  }
+}
+```
+
+#### uploader
+
+Information about the video uploader:
+
+```typescript
+{
+  uploader: {
+    name: "Example Channel",
+    info: "https://example.com/channel"
+  }
+}
+```
+
+## Full Example
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  {
+    url: "/videos/tutorial",
+    priority: 0.9,
+    videos: [
+      {
+        title: "Getting Started Tutorial",
+        description:
+          "Learn how to use our product in this comprehensive guide covering setup, configuration, and best practices.",
+        thumbnail_loc: "https://example.com/thumbnails/tutorial.jpg",
+        content_loc: "https://example.com/videos/tutorial.mp4",
+        duration: 600,
+        rating: 4.8,
+        view_count: 25000,
+        publication_date: "2025-01-15",
+        family_friendly: true,
+        tag: ["tutorial", "beginner", "guide"],
+        uploader: {
+          name: "Example Tutorials",
+          info: "https://example.com/channel",
+        },
+        restriction: {
+          relationship: "allow",
+          countries: ["US", "CA", "GB", "AU"],
+        },
+        platform: {
+          relationship: "allow",
+          platforms: ["web", "mobile", "tv"],
+        },
+      },
+    ],
+  },
+] satisfies Route[];
+```
+
+## Generated XML
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https://example.com/videos/tutorial</loc>
+    <priority>0.9</priority>
+    <video:video>
+      <video:thumbnail_loc>https://example.com/thumbnails/tutorial.jpg</video:thumbnail_loc>
+      <video:title>Getting Started Tutorial</video:title>
+      <video:description>Learn how to use our product...</video:description>
+      <video:content_loc>https://example.com/videos/tutorial.mp4</video:content_loc>
+      <video:duration>600</video:duration>
+      <video:rating>4.8</video:rating>
+      <video:view_count>25000</video:view_count>
+      <video:publication_date>2025-01-15</video:publication_date>
+      <video:family_friendly>yes</video:family_friendly>
+      <video:tag>tutorial</video:tag>
+      <video:tag>beginner</video:tag>
+      <video:tag>guide</video:tag>
+      <video:restriction relationship="allow">US CA GB AU</video:restriction>
+      <video:platform relationship="allow">web mobile tv</video:platform>
+      <video:uploader info="https://example.com/channel">Example Tutorials</video:uploader>
+    </video:video>
+  </url>
+</urlset>
+```
+
+## Dynamic Video Generation
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default async function getRoutes(): Promise<Route[]> {
+  const videos = await fetch("https://api.example.com/videos").then((r) => r.json());
+
+  return videos.map((video) => ({
+    url: `/videos/${video.slug}`,
+    lastmod: video.updatedAt,
+    videos: [
+      {
+        title: video.title,
+        description: video.description,
+        thumbnail_loc: video.thumbnailUrl,
+        content_loc: video.videoUrl,
+        duration: video.durationSeconds,
+        publication_date: video.publishedAt,
+        view_count: video.views,
+        tag: video.tags,
+      },
+    ],
+  }));
+}
+```
+
+## Best Practices
+
+1. **Use high-quality thumbnails** - Minimum 160x90, recommended 1920x1080
+2. **Write accurate descriptions** - Help users understand video content
+3. **Keep titles concise** - Maximum 100 characters
+4. **Update view counts** - Rebuild sitemap periodically to update metrics
+5. **Set expiration dates** - For time-limited content
+
+-----
+# News Sitemaps
+
+News sitemaps help Google News discover and index your news articles. They're essential for news publishers who want their articles to appear in Google News.
+
+## Basic Usage
+
+Add a `news` object to any route:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  {
+    url: "/news/breaking-story",
+    news: {
+      publication: {
+        name: "Example News",
+        language: "en",
+      },
+      publication_date: "2025-01-15T10:30:00Z",
+      title: "Breaking: Important Announcement",
+    },
+  },
+] satisfies Route[];
+```
+
+## News Properties
+
+```typescript
+interface News {
+  // Required
+  publication: NewsPublication;
+  publication_date: string;
+  title: string;
+
+  // Optional
+  keywords?: string;
+  stock_tickers?: string;
+}
+
+interface NewsPublication {
+  name: string;
+  language: string;
+}
+```
+
+### Required Properties
+
+#### publication
+
+Information about the news publication:
+
+```typescript
+{
+  publication: {
+    name: "Example News",      // Publication name
+    language: "en"             // ISO 639-1 language code
+  }
+}
+```
+
+#### publication_date
+
+When the article was published (W3C Datetime):
+
+```typescript
+{ publication_date: "2025-01-15T10:30:00Z" }
+
+// Or just the date
+{ publication_date: "2025-01-15" }
+```
+
+#### title
+
+The title of the news article (max 2,048 characters):
+
+```typescript
+{ title: "Breaking: Major Tech Company Announces New Product" }
+```
+
+### Optional Properties
+
+#### keywords
+
+Comma-separated list of keywords:
+
+```typescript
+{ keywords: "technology, business, announcement, product launch" }
+```
+
+#### stock_tickers
+
+Comma-separated stock tickers (max 5):
+
+```typescript
+{ stock_tickers: "NASDAQ:GOOG, NASDAQ:AAPL" }
+```
+
+## Full Example
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+const now = new Date().toISOString();
+
+export default [
+  {
+    url: "/news/tech-announcement",
+    lastmod: now,
+    news: {
+      publication: {
+        name: "Tech Daily",
+        language: "en",
+      },
+      publication_date: now,
+      title: "Major Tech Company Unveils Revolutionary New Product",
+      keywords: "technology, innovation, product launch, silicon valley",
+      stock_tickers: "NASDAQ:TECH",
+    },
+  },
+  {
+    url: "/news/market-update",
+    lastmod: now,
+    news: {
+      publication: {
+        name: "Tech Daily",
+        language: "en",
+      },
+      publication_date: now,
+      title: "Stock Markets React to Federal Reserve Decision",
+      keywords: "finance, stocks, federal reserve, economy",
+      stock_tickers: "NYSE:DJI, NASDAQ:IXIC, NYSE:SPX",
+    },
+  },
+] satisfies Route[];
+```
+
+## Generated XML
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+  <url>
+    <loc>https://example.com/news/tech-announcement</loc>
+    <lastmod>2025-01-15T10:30:00.000Z</lastmod>
+    <news:news>
+      <news:publication>
+        <news:name>Tech Daily</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2025-01-15T10:30:00.000Z</news:publication_date>
+      <news:title>Major Tech Company Unveils Revolutionary New Product</news:title>
+      <news:keywords>technology, innovation, product launch, silicon valley</news:keywords>
+      <news:stock_tickers>NASDAQ:TECH</news:stock_tickers>
+    </news:news>
+  </url>
+</urlset>
+```
+
+## Dynamic News Generation
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default async function getRoutes(): Promise<Route[]> {
+  // Fetch recent articles (last 2 days for Google News)
+  const articles = await fetch("https://api.example.com/articles?since=2d").then((r) => r.json());
+
+  return articles.map((article) => ({
+    url: `/news/${article.slug}`,
+    lastmod: article.updatedAt,
+    news: {
+      publication: {
+        name: "Example News",
+        language: article.language,
+      },
+      publication_date: article.publishedAt,
+      title: article.title,
+      keywords: article.tags.join(", "),
+    },
+  }));
+}
+```
+
+## Multi-Language News
+
+For publications in multiple languages:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+// English articles
+export const newsEn: Route[] = [
+  {
+    url: "/en/news/article-1",
+    news: {
+      publication: {
+        name: "Global News",
+        language: "en",
+      },
+      publication_date: "2025-01-15",
+      title: "English Article Title",
+    },
+  },
+];
+
+// Spanish articles
+export const newsEs: Route[] = [
+  {
+    url: "/es/noticias/articulo-1",
+    news: {
+      publication: {
+        name: "Global News",
+        language: "es",
+      },
+      publication_date: "2025-01-15",
+      title: "Titulo del Articulo en Espanol",
+    },
+  },
+];
+```
+
+## Best Practices
+
+1. **Fresh content only** - Google News indexes articles from the past 2 days
+2. **Accurate publication dates** - Must match when the article was first published
+3. **Original content** - Don't include aggregated or syndicated content
+4. **Unique titles** - Each article should have a distinct, descriptive title
+5. **Update frequently** - Rebuild sitemap when new articles are published
+6. **Use ISO 639-1 codes** - For language (en, es, fr, de, etc.)
+
+## Google News Requirements
+
+To be included in Google News:
+
+1. Your site must be accepted into Google News
+2. Articles must be original news content
+3. Publication must have a consistent name
+4. Articles should be timely (within 2 days)
+
+-----
+# Internationalization (hreflang)
+
+Use hreflang annotations to tell Google about alternate language versions of your pages. This helps serve the correct language version to users in different regions.
+
+## Basic Usage
+
+Add an `alternates` array to any route:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  {
+    url: "/products",
+    alternates: [
+      { hreflang: "en", href: "https://example.com/products" },
+      { hreflang: "es", href: "https://example.com/es/productos" },
+      { hreflang: "fr", href: "https://example.com/fr/produits" },
+    ],
+  },
+] satisfies Route[];
+```
+
+## Alternate Properties
+
+```typescript
+interface Alternate {
+  hreflang: string;
+  href: string;
+}
+```
+
+### hreflang
+
+Language and optional region code:
+
+```typescript
+// Language only (ISO 639-1)
+{ hreflang: "en" }
+{ hreflang: "es" }
+{ hreflang: "fr" }
+
+// Language and region (ISO 639-1 + ISO 3166-1 Alpha 2)
+{ hreflang: "en-US" }
+{ hreflang: "en-GB" }
+{ hreflang: "es-MX" }
+{ hreflang: "zh-TW" }
+
+// Default fallback
+{ hreflang: "x-default" }
+```
+
+### href
+
+The URL of the alternate version (must be absolute):
+
+```typescript
+{ href: "https://example.com/es/productos" }
+```
+
+## Full Example
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+const languages = ["en", "es", "fr", "de", "ja"] as const;
+
+export default [
+  // English version
+  {
+    url: "https://example.com/products",
+    alternates: [
+      { hreflang: "en", href: "https://example.com/products" },
+      { hreflang: "es", href: "https://example.com/es/productos" },
+      { hreflang: "fr", href: "https://example.com/fr/produits" },
+      { hreflang: "de", href: "https://example.com/de/produkte" },
+      { hreflang: "ja", href: "https://example.com/ja/products" },
+      { hreflang: "x-default", href: "https://example.com/products" },
+    ],
+  },
+  // Spanish version
+  {
+    url: "https://example.com/es/productos",
+    alternates: [
+      { hreflang: "en", href: "https://example.com/products" },
+      { hreflang: "es", href: "https://example.com/es/productos" },
+      { hreflang: "fr", href: "https://example.com/fr/produits" },
+      { hreflang: "de", href: "https://example.com/de/produkte" },
+      { hreflang: "ja", href: "https://example.com/ja/products" },
+      { hreflang: "x-default", href: "https://example.com/products" },
+    ],
+  },
+  // ... other language versions
+] satisfies Route[];
+```
+
+## Generated XML
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://example.com/products</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://example.com/products"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://example.com/es/productos"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://example.com/fr/produits"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://example.com/de/produkte"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://example.com/ja/products"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://example.com/products"/>
+  </url>
+</urlset>
+```
+
+## Dynamic Multi-Language Routes
+
+Generate routes for all language versions automatically:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+const hostname = "https://example.com";
+
+const languages = [
+  { code: "en", prefix: "" },
+  { code: "es", prefix: "/es" },
+  { code: "fr", prefix: "/fr" },
+  { code: "de", prefix: "/de" },
+] as const;
+
+const pages = [
+  { path: "/products", translations: { es: "/productos", fr: "/produits", de: "/produkte" } },
+  { path: "/about", translations: { es: "/acerca", fr: "/a-propos", de: "/uber-uns" } },
+  { path: "/contact", translations: { es: "/contacto", fr: "/contact", de: "/kontakt" } },
+];
+
+function getLocalizedPath(page: (typeof pages)[0], lang: (typeof languages)[0]): string {
+  if (lang.code === "en") return page.path;
+  return page.translations[lang.code as keyof typeof page.translations] || page.path;
+}
+
+function generateAlternates(page: (typeof pages)[0]) {
+  return [
+    ...languages.map((lang) => ({
+      hreflang: lang.code,
+      href: `${hostname}${lang.prefix}${getLocalizedPath(page, lang)}`,
+    })),
+    { hreflang: "x-default", href: `${hostname}${page.path}` },
+  ];
+}
+
+export default languages.flatMap((lang) =>
+  pages.map((page) => ({
+    url: `${lang.prefix}${getLocalizedPath(page, lang)}`,
+    alternates: generateAlternates(page),
+  })),
+) satisfies Route[];
+```
+
+## Region-Specific Variants
+
+For content that varies by region within the same language:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  {
+    url: "/pricing",
+    alternates: [
+      // US English (default)
+      { hreflang: "en-US", href: "https://example.com/pricing" },
+      // UK English (different prices/currency)
+      { hreflang: "en-GB", href: "https://example.co.uk/pricing" },
+      // Australian English
+      { hreflang: "en-AU", href: "https://example.com.au/pricing" },
+      // Canadian English
+      { hreflang: "en-CA", href: "https://example.ca/pricing" },
+      // Canadian French
+      { hreflang: "fr-CA", href: "https://example.ca/fr/tarification" },
+      // Default fallback
+      { hreflang: "x-default", href: "https://example.com/pricing" },
+    ],
+  },
+] satisfies Route[];
+```
+
+## Using with CMS Data
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+interface Page {
+  slug: string;
+  locale: string;
+  translations: Array<{ locale: string; slug: string }>;
+}
+
+export default async function getRoutes(): Promise<Route[]> {
+  const pages: Page[] = await fetch("https://cms.example.com/pages").then((r) => r.json());
+
+  return pages.map((page) => ({
+    url: `/${page.locale}/${page.slug}`,
+    alternates: [
+      { hreflang: page.locale, href: `https://example.com/${page.locale}/${page.slug}` },
+      ...page.translations.map((t) => ({
+        hreflang: t.locale,
+        href: `https://example.com/${t.locale}/${t.slug}`,
+      })),
+      { hreflang: "x-default", href: `https://example.com/en/${page.slug}` },
+    ],
+  }));
+}
+```
+
+## Best Practices
+
+1. **Include all alternates** - Every language version should list all other versions
+2. **Self-reference** - Include the current page in its own alternates list
+3. **Use x-default** - Provide a fallback for users whose language isn't listed
+4. **Consistent URLs** - Use the same URL structure across languages
+5. **Bidirectional links** - If page A links to page B, page B must link back to A
+6. **Absolute URLs** - All href values must be absolute URLs
+
+## Common Language Codes
+
+| Code | Language   |
+| ---- | ---------- |
+| `en` | English    |
+| `es` | Spanish    |
+| `fr` | French     |
+| `de` | German     |
+| `it` | Italian    |
+| `pt` | Portuguese |
+| `ja` | Japanese   |
+| `zh` | Chinese    |
+| `ko` | Korean     |
+| `ar` | Arabic     |
+
+## Common Region Codes
+
+| Code    | Region                   |
+| ------- | ------------------------ |
+| `en-US` | English (United States)  |
+| `en-GB` | English (United Kingdom) |
+| `es-ES` | Spanish (Spain)          |
+| `es-MX` | Spanish (Mexico)         |
+| `pt-BR` | Portuguese (Brazil)      |
+| `zh-CN` | Chinese (Simplified)     |
+| `zh-TW` | Chinese (Traditional)    |
+
+-----
+# Plugin Options
+
+Complete reference for all plugin configuration options.
+
+## Usage
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      // options here
+    }),
+  ],
+});
+```
+
+## Options
+
+### hostname
+
+- **Type:** `string`
+- **Default:** `undefined`
+
+The base URL of your site. Required for relative URLs to be properly resolved.
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+});
+```
+
+All relative URLs in your routes will be prefixed with this hostname:
+
+```typescript
+// Route: { url: "/about" }
+// Output: <loc>https://example.com/about</loc>
+```
+
+### sitemapFile
+
+- **Type:** `string`
+- **Default:** Auto-discovered
+
+Path to your sitemap definition file (without extension).
+
+```typescript
+sitemap({
+  sitemapFile: "config/sitemap",
+});
+```
+
+If not specified, the plugin searches in order:
+
+1. `src/sitemap.{ts,js,mts,mjs}`
+2. `sitemap.{ts,js,mts,mjs}` (project root)
+
+### outDir
+
+- **Type:** `string`
+- **Default:** Vite's `build.outDir`
+
+Output directory for generated sitemap files.
+
+```typescript
+sitemap({
+  outDir: "public",
+});
+```
+
+### filename
+
+- **Type:** `string`
+- **Default:** `"sitemap.xml"`
+
+Name of the output sitemap file.
+
+```typescript
+sitemap({
+  filename: "urlset.xml",
+});
+```
+
+When sitemap splitting occurs, this becomes the base name: `sitemap-0.xml`, `sitemap-1.xml`, etc.
+
+### changefreq
+
+- **Type:** `ChangeFrequency`
+- **Default:** `undefined`
+
+Default change frequency applied to all routes that don't specify their own.
+
+```typescript
+sitemap({
+  changefreq: "weekly",
+});
+```
+
+**Valid values:**
+
+- `"always"` - Changes every time accessed
+- `"hourly"` - Changes every hour
+- `"daily"` - Changes every day
+- `"weekly"` - Changes every week
+- `"monthly"` - Changes every month
+- `"yearly"` - Changes every year
+- `"never"` - Archived content
+
+### priority
+
+- **Type:** `number`
+- **Default:** `undefined`
+
+Default priority applied to all routes. Must be between `0.0` and `1.0`.
+
+```typescript
+sitemap({
+  priority: 0.5,
+});
+```
+
+Priority is relative to other pages on your site, not absolute. The default for pages without a specified priority is `0.5`.
+
+### lastmod
+
+- **Type:** `string`
+- **Default:** `undefined`
+
+Default last modified date for all routes. Must be in W3C Datetime format.
+
+```typescript
+sitemap({
+  lastmod: "2025-01-15",
+});
+
+// Or dynamic
+sitemap({
+  lastmod: new Date().toISOString().split("T")[0],
+});
+```
+
+**Valid formats:**
+
+- `"2025"` - Year only
+- `"2025-01"` - Year and month
+- `"2025-01-15"` - Full date
+- `"2025-01-15T10:30:00Z"` - With time (UTC)
+- `"2025-01-15T10:30:00+05:30"` - With timezone
+
+### exclude
+
+- **Type:** `Array<string | RegExp>`
+- **Default:** `[]`
+
+URL patterns to exclude from the sitemap.
+
+```typescript
+sitemap({
+  exclude: [
+    // String patterns (glob-like matching)
+    "/admin/*",
+    "/api/*",
+    "/internal/*",
+
+    // Regular expressions
+    /^\/private/,
+    /\/draft-/,
+    /\?/, // Exclude URLs with query strings
+  ],
+});
+```
+
+### transform
+
+- **Type:** `(route: Route) => Route | null | Promise<Route | null>`
+- **Default:** `undefined`
+
+Transform each route before XML generation. Return `null` to exclude the route.
+
+```typescript
+// Add trailing slashes
+sitemap({
+  transform: (route) => ({
+    ...route,
+    url: route.url.endsWith("/") ? route.url : `${route.url}/`,
+  }),
+});
+
+// Async transformation
+sitemap({
+  transform: async (route) => {
+    const meta = await fetchPageMeta(route.url);
+    if (!meta.published) return null;
+    return { ...route, lastmod: meta.updatedAt };
+  },
+});
+
+// Exclude specific routes
+sitemap({
+  transform: (route) => {
+    if (route.url.includes("/secret/")) return null;
+    return route;
+  },
+});
+```
+
+### serialize
+
+- **Type:** `(routes: Route[]) => string | Promise<string>`
+- **Default:** `undefined`
+
+Custom XML serialization function. Receives all validated routes and must return the complete XML string.
+
+```typescript
+sitemap({
+  serialize: (routes) => {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  ${routes.map((r) => `<url><loc>${r.url}</loc></url>`).join("\n  ")}
+</urlset>`;
+  },
+});
+```
+
+### generateRobotsTxt
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Generate or update `robots.txt` with a Sitemap directive.
+
+```typescript
+sitemap({
+  hostname: "https://example.com",
+  generateRobotsTxt: true,
+});
+```
+
+**Creates new robots.txt:**
+
+```txt
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+**Updates existing robots.txt:**
+
+- Appends Sitemap directive if not present
+- Preserves existing content
+
+Requires `hostname` to be set for the Sitemap URL.
+
+## TypeScript
+
+For full type safety, import the options type:
+
+```typescript
+import type { PluginOptions } from "@pyyupsk/vite-plugin-sitemap";
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+
+const options: PluginOptions = {
+  hostname: "https://example.com",
+  changefreq: "weekly",
+};
+
+export default defineConfig({
+  plugins: [sitemap(options)],
+});
+```
+
+## Complete Example
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+      sitemapFile: "src/sitemap",
+      outDir: "dist",
+      filename: "sitemap.xml",
+      changefreq: "weekly",
+      priority: 0.5,
+      lastmod: new Date().toISOString().split("T")[0],
+      exclude: ["/admin/*", "/api/*", /^\/private/],
+      transform: (route) => {
+        // Add trailing slash
+        if (!route.url.endsWith("/")) {
+          return { ...route, url: `${route.url}/` };
+        }
+        return route;
+      },
+      generateRobotsTxt: true,
+    }),
+  ],
+});
+```
+
+-----
+# Route Options
+
+Complete reference for route configuration options.
+
+## Basic Route
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+const route: Route = {
+  url: "/about",
+};
+```
+
+## Route Interface
+
+```typescript
+interface Route {
+  // Required
+  url: string;
+
+  // Standard sitemap properties
+  lastmod?: string;
+  changefreq?: ChangeFrequency;
+  priority?: number;
+
+  // Google extensions
+  images?: Image[];
+  videos?: Video[];
+  news?: News;
+  alternates?: Alternate[];
+}
+```
+
+## Standard Properties
+
+### url
+
+- **Type:** `string`
+- **Required:** Yes
+
+The URL of the page. Can be relative or absolute.
+
+```typescript
+// Relative (hostname prepended from config)
+{ url: "/about" }
+{ url: "/blog/post-1" }
+
+// Absolute
+{ url: "https://example.com/about" }
+```
+
+**Requirements:**
+
+- Maximum 2,048 characters
+- Must be valid URL format
+- No URL fragments (`#`)
+- After resolution, must use `http://` or `https://`
+
+### lastmod
+
+- **Type:** `string`
+- **Required:** No
+
+The date the page was last modified. Must be W3C Datetime format.
+
+```typescript
+{ url: "/", lastmod: "2025-01-15" }
+{ url: "/", lastmod: "2025-01-15T10:30:00Z" }
+{ url: "/", lastmod: "2025-01-15T10:30:00+05:30" }
+```
+
+**Valid formats:**
+| Format | Example |
+|--------|---------|
+| Year | `"2025"` |
+| Year-Month | `"2025-01"` |
+| Date | `"2025-01-15"` |
+| DateTime (UTC) | `"2025-01-15T10:30:00Z"` |
+| DateTime (offset) | `"2025-01-15T10:30:00+05:30"` |
+
+### changefreq
+
+- **Type:** `ChangeFrequency`
+- **Required:** No
+
+How frequently the page is likely to change.
+
+```typescript
+type ChangeFrequency = "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+```
+
+```typescript
+{ url: "/", changefreq: "daily" }
+{ url: "/blog", changefreq: "weekly" }
+{ url: "/archive/2020", changefreq: "never" }
+```
+
+### priority
+
+- **Type:** `number`
+- **Required:** No
+
+The priority of this URL relative to other URLs on your site.
+
+```typescript
+{ url: "/", priority: 1.0 }      // Highest
+{ url: "/about", priority: 0.8 }
+{ url: "/contact", priority: 0.5 } // Default
+{ url: "/terms", priority: 0.3 }  // Lower
+```
+
+**Requirements:**
+
+- Value between `0.0` and `1.0`
+- Default is `0.5` if not specified
+
+## Google Extensions
+
+### images
+
+- **Type:** `Image[]`
+- **Required:** No
+
+Images associated with this URL.
+
+```typescript
+interface Image {
+  loc: string; // Required: Image URL
+  title?: string; // Image title
+  caption?: string; // Image caption
+  geo_location?: string; // Geographic location
+  license?: string; // License URL
+}
+```
+
+```typescript
+{
+  url: "/gallery",
+  images: [
+    {
+      loc: "https://example.com/images/photo.jpg",
+      title: "Beautiful Photo",
+      caption: "A stunning landscape",
+      geo_location: "Swiss Alps",
+    },
+  ],
+}
+```
+
+### videos
+
+- **Type:** `Video[]`
+- **Required:** No
+
+Videos associated with this URL.
+
+```typescript
+interface Video {
+  // Required
+  title: string;
+  description: string;
+  thumbnail_loc: string;
+
+  // At least one required
+  content_loc?: string;
+  player_loc?: string;
+
+  // Optional
+  duration?: number;
+  expiration_date?: string;
+  rating?: number;
+  view_count?: number;
+  publication_date?: string;
+  family_friendly?: boolean;
+  restriction?: VideoRestriction;
+  platform?: VideoPlatform;
+  requires_subscription?: boolean;
+  uploader?: VideoUploader;
+  live?: boolean;
+  tag?: string[];
+}
+```
+
+```typescript
+{
+  url: "/videos/tutorial",
+  videos: [
+    {
+      title: "Getting Started",
+      description: "Learn the basics",
+      thumbnail_loc: "https://example.com/thumb.jpg",
+      content_loc: "https://example.com/video.mp4",
+      duration: 300,
+    },
+  ],
+}
+```
+
+### news
+
+- **Type:** `News`
+- **Required:** No
+
+News article metadata.
+
+```typescript
+interface News {
+  publication: {
+    name: string; // Publication name
+    language: string; // ISO 639-1 code
+  };
+  publication_date: string; // W3C Datetime
+  title: string; // Article title
+
+  // Optional
+  keywords?: string; // Comma-separated
+  stock_tickers?: string; // Max 5 tickers
+}
+```
+
+```typescript
+{
+  url: "/news/breaking",
+  news: {
+    publication: {
+      name: "Example News",
+      language: "en",
+    },
+    publication_date: "2025-01-15T10:30:00Z",
+    title: "Breaking News Story",
+    keywords: "breaking, news, important",
+  },
+}
+```
+
+### alternates
+
+- **Type:** `Alternate[]`
+- **Required:** No
+
+Alternate language versions.
+
+```typescript
+interface Alternate {
+  hreflang: string; // Language code or "x-default"
+  href: string; // Absolute URL
+}
+```
+
+```typescript
+{
+  url: "/products",
+  alternates: [
+    { hreflang: "en", href: "https://example.com/products" },
+    { hreflang: "es", href: "https://example.com/es/productos" },
+    { hreflang: "x-default", href: "https://example.com/products" },
+  ],
+}
+```
+
+## Complete Example
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  // Basic page
+  {
+    url: "/",
+    priority: 1.0,
+    changefreq: "daily",
+    lastmod: "2025-01-15",
+  },
+
+  // Page with images
+  {
+    url: "/gallery",
+    priority: 0.8,
+    images: [
+      {
+        loc: "https://example.com/images/hero.jpg",
+        title: "Hero Image",
+      },
+    ],
+  },
+
+  // Video page
+  {
+    url: "/tutorials",
+    videos: [
+      {
+        title: "Tutorial",
+        description: "Learn how to use our product",
+        thumbnail_loc: "https://example.com/thumb.jpg",
+        content_loc: "https://example.com/video.mp4",
+        duration: 600,
+      },
+    ],
+  },
+
+  // News article
+  {
+    url: "/news/announcement",
+    news: {
+      publication: { name: "Company Blog", language: "en" },
+      publication_date: new Date().toISOString(),
+      title: "Important Announcement",
+    },
+  },
+
+  // Multi-language page
+  {
+    url: "/about",
+    alternates: [
+      { hreflang: "en", href: "https://example.com/about" },
+      { hreflang: "es", href: "https://example.com/es/acerca" },
+      { hreflang: "x-default", href: "https://example.com/about" },
+    ],
+  },
+] satisfies Route[];
+```
+
+-----
+# API Reference
+
+This page documents the public API exports from `@pyyupsk/vite-plugin-sitemap`.
+
+## Plugin
+
+### sitemapPlugin (default)
+
+The main Vite plugin function.
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+
+// Usage
+sitemap(options?: PluginOptions): Plugin
+```
+
+**Parameters:**
+
+- `options` - Plugin options
+
+**Returns:** Vite Plugin object
+
+**Example:**
+
+```typescript
+import sitemap from "@pyyupsk/vite-plugin-sitemap";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    sitemap({
+      hostname: "https://example.com",
+    }),
+  ],
+});
+```
+
+## Generator Functions
+
+### generateSitemap
+
+Generate sitemap XML from routes programmatically.
+
+```typescript
+import { generateSitemap } from "@pyyupsk/vite-plugin-sitemap";
+
+async function generateSitemap(
+  routes: Route[],
+  options?: GeneratorOptions,
+): Promise<GeneratorResult>;
+```
+
+**Parameters:**
+
+- `routes` - Array of route objects
+- `options` - Generator options
+
+**Returns:** `GeneratorResult` object with XML and metadata
+
+**Example:**
+
+```typescript
+import { generateSitemap } from "@pyyupsk/vite-plugin-sitemap";
+
+const result = await generateSitemap(
+  [{ url: "https://example.com/" }, { url: "https://example.com/about" }],
+  { hostname: "https://example.com" },
+);
+
+if (result.success) {
+  console.log(result.xml);
+}
+```
+
+### validateRoutes
+
+Validate routes without generating XML.
+
+```typescript
+import { validateRoutes } from "@pyyupsk/vite-plugin-sitemap";
+
+function validateRoutes(routes: Route[]): ValidationResult;
+```
+
+**Parameters:**
+
+- `routes` - Array of route objects
+
+**Returns:** `ValidationResult` with validation status and errors
+
+**Example:**
+
+```typescript
+import { validateRoutes } from "@pyyupsk/vite-plugin-sitemap";
+
+const result = validateRoutes([
+  { url: "https://example.com/" },
+  { url: "invalid-url" }, // Will fail validation
+]);
+
+if (!result.valid) {
+  console.error(result.errors);
+}
+```
+
+## XML Builders
+
+### buildSitemapXml
+
+Build a complete sitemap XML string from routes.
+
+```typescript
+import { buildSitemapXml } from "@pyyupsk/vite-plugin-sitemap";
+
+function buildSitemapXml(routes: Route[]): string;
+```
+
+**Example:**
+
+```typescript
+import { buildSitemapXml } from "@pyyupsk/vite-plugin-sitemap";
+
+const xml = buildSitemapXml([
+  { url: "https://example.com/" },
+  { url: "https://example.com/about" },
+]);
+```
+
+### buildSitemapIndexXml
+
+Build a sitemap index XML string.
+
+```typescript
+import { buildSitemapIndexXml } from "@pyyupsk/vite-plugin-sitemap";
+
+function buildSitemapIndexXml(references: SitemapReference[]): string;
+```
+
+**Example:**
+
+```typescript
+import { buildSitemapIndexXml } from "@pyyupsk/vite-plugin-sitemap";
+
+const xml = buildSitemapIndexXml([
+  { loc: "https://example.com/sitemap-0.xml", lastmod: "2025-01-15" },
+  { loc: "https://example.com/sitemap-1.xml", lastmod: "2025-01-15" },
+]);
+```
+
+### buildUrlElement
+
+Build a single URL element XML string.
+
+```typescript
+import { buildUrlElement } from "@pyyupsk/vite-plugin-sitemap";
+
+function buildUrlElement(route: Route): string;
+```
+
+**Example:**
+
+```typescript
+import { buildUrlElement } from "@pyyupsk/vite-plugin-sitemap";
+
+const xml = buildUrlElement({
+  url: "https://example.com/",
+  lastmod: "2025-01-15",
+  changefreq: "daily",
+  priority: 1.0,
+});
+
+// Output:
+// <url>
+//   <loc>https://example.com/</loc>
+//   <lastmod>2025-01-15</lastmod>
+//   <changefreq>daily</changefreq>
+//   <priority>1.0</priority>
+// </url>
+```
+
+## Utilities
+
+### calculateByteSize
+
+Calculate the byte size of an XML string (UTF-8).
+
+```typescript
+import { calculateByteSize } from "@pyyupsk/vite-plugin-sitemap";
+
+function calculateByteSize(xml: string): number;
+```
+
+**Example:**
+
+```typescript
+import { buildSitemapXml, calculateByteSize } from "@pyyupsk/vite-plugin-sitemap";
+
+const xml = buildSitemapXml([{ url: "https://example.com/" }]);
+const size = calculateByteSize(xml);
+console.log(`Sitemap size: ${size} bytes`);
+```
+
+## Validation
+
+### ValidationError
+
+Error class for validation failures.
+
+```typescript
+import { ValidationError } from "@pyyupsk/vite-plugin-sitemap";
+
+interface ValidationError {
+  field: string;
+  message: string;
+  suggestion?: string;
+  received?: unknown;
+}
+```
+
+### formatResultForConsole
+
+Format a validation result for console output.
+
+```typescript
+import { formatResultForConsole } from "@pyyupsk/vite-plugin-sitemap";
+
+function formatResultForConsole(result: ValidationResult): string;
+```
+
+### formatErrorsForConsole
+
+Format validation errors for console output.
+
+```typescript
+import { formatErrorsForConsole } from "@pyyupsk/vite-plugin-sitemap";
+
+function formatErrorsForConsole(errors: ValidationError[]): string;
+```
+
+## Full Export List
+
+```typescript
+// Default export
+export { sitemapPlugin as default };
+
+// Plugin
+export { sitemapPlugin, PLUGIN_NAME };
+
+// Generator
+export { generateSitemap, validateRoutes };
+export type { GenerationOptions, GenerationResult };
+
+// XML Builders
+export { buildSitemapXml, buildSitemapIndexXml, buildUrlElement, calculateByteSize };
+
+// Validation
+export { formatResultForConsole, formatErrorsForConsole };
+export type { ValidationError, ValidationResult };
+
+// Types
+export type {
+  Route,
+  ChangeFrequency,
+  Image,
+  Video,
+  News,
+  NewsPublication,
+  Alternate,
+  VideoRestriction,
+  VideoPlatform,
+  VideoUploader,
+  PluginOptions,
+  RouteTransformer,
+  XmlSerializer,
+};
+```
+
+-----
+# Types
+
+TypeScript type definitions exported by `@pyyupsk/vite-plugin-sitemap`.
+
+## Core Types
+
+### Route
+
+A single URL entry in the sitemap.
+
+```typescript
+interface Route {
+  url: string;
+  lastmod?: string;
+  changefreq?: ChangeFrequency;
+  priority?: number;
+  images?: Image[];
+  videos?: Video[];
+  news?: News;
+  alternates?: Alternate[];
+}
+```
+
+### ChangeFrequency
+
+Valid change frequency values.
+
+```typescript
+type ChangeFrequency = "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+```
+
+### RouteGenerator
+
+Async function that returns routes.
+
+```typescript
+type RouteGenerator = () => Promise<Route[]> | Route[];
+```
+
+### SitemapDefaultExport
+
+Valid default export types from sitemap.ts.
+
+```typescript
+type SitemapDefaultExport = Route[] | RouteGenerator;
+```
+
+## Plugin Types
+
+### PluginOptions
+
+Plugin configuration options.
+
+```typescript
+interface PluginOptions {
+  hostname?: string;
+  sitemapFile?: string;
+  outDir?: string;
+  filename?: string;
+  changefreq?: ChangeFrequency;
+  priority?: number;
+  lastmod?: string;
+  exclude?: Array<string | RegExp>;
+  transform?: RouteTransformer;
+  serialize?: XmlSerializer;
+  generateRobotsTxt?: boolean;
+}
+```
+
+### RouteTransformer
+
+Function to transform routes before XML generation.
+
+```typescript
+type RouteTransformer = (route: Route) => Route | null | Promise<Route | null>;
+```
+
+### XmlSerializer
+
+Custom XML serializer function.
+
+```typescript
+type XmlSerializer = (routes: Route[]) => string | Promise<string>;
+```
+
+## Extension Types
+
+### Image
+
+Image metadata for Google Image sitemap extension.
+
+```typescript
+interface Image {
+  loc: string;
+  title?: string;
+  caption?: string;
+  geo_location?: string;
+  license?: string;
+}
+```
+
+### Video
+
+Video metadata for Google Video sitemap extension.
+
+```typescript
+interface Video {
+  title: string;
+  description: string;
+  thumbnail_loc: string;
+  content_loc?: string;
+  player_loc?: string;
+  duration?: number;
+  expiration_date?: string;
+  rating?: number;
+  view_count?: number;
+  publication_date?: string;
+  family_friendly?: boolean;
+  restriction?: VideoRestriction;
+  platform?: VideoPlatform;
+  requires_subscription?: boolean;
+  uploader?: VideoUploader;
+  live?: boolean;
+  tag?: string[];
+}
+```
+
+### VideoRestriction
+
+Geographic restrictions for video playback.
+
+```typescript
+interface VideoRestriction {
+  relationship: "allow" | "deny";
+  countries: string[];
+}
+```
+
+### VideoPlatform
+
+Platform restrictions for video playback.
+
+```typescript
+interface VideoPlatform {
+  relationship: "allow" | "deny";
+  platforms: Array<"web" | "mobile" | "tv">;
+}
+```
+
+### VideoUploader
+
+Information about the video uploader.
+
+```typescript
+interface VideoUploader {
+  name: string;
+  info?: string;
+}
+```
+
+### News
+
+News article metadata for Google News sitemap extension.
+
+```typescript
+interface News {
+  publication: NewsPublication;
+  publication_date: string;
+  title: string;
+  keywords?: string;
+  stock_tickers?: string;
+}
+```
+
+### NewsPublication
+
+Information about the news publication.
+
+```typescript
+interface NewsPublication {
+  name: string;
+  language: string;
+}
+```
+
+### Alternate
+
+Alternate language version for hreflang annotations.
+
+```typescript
+interface Alternate {
+  hreflang: string;
+  href: string;
+}
+```
+
+## Result Types
+
+### ValidationResult
+
+Result from route validation.
+
+```typescript
+interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+}
+```
+
+### ValidationError
+
+A validation error.
+
+```typescript
+interface ValidationError {
+  url: string;
+  field: string;
+  message: string;
+  suggestion?: string;
+  received?: unknown;
+}
+```
+
+### ValidationWarning
+
+A validation warning (non-blocking).
+
+```typescript
+interface ValidationWarning {
+  url: string;
+  field: string;
+  message: string;
+}
+```
+
+### GeneratorResult
+
+Result from sitemap generation.
+
+```typescript
+interface GeneratorResult {
+  success: boolean;
+  xml?: string;
+  byteSize?: number;
+  routeCount?: number;
+  warnings: string[];
+  validation: ValidationResult;
+  splitResult?: SplitResult;
+}
+```
+
+### SplitResult
+
+Result when sitemap was split into multiple files.
+
+```typescript
+interface SplitResult {
+  wasSplit: boolean;
+  sitemaps: SitemapChunk[];
+  indexXml?: string;
+}
+```
+
+### SitemapChunk
+
+A chunk of a split sitemap.
+
+```typescript
+interface SitemapChunk {
+  filename: string;
+  xml: string;
+  routes: Route[];
+  byteSize: number;
+}
+```
+
+## Sitemap Types
+
+### Sitemap
+
+Generated sitemap file structure.
+
+```typescript
+interface Sitemap {
+  filename: string;
+  routes: Route[];
+  byteSize: number;
+}
+```
+
+### SitemapIndex
+
+Index file referencing multiple sitemaps.
+
+```typescript
+interface SitemapIndex {
+  filename: string;
+  sitemaps: SitemapReference[];
+}
+```
+
+### SitemapReference
+
+Reference to a child sitemap in an index.
+
+```typescript
+interface SitemapReference {
+  loc: string;
+  lastmod?: string;
+}
+```
+
+## Importing Types
+
+Import types for use in your code:
+
+```typescript
+import type {
+  Route,
+  ChangeFrequency,
+  Image,
+  Video,
+  News,
+  Alternate,
+  PluginOptions,
+  RouteTransformer,
+  XmlSerializer,
+  ValidationResult,
+} from "@pyyupsk/vite-plugin-sitemap";
+```
+
+## Type-Safe Routes
+
+Use `satisfies` for type checking without explicit annotation:
+
+```typescript
+import type { Route } from "@pyyupsk/vite-plugin-sitemap";
+
+export default [
+  {
+    url: "/",
+    priority: 1.0,
+    changefreq: "daily",
+  },
+  {
+    url: "/about",
+    priority: 0.8,
+  },
+] satisfies Route[];
+```
