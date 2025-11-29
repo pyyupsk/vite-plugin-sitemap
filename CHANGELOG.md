@@ -7,14 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Explicit guard for empty routes array in `splitRoutes()`
+- `SitemapPlugin` interface to prevent Vite types leaking into public API
+- Comprehensive JSDoc documentation with `@since` version tags based on git history
+
 ### Changed
 
 - Replace custom glob matching with `picomatch` for proper pattern support
-- Fix glob matching bug where `*.example.com` incorrectly matched `abcexample.com`
 - Extract `formatBytes` to shared utility module (DRY refactor)
-- Add explicit guard for empty routes array in `splitRoutes()`
-- Add `SitemapPlugin` interface to prevent Vite types leaking into public API
-- Add comprehensive JSDoc documentation with `@since` version tags based on git history
+
+### Fixed
+
+- Glob matching bug where `*.example.com` incorrectly matched `abcexample.com`
+- Priority precision in XML output (0.85 no longer rounds to 0.9)
 
 ## [0.2.0] - 2025-11-29
 

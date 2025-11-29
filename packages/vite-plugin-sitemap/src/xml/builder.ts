@@ -219,7 +219,10 @@ export function buildUrlElement(route: Route): string {
 
   // Optional: priority
   if (route.priority !== undefined) {
-    parts.push(`  <priority>${route.priority.toFixed(1)}</priority>`);
+    // Keep original precision, but ensure at least one decimal for whole numbers
+    const priorityStr =
+      route.priority % 1 === 0 ? route.priority.toFixed(1) : String(route.priority);
+    parts.push(`  <priority>${priorityStr}</priority>`);
   }
 
   // Images extension
