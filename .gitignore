@@ -36,3 +36,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Generated docs files (copied during build)
+apps/docs/docs/public/llms.txt
+apps/docs/docs/public/llms-full.txt

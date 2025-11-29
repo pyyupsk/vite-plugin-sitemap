@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "vitepress build docs",
+    "build": "cp ../../llms.txt ../../llms-full.txt docs/public/ && vitepress build docs",
     "dev": "vitepress dev docs",
     "preview": "vitepress preview docs"
   },
