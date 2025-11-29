@@ -24,7 +24,7 @@ export default defineConfig({
       { text: "Config", link: "/config/" },
       { text: "API", link: "/api/" },
       {
-        text: "0.0.1",
+        text: "v0.2.0",
         items: [
           {
             text: "Changelog",

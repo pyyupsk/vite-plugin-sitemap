@@ -1,6 +1,6 @@
 # @pyyupsk/vite-plugin-sitemap
 
-A TypeScript-first Vite plugin for generating XML sitemaps with full Google extensions support (images, videos, news, hreflang).
+A TypeScript-first Vite plugin for generating XML sitemaps with full Google extensions support (images, videos, news, hreflang). Features dev mode support for previewing sitemap.xml and robots.txt during development.
 
 ## Guide
 

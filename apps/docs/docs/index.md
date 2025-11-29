@@ -23,6 +23,9 @@ features:
   - icon: ⚡
     title: Zero Runtime
     details: Generates sitemaps at build time only. No impact on your client bundle size or runtime performance.
+  - icon: 🔧
+    title: Dev Mode Support
+    details: Preview sitemap.xml and robots.txt dynamically during development without running a build.
   - icon: 💻
     title: Powerful CLI
     details: Validate, preview, and generate sitemaps without a full Vite build. Perfect for CI/CD pipelines.
@@ -32,6 +35,9 @@ features:
   - icon: 🔄
     title: Async Routes
     details: Fetch routes from APIs, databases, or CMSs at build time with async route generators.
+  - icon: 🤖
+    title: LLM-Friendly Docs
+    details: Machine-readable documentation via llms.txt for AI assistants and code generation tools.
 ---
 
 <style>

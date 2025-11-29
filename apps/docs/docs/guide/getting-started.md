@@ -63,7 +63,17 @@ export default [
 ] satisfies Route[];
 ```
 
-### 3. Build Your Project
+### 3. Preview in Dev Mode
+
+Start the dev server to preview your sitemap:
+
+```bash
+npm run dev
+```
+
+Visit `http://localhost:5173/sitemap.xml` to see your generated sitemap in real-time. Changes to `src/sitemap.ts` are reflected immediately.
+
+### 4. Build Your Project
 
 Run your Vite build:
 
@@ -120,6 +130,10 @@ Allow: /
 
 Sitemap: https://example.com/sitemap.xml
 ```
+
+::: tip Dev Mode Support
+When `generateRobotsTxt` is enabled, `robots.txt` is also served during development at `http://localhost:5173/robots.txt`.
+:::
 
 ## Next Steps
 

@@ -262,6 +262,10 @@ Or appends to existing `robots.txt`:
 Sitemap: https://example.com/sitemap.xml
 ```
 
+::: tip Dev Mode
+Both `sitemap.xml` and `robots.txt` (when enabled) are served during development at `http://localhost:5173/sitemap.xml` and `http://localhost:5173/robots.txt`.
+:::
+
 ## TypeScript Configuration
 
 For full type safety, import the plugin types:

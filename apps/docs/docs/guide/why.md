@@ -84,6 +84,21 @@ vite-sitemap preview
 vite-sitemap generate --hostname https://example.com
 ```
 
+### Dev Mode Support
+
+Preview your sitemap during development without running a build. The plugin serves `/sitemap.xml` and `/robots.txt` dynamically:
+
+```bash
+# Start dev server
+npm run dev
+
+# Access in browser
+http://localhost:5173/sitemap.xml
+http://localhost:5173/robots.txt
+```
+
+This allows you to verify your sitemap configuration in real-time as you develop.
+
 ## Comparison
 
 | Feature              | vite-plugin-sitemap | Others  |
@@ -97,6 +112,7 @@ vite-sitemap generate --hostname https://example.com
 | Async Routes         | Yes                 | Limited |
 | Auto-splitting       | Yes                 | No      |
 | CLI Tools            | Full suite          | None    |
+| Dev Mode Support     | Yes                 | No      |
 | Zero Runtime         | Yes                 | Yes     |
 
 ## When to Use This Plugin
@@ -109,6 +125,7 @@ This plugin is ideal if you:
 - Need to validate sitemaps in CI/CD
 - Want to fetch routes from APIs at build time
 - Value detailed error messages and suggestions
+- Want to preview sitemaps during development
 
 ## When to Consider Alternatives
 

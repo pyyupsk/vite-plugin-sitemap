@@ -5,6 +5,7 @@ A TypeScript-first Vite plugin for generating XML sitemaps from a file-based con
 ## Features
 
 - **File-based configuration** - Define routes in `src/sitemap.ts`
+- **Dev mode support** - Preview sitemap.xml and robots.txt during development
 - **Async support** - Fetch routes from APIs or databases at build time
 - **Auto-splitting** - Automatically splits large sitemaps (50,000+ URLs)
 - **Google extensions** - Support for images, videos, news, and i18n (hreflang)
@@ -36,6 +37,8 @@ export default defineConfig({
 ## Documentation
 
 For full documentation, visit [pyyupsk.github.io/vite-plugin-sitemap](https://pyyupsk.github.io/vite-plugin-sitemap).
+
+For LLM-friendly documentation, see [llms.txt](./llms.txt) or [llms-full.txt](./llms-full.txt).
 
 ## License
 
