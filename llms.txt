@@ -1,0 +1,34 @@
+# @pyyupsk/vite-plugin-sitemap
+
+A TypeScript-first Vite plugin for generating XML sitemaps with full Google extensions support (images, videos, news, hreflang).
+
+## Guide
+
+- [Why This Plugin](https://pyyupsk.github.io/vite-plugin-sitemap/guide/why): Key differentiators and comparison with alternatives
+- [Getting Started](https://pyyupsk.github.io/vite-plugin-sitemap/guide/getting-started): Installation and basic setup
+- [Configuration](https://pyyupsk.github.io/vite-plugin-sitemap/guide/configuration): Plugin options and configuration
+- [Route Definition](https://pyyupsk.github.io/vite-plugin-sitemap/guide/routes): Defining routes in sitemap.ts
+- [CLI](https://pyyupsk.github.io/vite-plugin-sitemap/guide/cli): Command-line tools for validation, preview, and generation
+
+## Advanced
+
+- [Large Sitemaps](https://pyyupsk.github.io/vite-plugin-sitemap/guide/advanced/large-sitemaps): Automatic splitting for 50,000+ URLs
+- [Dynamic Routes](https://pyyupsk.github.io/vite-plugin-sitemap/guide/advanced/dynamic-routes): Fetching routes from APIs, databases, and CMSs
+- [Custom Serialization](https://pyyupsk.github.io/vite-plugin-sitemap/guide/advanced/custom-serialization): Custom XML generation
+
+## Extensions
+
+- [Image Sitemaps](https://pyyupsk.github.io/vite-plugin-sitemap/guide/extensions/images): Google Image sitemap extension
+- [Video Sitemaps](https://pyyupsk.github.io/vite-plugin-sitemap/guide/extensions/videos): Google Video sitemap extension
+- [News Sitemaps](https://pyyupsk.github.io/vite-plugin-sitemap/guide/extensions/news): Google News sitemap extension
+- [Internationalization](https://pyyupsk.github.io/vite-plugin-sitemap/guide/extensions/i18n): hreflang annotations for multi-language sites
+
+## Config Reference
+
+- [Plugin Options](https://pyyupsk.github.io/vite-plugin-sitemap/config/): Complete reference for plugin configuration
+- [Route Options](https://pyyupsk.github.io/vite-plugin-sitemap/config/route): Complete reference for route configuration
+
+## API
+
+- [API Reference](https://pyyupsk.github.io/vite-plugin-sitemap/api/): Public API exports and functions
+- [Types](https://pyyupsk.github.io/vite-plugin-sitemap/api/types): TypeScript type definitions
