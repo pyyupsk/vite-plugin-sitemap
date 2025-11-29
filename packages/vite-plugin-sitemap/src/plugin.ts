@@ -3,7 +3,7 @@
  * Generates sitemap.xml during build using the closeBundle hook.
  */
 
-import type { ResolvedConfig } from "vite";
+import type { ResolvedConfig, ViteDevServer } from "vite";
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
@@ -229,9 +229,115 @@ export function sitemapPlugin(userOptions: PluginOptions = {}) {
     },
 
     // Store resolved config and resolve options with build.outDir
-    configResolved(resolvedConfig: ResolvedConfig) {
-      config = resolvedConfig;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    configResolved(resolvedConfig: any) {
+      config = resolvedConfig as ResolvedConfig;
       resolvedOptions = resolveOptions(userOptions, config.build.outDir);
+    },
+
+    // Serve sitemap.xml and robots.txt in dev mode
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    configureServer(server: any) {
+      const viteServer = server as ViteDevServer;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      server.middlewares.use(async (req: any, res: any, next: any) => {
+        const url = req.url ?? "";
+
+        // Handle robots.txt
+        if (url === "/robots.txt" && resolvedOptions.generateRobotsTxt) {
+          const hostname = resolvedOptions.hostname;
+          if (hostname) {
+            const sitemapUrl = buildSitemapUrl(hostname, resolvedOptions.filename);
+            res.setHeader("Content-Type", "text/plain");
+            res.end(`User-agent: *\nAllow: /\n\nSitemap: ${sitemapUrl}\n`);
+            return;
+          }
+          return next();
+        }
+
+        // Only handle sitemap requests
+        if (!url.startsWith("/sitemap") || !url.endsWith(".xml")) {
+          return next();
+        }
+
+        try {
+          // Discover sitemap file
+          const { existsSync } = await import("node:fs");
+          const { resolve: pathResolve } = await import("node:path");
+
+          const discovery = await inlineDiscoverSitemapFile(
+            config.root,
+            resolvedOptions.sitemapFile,
+            existsSync,
+            pathResolve,
+          );
+
+          if (!discovery.found || !discovery.path) {
+            return next();
+          }
+
+          // Load and resolve routes
+          const loadResult = await loadSitemapFile(discovery.path, viteServer);
+          const resolvedRoutes = await resolveRoutes(loadResult);
+
+          if (resolvedRoutes.length === 0) {
+            return next();
+          }
+
+          // Determine which sitemap to serve based on URL
+          const requestedFile = url.slice(1); // Remove leading /
+
+          for (const { name, routes } of resolvedRoutes) {
+            const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
+            const result = await generateSitemap(routes, {
+              baseFilename,
+              enableSplitting: true,
+              hostname: resolvedOptions.hostname,
+              pluginOptions: resolvedOptions,
+            });
+
+            if (!result.success) {
+              continue;
+            }
+
+            // Check if this is a split sitemap request
+            if (result.splitResult?.wasSplit) {
+              // Check for sitemap index
+              const indexFilename = getSitemapIndexFilename(baseFilename);
+              if (requestedFile === indexFilename) {
+                res.setHeader("Content-Type", "application/xml");
+                res.end(result.splitResult.indexXml);
+                return;
+              }
+
+              // Check for individual sitemap chunks
+              for (const chunk of result.splitResult.sitemaps) {
+                if (requestedFile === chunk.filename) {
+                  res.setHeader("Content-Type", "application/xml");
+                  res.end(chunk.xml);
+                  return;
+                }
+              }
+            } else {
+              // Single sitemap file
+              const filename = resolvedOptions.filename ?? getSitemapFilename(name);
+              if (requestedFile === filename) {
+                res.setHeader("Content-Type", "application/xml");
+                res.end(result.xml);
+                return;
+              }
+            }
+          }
+
+          // No matching sitemap found
+          next();
+        } catch (error) {
+          config.logger.error(
+            `${pc.red("✗")} Failed to generate sitemap: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          next();
+        }
+      });
     },
 
     name: PLUGIN_NAME,

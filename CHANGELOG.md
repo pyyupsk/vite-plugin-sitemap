@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-11-29
+
+### Added
+
+- Dev mode support: serve `/sitemap.xml` dynamically during development
+- Dev mode support: serve `/robots.txt` during development (when `generateRobotsTxt: true`)
+
 ## [0.1.1] - 2025-11-29
 
 ### Fixed
