@@ -5,7 +5,7 @@
   "description": "A modern Vite plugin for generating XML sitemaps from file-based conventions",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pyyupsk/vite-plugin-sitemap"
+    "url": "git+https://github.com/pyyupsk/vite-plugin-sitemap.git"
   },
   "homepage": "https://github.com/pyyupsk/vite-plugin-sitemap#readme",
   "bugs": {
@@ -17,7 +17,7 @@
     "node": ">=20"
   },
   "bin": {
-    "vite-sitemap": "./dist/cli/index.mjs"
+    "vite-sitemap": "dist/cli/index.mjs"
   },
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
