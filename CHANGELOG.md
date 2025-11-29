@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-11-29
+
 ### Fixed
 
-- Add missing ESLint dependencies to workspace packages
+- Fix TypeScript type conflict when using `bun link` for local development
+- Remove Vite types from public API to avoid type resolution conflicts when package is symlinked
+- Use `Symbol.for()` to store plugin options for CLI access across module boundaries
 
 ## [0.1.0] - 2025-11-28
 

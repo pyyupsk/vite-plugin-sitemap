@@ -10,6 +10,16 @@ pre-commit:
           if ! git diff --staged --name-only | grep -q "^CHANGELOG.md$"; then
             echo "❌ Please update CHANGELOG.md"
             echo "Note: CHANGELOG.md should be updated in the root directory, and only provides a changelog for the plugin."
+            echo "    The CHANGELOG.md in packages/vite-plugin-sitemap/ copies the changelog from the root directory during build."
+            exit 1
+          fi
+        fi
+    version-check:
+      run: |
+        if git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/src/"; then
+          if ! git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/package.json$"; then
+            echo "❌ Source files changed but version not bumped"
+            echo "   Please update the version in packages/vite-plugin-sitemap/package.json"
             exit 1
           fi
         fi

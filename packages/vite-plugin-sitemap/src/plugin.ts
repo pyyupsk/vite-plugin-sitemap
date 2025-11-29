@@ -3,7 +3,7 @@
  * Generates sitemap.xml during build using the closeBundle hook.
  */
 
-import type { Plugin, ResolvedConfig } from "vite";
+import type { ResolvedConfig } from "vite";
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
@@ -25,28 +25,37 @@ import { formatResultForConsole } from "./validation/errors";
 export const PLUGIN_NAME = "vite-plugin-sitemap";
 
 /**
+ * Symbol key for storing plugin options.
+ * Uses Symbol.for() to ensure the same symbol is used across module boundaries
+ * (e.g., when CLI loads vite.config.ts in a separate context).
+ */
+const PLUGIN_OPTIONS_KEY = Symbol.for("vite-plugin-sitemap:options");
+
+/**
+ * Get plugin options from a plugin instance.
+ * Used by CLI to read config from vite.config.ts.
+ *
+ * @param plugin Plugin instance
+ * @returns Plugin options or undefined
+ */
+export function getPluginOptions(plugin: unknown): PluginOptions | undefined {
+  if (plugin && typeof plugin === "object" && PLUGIN_OPTIONS_KEY in plugin) {
+    return (plugin as Record<symbol, PluginOptions>)[PLUGIN_OPTIONS_KEY];
+  }
+  return undefined;
+}
+
+/**
  * Create the Vite sitemap plugin.
  *
  * @param userOptions Plugin options
  * @returns Vite plugin
  */
-/**
- * Extended plugin type with options for CLI access.
- */
-export interface SitemapPlugin extends Plugin {
-  __options: PluginOptions;
-}
-
-export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
+export function sitemapPlugin(userOptions: PluginOptions = {}) {
   let config: ResolvedConfig;
   let resolvedOptions: ReturnType<typeof resolveOptions>;
 
-  return {
-    /**
-     * Expose plugin options for CLI access.
-     */
-    __options: userOptions,
-
+  const plugin = {
     // Generate sitemap after build completes
     async closeBundle() {
       // Only run in build mode
@@ -220,13 +229,19 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
     },
 
     // Store resolved config and resolve options with build.outDir
-    configResolved(resolvedConfig) {
+    configResolved(resolvedConfig: ResolvedConfig) {
       config = resolvedConfig;
       resolvedOptions = resolveOptions(userOptions, config.build.outDir);
     },
 
     name: PLUGIN_NAME,
+
+    // Store options for CLI access using a symbol key
+    // Symbol.for ensures the same key is used across module boundaries
+    [PLUGIN_OPTIONS_KEY]: userOptions,
   };
+
+  return plugin;
 }
 
 /**

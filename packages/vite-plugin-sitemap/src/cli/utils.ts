@@ -16,7 +16,7 @@ import type { PluginOptions } from "../types/config";
 
 import { discoverSitemapFile, formatNotFoundError } from "../core/discovery";
 import { loadSitemapFile, type ResolvedRoutes, resolveRoutes } from "../core/loader";
-import { PLUGIN_NAME } from "../plugin";
+import { getPluginOptions, PLUGIN_NAME } from "../plugin";
 
 /**
  * CLI logger with colored output.
@@ -93,9 +93,7 @@ export async function loadPluginOptions(root: string): Promise<null | PluginOpti
     // Try to find the sitemap plugin in the plugins array
     for (const plugin of plugins) {
       if (plugin && typeof plugin === "object" && "name" in plugin && plugin.name === PLUGIN_NAME) {
-        // The options are stored on the plugin instance
-        const sitemapPlugin = plugin as { __options?: PluginOptions };
-        return sitemapPlugin.__options ?? {};
+        return getPluginOptions(plugin) ?? {};
       }
     }
 
