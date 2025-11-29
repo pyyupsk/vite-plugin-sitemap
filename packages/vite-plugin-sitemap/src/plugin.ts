@@ -33,6 +33,19 @@ export const PLUGIN_NAME = "vite-plugin-sitemap";
 const PLUGIN_OPTIONS_KEY = Symbol.for("vite-plugin-sitemap:options");
 
 /**
+ * Vite plugin return type without exposing Vite's internal types.
+ * This prevents type conflicts when users have different Vite versions.
+ */
+export interface SitemapPlugin {
+  closeBundle: () => Promise<void>;
+  // eslint-disable-next-line no-unused-vars
+  configResolved: (resolvedConfig: unknown) => void;
+  // eslint-disable-next-line no-unused-vars
+  configureServer: (server: unknown) => void;
+  name: string;
+}
+
+/**
  * Get plugin options from a plugin instance.
  * Used by CLI to read config from vite.config.ts.
  *
@@ -52,7 +65,7 @@ export function getPluginOptions(plugin: unknown): PluginOptions | undefined {
  * @param userOptions Plugin options
  * @returns Vite plugin
  */
-export function sitemapPlugin(userOptions: PluginOptions = {}) {
+export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
   let config: ResolvedConfig;
   let resolvedOptions: ReturnType<typeof resolveOptions>;
 

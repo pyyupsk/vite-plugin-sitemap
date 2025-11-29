@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix glob matching bug where `*.example.com` incorrectly matched `abcexample.com`
 - Extract `formatBytes` to shared utility module (DRY refactor)
 - Add explicit guard for empty routes array in `splitRoutes()`
+- Add `SitemapPlugin` interface to prevent Vite types leaking into public API
 
 ## [0.2.0] - 2025-11-29
 
