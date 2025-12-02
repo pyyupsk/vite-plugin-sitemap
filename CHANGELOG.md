@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use new `@repo/eslint-config/library` config with JSDoc linting for source files
+
 ## [0.2.1] - 2025-11-29
 
 ### Added

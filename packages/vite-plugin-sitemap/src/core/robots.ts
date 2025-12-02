@@ -1,6 +1,7 @@
 /**
  * robots.txt generation and management utilities.
  * Handles reading, updating, and creating robots.txt files with Sitemap directives.
+ *
  * @module
  */
 
@@ -26,9 +27,9 @@ export interface RobotsTxtResult {
  * Append a Sitemap directive to robots.txt content.
  * Ensures proper formatting with newlines and preserves existing content.
  *
- * @param {string} content - Current robots.txt content (may be empty)
- * @param {string} sitemapUrl - URL of the sitemap to add
- * @returns {string} Updated robots.txt content with Sitemap directive appended
+ * @param content - Current robots.txt content (may be empty)
+ * @param sitemapUrl - URL of the sitemap to add
+ * @returns Updated robots.txt content with Sitemap directive appended
  *
  * @example
  * const content = 'User-agent: *\nAllow: /\n';
@@ -55,9 +56,9 @@ export function appendSitemapDirective(content: string, sitemapUrl: string): str
  * Build the absolute sitemap URL from hostname and filename.
  * Handles trailing slashes and leading slashes to produce a valid URL.
  *
- * @param {string} hostname - Base hostname (e.g., 'https://example.com')
- * @param {string} filename - Sitemap filename (e.g., 'sitemap.xml' or 'sitemap-index.xml')
- * @returns {string} Absolute sitemap URL
+ * @param hostname - Base hostname (e.g., 'https://example.com')
+ * @param filename - Sitemap filename (e.g., 'sitemap.xml' or 'sitemap-index.xml')
+ * @returns Absolute sitemap URL
  *
  * @example
  * buildSitemapUrl('https://example.com', 'sitemap.xml');
@@ -82,8 +83,8 @@ export function buildSitemapUrl(hostname: string, filename: string): string {
  * Create a minimal robots.txt with Sitemap directive.
  * Includes a default User-agent: * rule allowing all crawlers.
  *
- * @param {string} sitemapUrl - Absolute URL of the sitemap
- * @returns {string} Complete robots.txt content with User-agent rule and Sitemap directive
+ * @param sitemapUrl - Absolute URL of the sitemap
+ * @returns Complete robots.txt content with User-agent rule and Sitemap directive
  *
  * @example
  * const content = createMinimalRobotsTxt('https://example.com/sitemap.xml');
@@ -107,8 +108,8 @@ Sitemap: ${sitemapUrl}
  * Extract all Sitemap URLs from robots.txt content.
  * Parses the content line by line to find all Sitemap directives.
  *
- * @param {string} content - robots.txt content to parse
- * @returns {string[]} Array of sitemap URLs found in the content
+ * @param content - robots.txt content to parse
+ * @returns Array of sitemap URLs found in the content
  *
  * @example
  * const content = 'User-agent: *\nSitemap: https://example.com/sitemap.xml\n';
@@ -136,9 +137,9 @@ export function extractSitemapUrls(content: string): string[] {
  * Check if robots.txt contains a Sitemap directive for the given URL.
  * Performs case-insensitive matching per the robots.txt specification.
  *
- * @param {string} content - Current robots.txt content
- * @param {string} sitemapUrl - URL of the sitemap to check for
- * @returns {boolean} True if the sitemap URL is already present
+ * @param content - Current robots.txt content
+ * @param sitemapUrl - URL of the sitemap to check for
+ * @returns True if the sitemap URL is already present
  *
  * @example
  * const content = 'Sitemap: https://example.com/sitemap.xml\n';
@@ -174,11 +175,11 @@ export function hasSitemapDirective(content: string, sitemapUrl: string): boolea
  * Update or create robots.txt with a Sitemap directive.
  * Reads existing robots.txt, checks for existing directive, and updates or creates as needed.
  *
- * @param {string} outDir - Output directory where robots.txt should be written
- * @param {string} sitemapUrl - Absolute URL of the sitemap
- * @param {Object} [options={}] - Optional configuration
- * @param {boolean} [options.createIfMissing=true] - If true, create a minimal robots.txt if one doesn't exist
- * @returns {Promise<RobotsTxtResult>} Result of the operation with action taken
+ * @param outDir - Output directory where robots.txt should be written
+ * @param sitemapUrl - Absolute URL of the sitemap
+ * @param [options] - Optional configuration
+ * @param [options.createIfMissing] - If true, create a minimal robots.txt if one doesn't exist
+ * @returns Result of the operation with action taken
  *
  * @example
  * const result = await updateRobotsTxt('/dist', 'https://example.com/sitemap.xml');

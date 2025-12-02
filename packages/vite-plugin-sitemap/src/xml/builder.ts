@@ -1,6 +1,7 @@
 /**
  * XML string builder for sitemap elements.
  * Generates well-formed XML strings without external dependencies.
+ *
  * @module
  */
 
@@ -14,8 +15,8 @@ import { buildNamespaceAttrs, buildSitemapIndexNsAttr, XML_DECLARATION } from ".
  * Build an <xhtml:link> element for hreflang.
  * Creates an alternate link element for multi-language sitemap support.
  *
- * @param {Alternate} alternate - Alternate link data
- * @returns {string} XML string for xhtml:link element
+ * @param alternate - Alternate link data
+ * @returns XML string for xhtml:link element
  *
  * @example
  * const alt = { href: 'https://example.com/fr', hreflang: 'fr' };
@@ -32,8 +33,8 @@ export function buildAlternateElement(alternate: Alternate): string {
  * Build an <image:image> element.
  * Creates an image element for Google Image sitemap extension.
  *
- * @param {Image} image - Image data
- * @returns {string} XML string for image:image element
+ * @param image - Image data
+ * @returns XML string for image:image element
  *
  * @example
  * const image = {
@@ -70,8 +71,8 @@ export function buildImageElement(image: Image): string {
  * Build a <news:news> element.
  * Creates a news element for Google News sitemap extension.
  *
- * @param {News} news - News data
- * @returns {string} XML string for news:news element
+ * @param news - News data
+ * @returns XML string for news:news element
  *
  * @example
  * const news = {
@@ -114,8 +115,8 @@ export function buildNewsElement(news: News): string {
  * Build a sitemap index XML document.
  * Creates a sitemap index that references multiple sitemap files.
  *
- * @param {Array<{ lastmod?: string, loc: string }>} sitemaps - Array of sitemap references
- * @returns {string} Complete sitemap index XML document
+ * @param sitemaps - Array of sitemap references
+ * @returns Complete sitemap index XML document
  *
  * @example
  * const sitemaps = [
@@ -149,8 +150,8 @@ ${entries}
  * Build a complete sitemap XML document.
  * Generates a complete sitemap with proper namespaces and URL entries.
  *
- * @param {Route[]} routes - Array of routes to include in sitemap
- * @returns {string} Complete sitemap XML document
+ * @param routes - Array of routes to include in sitemap
+ * @returns Complete sitemap XML document
  *
  * @example
  * const routes = [
@@ -187,8 +188,8 @@ ${urls}
  * Build a single <url> element.
  * Creates a URL entry with all optional elements (lastmod, changefreq, priority, etc.).
  *
- * @param {Route} route - Route data
- * @returns {string} XML string for url element
+ * @param route - Route data
+ * @returns XML string for url element
  *
  * @example
  * const route = {
@@ -258,8 +259,8 @@ export function buildUrlElement(route: Route): string {
  * Build a <video:video> element.
  * Creates a video element for Google Video sitemap extension.
  *
- * @param {Video} video - Video data
- * @returns {string} XML string for video:video element
+ * @param video - Video data
+ * @returns XML string for video:video element
  *
  * @example
  * const video = {
@@ -351,8 +352,8 @@ export function buildVideoElement(video: Video): string {
  * Calculate approximate byte size of an XML string (UTF-8).
  * Used to ensure sitemaps stay under the 50MB size limit.
  *
- * @param {string} xml - XML string to measure
- * @returns {number} Size in bytes (UTF-8 encoding)
+ * @param xml - XML string to measure
+ * @returns Size in bytes (UTF-8 encoding)
  *
  * @example
  * const xml = buildSitemapXml(routes);

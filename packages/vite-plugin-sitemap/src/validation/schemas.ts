@@ -1,6 +1,7 @@
 /**
  * Zod schemas for sitemap validation.
  * Provides runtime validation with type inference for all sitemap elements.
+ *
  * @module
  */
 
@@ -13,7 +14,6 @@ import { isValidUrl, MAX_URL_LENGTH } from "./url";
  * Change frequency enum schema.
  * Validates changefreq values per the sitemap protocol specification.
  *
- * @constant
  * @see {@link https://www.sitemaps.org/protocol.html}
  * @since 0.1.0
  */
@@ -31,7 +31,6 @@ export const changeFrequencySchema = z.enum([
  * URL schema with sitemap protocol validation.
  * Validates that URLs are absolute, use http(s) protocol, and meet length requirements.
  *
- * @constant
  * @see {@link https://www.sitemaps.org/protocol.html#escaping}
  * @since 0.1.0
  */
@@ -46,7 +45,6 @@ export const urlSchema = z
  * W3C Datetime schema.
  * Validates dates in W3C Datetime format (ISO 8601 subset).
  *
- * @constant
  * @see {@link https://www.w3.org/TR/NOTE-datetime}
  * @since 0.1.0
  */
@@ -58,7 +56,6 @@ export const w3cDatetimeSchema = z.string().refine(isValidW3CDatetime, {
  * Priority schema (0.0 to 1.0).
  * Validates priority values within the sitemap protocol range.
  *
- * @constant
  * @since 0.1.0
  */
 export const prioritySchema = z
@@ -70,7 +67,6 @@ export const prioritySchema = z
  * Image schema for Google Image sitemap extension.
  * Validates image elements with required loc and optional metadata.
  *
- * @constant
  * @see {@link https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps}
  * @since 0.1.0
  */
@@ -86,7 +82,6 @@ export const imageSchema = z.object({
  * Video restriction schema.
  * Validates geographic restrictions for video playback using ISO 3166-1 country codes.
  *
- * @constant
  * @since 0.1.0
  */
 export const videoRestrictionSchema = z.object({
@@ -98,7 +93,6 @@ export const videoRestrictionSchema = z.object({
  * Video platform schema.
  * Validates platform restrictions for video playback (web, mobile, tv).
  *
- * @constant
  * @since 0.1.0
  */
 export const videoPlatformSchema = z.object({
@@ -110,7 +104,6 @@ export const videoPlatformSchema = z.object({
  * Video uploader schema.
  * Validates video uploader information with name and optional info URL.
  *
- * @constant
  * @since 0.1.0
  */
 export const videoUploaderSchema = z.object({
@@ -123,7 +116,6 @@ export const videoUploaderSchema = z.object({
  * Validates video elements with required fields and optional metadata.
  * Enforces that either content_loc or player_loc must be provided.
  *
- * @constant
  * @see {@link https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps}
  * @since 0.1.0
  */
@@ -160,7 +152,6 @@ export const videoSchema = z
  * News publication schema.
  * Validates news publication information with name and ISO 639-1 language code.
  *
- * @constant
  * @since 0.1.0
  */
 export const newsPublicationSchema = z.object({
@@ -172,7 +163,6 @@ export const newsPublicationSchema = z.object({
  * News schema for Google News sitemap extension.
  * Validates news article elements with publication info, date, and title.
  *
- * @constant
  * @see {@link https://developers.google.com/search/docs/crawling-indexing/sitemaps/news-sitemap}
  * @since 0.1.0
  */
@@ -193,7 +183,6 @@ export const newsSchema = z.object({
  * Alternate (hreflang) schema.
  * Validates alternate language links for internationalized sitemaps.
  *
- * @constant
  * @see {@link https://support.google.com/webmasters/answer/189077}
  * @since 0.1.0
  */
@@ -206,7 +195,6 @@ export const alternateSchema = z.object({
  * Route schema - a single URL entry in the sitemap.
  * Validates complete route objects with URL, metadata, and extensions.
  *
- * @constant
  * @see {@link https://www.sitemaps.org/protocol.html}
  * @since 0.1.0
  */
@@ -225,7 +213,6 @@ export const routeSchema = z.object({
  * Plugin options schema.
  * Validates plugin configuration options provided by users.
  *
- * @constant
  * @since 0.1.0
  */
 export const pluginOptionsSchema = z.object({
@@ -244,28 +231,28 @@ export const pluginOptionsSchema = z.object({
 
 /**
  * Alternate input type inferred from alternateSchema.
- * @typedef {z.input<typeof alternateSchema>} AlternateInput
+ *
  * @since 0.1.0
  */
 export type AlternateInput = z.input<typeof alternateSchema>;
 
 /**
  * Image input type inferred from imageSchema.
- * @typedef {z.input<typeof imageSchema>} ImageInput
+ *
  * @since 0.1.0
  */
 export type ImageInput = z.input<typeof imageSchema>;
 
 /**
  * News input type inferred from newsSchema.
- * @typedef {z.input<typeof newsSchema>} NewsInput
+ *
  * @since 0.1.0
  */
 export type NewsInput = z.input<typeof newsSchema>;
 
 /**
  * Plugin options input type inferred from pluginOptionsSchema.
- * @typedef {z.input<typeof pluginOptionsSchema>} PluginOptionsInput
+ *
  * @since 0.1.0
  */
 export type PluginOptionsInput = z.input<typeof pluginOptionsSchema>;
@@ -273,7 +260,7 @@ export type PluginOptionsInput = z.input<typeof pluginOptionsSchema>;
 /**
  * Route input type inferred from routeSchema.
  * Represents the raw input before validation.
- * @typedef {z.input<typeof routeSchema>} RouteInput
+ *
  * @since 0.1.0
  */
 export type RouteInput = z.input<typeof routeSchema>;
@@ -281,14 +268,14 @@ export type RouteInput = z.input<typeof routeSchema>;
 /**
  * Route output type inferred from routeSchema.
  * Represents the validated and transformed output.
- * @typedef {z.output<typeof routeSchema>} RouteOutput
+ *
  * @since 0.1.0
  */
 export type RouteOutput = z.output<typeof routeSchema>;
 
 /**
  * Video input type inferred from videoSchema.
- * @typedef {z.input<typeof videoSchema>} VideoInput
+ *
  * @since 0.1.0
  */
 export type VideoInput = z.input<typeof videoSchema>;

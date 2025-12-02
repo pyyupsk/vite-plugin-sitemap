@@ -1,5 +1,6 @@
 /**
  * Formatting utility functions.
+ *
  * @module
  */
 
@@ -7,8 +8,8 @@
  * Format bytes as human-readable string.
  * Converts a byte count to a human-readable string with appropriate unit suffix.
  *
- * @param {number} bytes - Number of bytes to format
- * @returns {string} Formatted string with unit (e.g., "1.5 KB", "2.3 MB")
+ * @param bytes - Number of bytes to format
+ * @returns Formatted string with unit (e.g., "1.5 KB", "2.3 MB")
  *
  * @example
  * formatBytes(512); // "512 B"

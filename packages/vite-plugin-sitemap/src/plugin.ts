@@ -1,6 +1,7 @@
 /**
  * Vite plugin for sitemap generation.
  * Generates sitemap.xml during build using the closeBundle hook.
+ *
  * @module
  */
 
@@ -25,7 +26,6 @@ import { formatResultForConsole } from "./validation/errors";
  * Plugin name for identification.
  * Used for Vite plugin registry and debugging.
  *
- * @constant {string}
  * @since 0.1.0
  */
 export const PLUGIN_NAME = "vite-plugin-sitemap";
@@ -35,9 +35,7 @@ export const PLUGIN_NAME = "vite-plugin-sitemap";
  * Uses Symbol.for() to ensure the same symbol is used across module boundaries
  * (e.g., when CLI loads vite.config.ts in a separate context).
  *
- * @constant {symbol}
  * @since 0.1.0
- * @private
  */
 const PLUGIN_OPTIONS_KEY = Symbol.for("vite-plugin-sitemap:options");
 
@@ -45,7 +43,6 @@ const PLUGIN_OPTIONS_KEY = Symbol.for("vite-plugin-sitemap:options");
  * Vite plugin return type without exposing Vite's internal types.
  * This prevents type conflicts when users have different Vite versions.
  *
- * @interface SitemapPlugin
  * @since 0.2.1
  */
 export interface SitemapPlugin {
@@ -82,8 +79,8 @@ export interface SitemapPlugin {
  * Get plugin options from a plugin instance.
  * Used by CLI to read config from vite.config.ts.
  *
- * @param {unknown} plugin - Plugin instance
- * @returns {PluginOptions | undefined} Plugin options or undefined
+ * @param plugin - Plugin instance
+ * @returns Plugin options or undefined
  *
  * @example
  * const config = await loadConfigFromFile(...);
@@ -103,8 +100,8 @@ export function getPluginOptions(plugin: unknown): PluginOptions | undefined {
  * Create the Vite sitemap plugin.
  * Main plugin factory function that integrates sitemap generation into Vite builds.
  *
- * @param {PluginOptions} [userOptions={}] - Plugin configuration options
- * @returns {SitemapPlugin} Configured Vite plugin instance
+ * @param [userOptions] - Plugin configuration options
+ * @returns Configured Vite plugin instance
  *
  * @example
  * // vite.config.ts

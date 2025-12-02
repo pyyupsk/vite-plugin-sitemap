@@ -1,11 +1,12 @@
 /**
  * XML namespace definitions for sitemap protocol and extensions.
+ *
  * @module
  */
 
 /**
  * Core sitemap namespace (sitemaps.org protocol).
- * @constant {string}
+ *
  * @see {@link https://www.sitemaps.org/schemas/sitemap/0.9}
  * @since 0.1.0
  */
@@ -13,7 +14,7 @@ export const SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9";
 
 /**
  * Google Image sitemap extension namespace.
- * @constant {string}
+ *
  * @see {@link https://developers.google.com/search/docs/advanced/sitemaps/image-sitemaps}
  * @since 0.1.0
  */
@@ -21,7 +22,7 @@ export const IMAGE_NS = "http://www.google.com/schemas/sitemap-image/1.1";
 
 /**
  * Google Video sitemap extension namespace.
- * @constant {string}
+ *
  * @see {@link https://developers.google.com/search/docs/advanced/sitemaps/video-sitemaps}
  * @since 0.1.0
  */
@@ -29,7 +30,7 @@ export const VIDEO_NS = "http://www.google.com/schemas/sitemap-video/1.1";
 
 /**
  * Google News sitemap extension namespace.
- * @constant {string}
+ *
  * @see {@link https://developers.google.com/search/docs/advanced/sitemaps/news-sitemap}
  * @since 0.1.0
  */
@@ -38,7 +39,7 @@ export const NEWS_NS = "http://www.google.com/schemas/sitemap-news/0.9";
 /**
  * XHTML namespace for hreflang links.
  * Used for alternate language annotations in sitemaps.
- * @constant {string}
+ *
  * @see {@link https://support.google.com/webmasters/answer/189077}
  * @since 0.1.0
  */
@@ -47,7 +48,7 @@ export const XHTML_NS = "http://www.w3.org/1999/xhtml";
 /**
  * XML declaration header.
  * Standard XML 1.0 declaration with UTF-8 encoding.
- * @constant {string}
+ *
  * @since 0.1.0
  */
 export const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -56,12 +57,12 @@ export const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>';
  * Build namespace attributes string for urlset element.
  * Only includes namespaces that are actually used, minimizing XML output size.
  *
- * @param {Object} options - Options indicating which extensions are used
- * @param {boolean} [options.hasImages] - Include image namespace
- * @param {boolean} [options.hasVideos] - Include video namespace
- * @param {boolean} [options.hasNews] - Include news namespace
- * @param {boolean} [options.hasAlternates] - Include xhtml namespace for hreflang
- * @returns {string} Space-separated namespace attributes string
+ * @param options - Options indicating which extensions are used
+ * @param [options.hasImages] - Include image namespace
+ * @param [options.hasVideos] - Include video namespace
+ * @param [options.hasNews] - Include news namespace
+ * @param [options.hasAlternates] - Include xhtml namespace for hreflang
+ * @returns Space-separated namespace attributes string
  *
  * @example
  * const attrs = buildNamespaceAttrs({ hasImages: true, hasAlternates: true });
@@ -97,7 +98,7 @@ export function buildNamespaceAttrs(options: {
  * Build sitemap index namespace attribute.
  * Returns the xmlns attribute for sitemapindex elements.
  *
- * @returns {string} Namespace attribute string
+ * @returns Namespace attribute string
  *
  * @example
  * const attr = buildSitemapIndexNsAttr();

@@ -1,5 +1,6 @@
 /**
  * Plugin configuration type definitions.
+ *
  * @module
  */
 
@@ -8,7 +9,6 @@ import type { ChangeFrequency, Route } from "./sitemap";
 /**
  * Plugin configuration options.
  *
- * @interface PluginOptions
  * @since 0.1.0
  */
 export interface PluginOptions {
@@ -25,12 +25,14 @@ export interface PluginOptions {
 
   /**
    * Name of the output sitemap file.
+   *
    * @default 'sitemap.xml'
    */
   filename?: string;
 
   /**
    * Generate or update robots.txt with Sitemap directive.
+   *
    * @default false
    */
   generateRobotsTxt?: boolean;
@@ -48,6 +50,7 @@ export interface PluginOptions {
 
   /**
    * Output directory for generated files.
+   *
    * @default Vite's build.outDir
    */
   outDir?: string;
@@ -64,6 +67,7 @@ export interface PluginOptions {
 
   /**
    * Path to the sitemap definition file (without extension).
+   *
    * @default 'src/sitemap'
    */
   sitemapFile?: string;
@@ -78,7 +82,6 @@ export interface PluginOptions {
 /**
  * Resolved plugin options with defaults applied.
  *
- * @interface ResolvedPluginOptions
  * @since 0.1.0
  */
 export interface ResolvedPluginOptions {
@@ -132,7 +135,6 @@ export interface ResolvedPluginOptions {
  * Function to transform routes before XML generation.
  * Return null to exclude the route from the sitemap.
  *
- * @callback RouteTransformer
  * @param {Route} route - Route to transform
  * @returns {Route | null | Promise<Route | null>} Transformed route, null to exclude, or promise
  * @since 0.1.0
@@ -143,7 +145,6 @@ export type RouteTransformer = (route: Route) => null | Promise<null | Route> | 
  * Custom XML serializer function.
  * Receives all routes and returns the complete XML string.
  *
- * @callback XmlSerializer
  * @param {Route[]} routes - Array of routes to serialize
  * @returns {string | Promise<string>} Complete XML string or promise
  * @since 0.1.0
@@ -154,7 +155,6 @@ export type XmlSerializer = (routes: Route[]) => Promise<string> | string;
  * Default plugin options.
  * Used when user doesn't provide specific configuration values.
  *
- * @constant
  * @since 0.1.0
  */
 export const defaultOptions: Omit<ResolvedPluginOptions, "outDir" | "sitemapFile"> & {
@@ -176,9 +176,9 @@ export const defaultOptions: Omit<ResolvedPluginOptions, "outDir" | "sitemapFile
  * Resolve plugin options with defaults.
  * Merges user-provided options with default values to create a fully resolved configuration.
  *
- * @param {PluginOptions} options - User-provided plugin options
- * @param {string} outDir - Default output directory (typically from Vite's build.outDir)
- * @returns {ResolvedPluginOptions} Fully resolved options with all defaults applied
+ * @param options - User-provided plugin options
+ * @param outDir - Default output directory (typically from Vite's build.outDir)
+ * @returns Fully resolved options with all defaults applied
  *
  * @example
  * const userOptions = { hostname: 'https://example.com', generateRobotsTxt: true };

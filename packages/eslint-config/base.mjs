@@ -3,8 +3,9 @@ import perfectionist from "eslint-plugin-perfectionist";
 import prettier from "eslint-plugin-prettier/recommended";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import { defineConfig } from "eslint/config";
 
-const config = tseslint.config(
+const config = defineConfig(
   eslint.configs.recommended,
   perfectionist.configs["recommended-natural"],
   tseslint.configs.recommended,

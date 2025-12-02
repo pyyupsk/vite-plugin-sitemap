@@ -1,12 +1,12 @@
 /**
  * Sitemap extension type definitions.
+ *
  * @module
  */
 
 /**
  * Alternate language version of a URL for hreflang annotations.
  *
- * @interface Alternate
  * @see {@link https://support.google.com/webmasters/answer/189077}
  * @since 0.1.0
  */
@@ -26,7 +26,6 @@ export interface Alternate {
 /**
  * Image metadata for Google Image sitemap extension.
  *
- * @interface Image
  * @see {@link https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps}
  * @since 0.1.0
  */
@@ -61,7 +60,6 @@ export interface Image {
 /**
  * News article metadata for Google News sitemap extension.
  *
- * @interface News
  * @see {@link https://developers.google.com/search/docs/crawling-indexing/sitemaps/news-sitemap}
  * @since 0.1.0
  */
@@ -95,7 +93,6 @@ export interface News {
 /**
  * Information about the news publication.
  *
- * @interface NewsPublication
  * @since 0.1.0
  */
 export interface NewsPublication {
@@ -113,7 +110,6 @@ export interface NewsPublication {
 /**
  * Video metadata for Google Video sitemap extension.
  *
- * @interface Video
  * @see {@link https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps}
  * @since 0.1.0
  */
@@ -210,7 +206,6 @@ export interface Video {
 /**
  * Platform restrictions for video playback.
  *
- * @interface VideoPlatform
  * @since 0.1.0
  */
 export interface VideoPlatform {
@@ -228,7 +223,6 @@ export interface VideoPlatform {
 /**
  * Geographic restrictions for video playback.
  *
- * @interface VideoRestriction
  * @since 0.1.0
  */
 export interface VideoRestriction {
@@ -246,7 +240,6 @@ export interface VideoRestriction {
 /**
  * Information about the video uploader.
  *
- * @interface VideoUploader
  * @since 0.1.0
  */
 export interface VideoUploader {

@@ -1,6 +1,7 @@
 /**
  * Sitemap generator module.
  * Orchestrates route validation, transformation, and XML generation.
+ *
  * @module
  */
 
@@ -19,22 +20,24 @@ import { splitRoutes } from "./splitter";
 /**
  * Options for the generation pipeline.
  *
- * @interface GenerationOptions
  * @since 0.1.0
  */
 export interface GenerationOptions {
   /**
    * Base filename for sitemaps (without extension).
+   *
    * @default "sitemap"
    */
   baseFilename?: string;
   /**
    * Enable auto-splitting for large sitemaps.
+   *
    * @default true
    */
   enableSplitting?: boolean;
   /**
    * Custom hostname to prepend to relative URLs.
+   *
    * @example "https://example.com"
    */
   hostname?: string | undefined;
@@ -44,6 +47,7 @@ export interface GenerationOptions {
   pluginOptions?: PluginOptions | ResolvedPluginOptions;
   /**
    * Whether to skip validation (not recommended).
+   *
    * @default false
    */
   skipValidation?: boolean;
@@ -52,7 +56,6 @@ export interface GenerationOptions {
 /**
  * Result of sitemap generation.
  *
- * @interface GenerationResult
  * @since 0.1.0
  */
 export interface GenerationResult {
@@ -92,9 +95,9 @@ export interface GenerationResult {
  * Sets default changefreq, priority, and lastmod values from plugin options
  * if not already specified on individual routes.
  *
- * @param {Route[]} routes - Array of routes to process
- * @param {PluginOptions | ResolvedPluginOptions} options - Plugin options containing defaults
- * @returns {Route[]} Routes with defaults applied
+ * @param routes - Array of routes to process
+ * @param options - Plugin options containing defaults
+ * @returns Routes with defaults applied
  *
  * @example
  * const routes = [{ url: 'https://example.com' }];
@@ -130,8 +133,8 @@ export function applyDefaults(
  * Deduplicate routes by URL.
  * First occurrence wins when duplicate URLs are found.
  *
- * @param {Route[]} routes - Array of routes that may contain duplicates
- * @returns {Route[]} Deduplicated routes array
+ * @param routes - Array of routes that may contain duplicates
+ * @returns Deduplicated routes array
  *
  * @example
  * const routes = [
@@ -162,9 +165,9 @@ export function deduplicateRoutes(routes: Route[]): Route[] {
  * Filter out routes matching exclusion patterns.
  * Supports both glob patterns and regular expressions.
  *
- * @param {Route[]} routes - Array of routes to filter
- * @param {Array<RegExp | string>} patterns - Exclusion patterns (glob or RegExp)
- * @returns {Route[]} Filtered routes array with excluded routes removed
+ * @param routes - Array of routes to filter
+ * @param patterns - Exclusion patterns (glob or RegExp)
+ * @returns Filtered routes array with excluded routes removed
  *
  * @example
  * const routes = [
@@ -189,9 +192,9 @@ export function filterExcludedRoutes(routes: Route[], patterns: Array<RegExp | s
  * Generate sitemaps for multiple route sets (named exports).
  * Creates separate sitemaps for each named export from the sitemap file.
  *
- * @param {Array<{ name: string, routes: Route[] }>} routeSets - Array of named route sets
- * @param {GenerationOptions} [options={}] - Generation options
- * @returns {Promise<Map<string, GenerationResult>>} Map of sitemap name to generation result
+ * @param routeSets - Array of named route sets
+ * @param [options] - Generation options
+ * @returns Map of sitemap name to generation result
  *
  * @example
  * const routeSets = [
@@ -228,9 +231,9 @@ export async function generateMultipleSitemaps(
  * 5. Deduplicate by URL
  * 6. Generate XML (with optional splitting)
  *
- * @param {Route[]} routes - Input routes to process
- * @param {GenerationOptions} [options={}] - Generation options
- * @returns {Promise<GenerationResult>} Generation result with XML, validation info, and warnings
+ * @param routes - Input routes to process
+ * @param [options] - Generation options
+ * @returns Generation result with XML, validation info, and warnings
  *
  * @example
  * const routes = [
@@ -372,9 +375,9 @@ export async function generateSitemap(
  * Converts relative URLs to absolute URLs by prepending the hostname.
  * Leaves absolute URLs (http:// or https://) unchanged.
  *
- * @param {Route} route - Route with potentially relative URL
- * @param {string} hostname - Hostname to prepend (e.g., 'https://example.com')
- * @returns {Route} Route with absolute URL
+ * @param route - Route with potentially relative URL
+ * @param hostname - Hostname to prepend (e.g., 'https://example.com')
+ * @returns Route with absolute URL
  *
  * @example
  * const route = { url: '/about' };
@@ -408,8 +411,8 @@ export function prependHostname(route: Route, hostname: string): Route {
  * Checks each route for compliance with sitemap protocol requirements
  * using Zod schema validation.
  *
- * @param {Route[]} routes - Array of routes to validate
- * @returns {ValidationResult} Validation result with errors if any
+ * @param routes - Array of routes to validate
+ * @returns Validation result with errors if any
  *
  * @example
  * const routes = [

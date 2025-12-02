@@ -1,6 +1,7 @@
 /**
  * CLI command: vite-sitemap generate
  * Generates sitemap files without running a full Vite build.
+ *
  * @module
  */
 
@@ -22,9 +23,7 @@ import { colors, formatBytes, formatDuration, loadRoutesFromSitemap, logger } fr
 /**
  * Options for the generate command.
  *
- * @interface GenerateOptions
  * @since 0.1.0
- * @private
  */
 interface GenerateOptions {
   /**
@@ -57,7 +56,7 @@ interface GenerateOptions {
  * Register the generate command.
  * Adds the 'generate' command to the CLI program with all options.
  *
- * @param {Command} program - Commander program instance
+ * @param program - Commander program instance
  *
  * @example
  * import { Command } from 'commander';
@@ -92,12 +91,10 @@ export function registerGenerateCommand(program: Command): void {
  * Execute the generate command.
  * Generates sitemap files and optionally robots.txt without a full Vite build.
  *
- * @param {GenerateOptions} options - Command options
- * @returns {Promise<void>}
+ * @param options - Command options
  * @throws {Error} If sitemap generation fails
  *
  * @since 0.1.0
- * @private
  */
 async function executeGenerate(options: GenerateOptions): Promise<void> {
   const startTime = Date.now();
@@ -273,11 +270,10 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
  * Get CLI options from parent command.
  * Extracts global options like --verbose from parent command.
  *
- * @param {Command} cmd - Commander command instance
- * @returns {{ config?: string, verbose?: boolean }} Global options
+ * @param cmd - Commander command instance
+ * @returns Global options
  *
  * @since 0.1.0
- * @private
  */
 function getGlobalOptions(cmd: Command): {
   config?: string;

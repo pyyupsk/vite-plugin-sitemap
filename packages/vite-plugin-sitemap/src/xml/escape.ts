@@ -1,15 +1,14 @@
 /**
  * XML entity escaping utilities.
  * Handles the 5 predefined XML entities that must be escaped in content.
+ *
  * @module
  */
 
 /**
  * Map of characters to their XML entity replacements.
  *
- * @constant {Record<string, string>}
  * @since 0.1.0
- * @private
  */
 const XML_ENTITIES: Record<string, string> = {
   '"': "&quot;",
@@ -22,9 +21,7 @@ const XML_ENTITIES: Record<string, string> = {
 /**
  * Regex pattern matching characters that need XML escaping.
  *
- * @constant {RegExp}
  * @since 0.1.0
- * @private
  */
 const XML_ENTITY_REGEX = /[&<>"']/g;
 
@@ -35,8 +32,8 @@ const XML_ENTITY_REGEX = /[&<>"']/g;
  *
  * Per sitemap spec: URLs must have &, <, >, ", and ' escaped.
  *
- * @param {string} url - URL to encode
- * @returns {string} XML-safe URL with entities escaped
+ * @param url - URL to encode
+ * @returns XML-safe URL with entities escaped
  *
  * @example
  * encodeUrl('https://example.com/search?q=foo&bar=baz');
@@ -61,8 +58,8 @@ export function encodeUrl(url: string): string {
  * Escape special XML characters in text content.
  * Handles the 5 predefined XML entities: & < > " '
  *
- * @param {string} text - Text to escape
- * @returns {string} XML-safe text with entities escaped
+ * @param text - Text to escape
+ * @returns XML-safe text with entities escaped
  *
  * @example
  * escapeXml('AT&T'); // 'AT&amp;T'
@@ -80,8 +77,8 @@ export function escapeXml(text: string): string {
  * Escape special characters in XML attribute values.
  * Same as escapeXml but ensures proper attribute encoding.
  *
- * @param {string} text - Attribute value to escape
- * @returns {string} XML-safe attribute value
+ * @param text - Attribute value to escape
+ * @returns XML-safe attribute value
  *
  * @example
  * const attr = escapeXmlAttr('value with "quotes"');

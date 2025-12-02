@@ -21,7 +21,6 @@
  * Supports: YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDThh:mm:ss.sssZ, YYYY-MM-DDThh:mm:ss.sss±hh:mm
  * Also supports new Date().toISOString() output (e.g., 2024-01-15T10:30:00.000Z)
  *
- * @constant {RegExp}
  * @see {@link https://www.w3.org/TR/NOTE-datetime}
  * @since 0.1.0
  */
@@ -31,7 +30,6 @@ export const W3C_DATETIME_REGEX =
 /**
  * Date validation result.
  *
- * @interface DateValidationResult
  * @since 0.1.0
  */
 export interface DateValidationResult {
@@ -57,7 +55,7 @@ export interface DateValidationResult {
  * Get current date in W3C Datetime format (YYYY-MM-DD).
  * Returns today's date in the standard sitemap date format.
  *
- * @returns {string} Current date in YYYY-MM-DD format
+ * @returns Current date in YYYY-MM-DD format
  *
  * @example
  * const today = getCurrentW3CDate();
@@ -74,8 +72,8 @@ export function getCurrentW3CDate(): string {
  * Check if a date is in the future (warning, not error).
  * Used to warn about potentially incorrect lastmod dates.
  *
- * @param {string} date - Date string to check
- * @returns {boolean} True if the date is in the future
+ * @param date - Date string to check
+ * @returns True if the date is in the future
  *
  * @example
  * isFutureDate('2099-12-31'); // true
@@ -96,8 +94,8 @@ export function isFutureDate(date: string): boolean {
  * Validate a date string for W3C Datetime compliance.
  * Checks format and validates that date values are in valid ranges.
  *
- * @param {string} date - Date string to validate
- * @returns {boolean} True if valid W3C Datetime format, false otherwise
+ * @param date - Date string to validate
+ * @returns True if valid W3C Datetime format, false otherwise
  *
  * @example
  * isValidW3CDatetime('2024-01-15'); // true
@@ -146,8 +144,8 @@ export function isValidW3CDatetime(date: string): boolean {
  * Validate date and return detailed result.
  * Provides comprehensive validation with helpful error messages and suggestions.
  *
- * @param {string} date - Date string to validate
- * @returns {DateValidationResult} Validation result with error details and suggestions
+ * @param date - Date string to validate
+ * @returns Validation result with error details and suggestions
  *
  * @example
  * const result = validateW3CDatetime('2024-01-15');

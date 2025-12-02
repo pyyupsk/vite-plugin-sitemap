@@ -1,6 +1,7 @@
 /**
  * CLI preview command.
  * Preview generated sitemap XML without writing files.
+ *
  * @module
  */
 
@@ -14,7 +15,7 @@ import { colors, formatBytes, formatDuration, loadRoutesFromSitemap, logger } fr
  * Register the preview command.
  * Adds the 'preview' command to the CLI program for previewing sitemap XML.
  *
- * @param {Command} program - Commander program instance
+ * @param program - Commander program instance
  *
  * @example
  * import { Command } from 'commander';

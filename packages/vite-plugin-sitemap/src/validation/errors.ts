@@ -1,6 +1,7 @@
 /**
  * Validation error formatting with actionable suggestions.
  * Provides utilities for creating, formatting, and displaying validation errors.
+ *
  * @module
  */
 
@@ -40,10 +41,10 @@ export interface ValidationResult {
  * Create a failed validation result.
  * Factory function for creating a validation result indicating failure.
  *
- * @param {number} routeCount - Number of routes that were validated
- * @param {ValidationError[]} errors - Array of validation errors found
- * @param {string[]} [warnings=[]] - Optional array of warning messages
- * @returns {ValidationResult} Failed validation result object
+ * @param routeCount - Number of routes that were validated
+ * @param errors - Array of validation errors found
+ * @param [warnings] - Optional array of warning messages
+ * @returns Failed validation result object
  *
  * @example
  * const errors = [{ code: 'invalid_url', message: 'Invalid URL format', path: 'routes[0].url', value: 'bad-url' }];
@@ -69,9 +70,9 @@ export function createFailedResult(
  * Create a successful validation result.
  * Factory function for creating a validation result indicating success.
  *
- * @param {number} routeCount - Number of routes that were validated
- * @param {string[]} [warnings=[]] - Optional array of warning messages
- * @returns {ValidationResult} Successful validation result object
+ * @param routeCount - Number of routes that were validated
+ * @param [warnings] - Optional array of warning messages
+ * @returns Successful validation result object
  *
  * @example
  * const result = createSuccessResult(50, ['2 duplicate URLs removed']);
@@ -93,12 +94,12 @@ export function createSuccessResult(routeCount: number, warnings: string[] = [])
  * Create a validation error.
  * Factory function for creating a structured validation error object.
  *
- * @param {string} code - Error code for programmatic handling (e.g., 'invalid_url')
- * @param {string} message - Human-readable error message
- * @param {string} path - Path to the invalid field (e.g., 'routes[0].url')
- * @param {unknown} value - The invalid value that caused the error
- * @param {string} [suggestion] - Optional suggestion for fixing the error
- * @returns {ValidationError} Structured validation error object
+ * @param code - Error code for programmatic handling (e.g., 'invalid_url')
+ * @param message - Human-readable error message
+ * @param path - Path to the invalid field (e.g., 'routes[0].url')
+ * @param value - The invalid value that caused the error
+ * @param [suggestion] - Optional suggestion for fixing the error
+ * @returns Structured validation error object
  *
  * @example
  * const error = createValidationError(
@@ -131,8 +132,8 @@ export function createValidationError(
  * Format validation errors for console output.
  * Creates a numbered, human-readable list of errors with values and suggestions.
  *
- * @param {ValidationError[]} errors - Array of validation errors to format
- * @returns {string} Formatted string suitable for console output
+ * @param errors - Array of validation errors to format
+ * @returns Formatted string suitable for console output
  *
  * @example
  * const errors = [{ code: 'invalid_url', message: 'Invalid URL', path: 'routes[0].url', value: 'bad', suggestion: 'Use absolute URL' }];
@@ -164,8 +165,8 @@ export function formatErrorsForConsole(errors: ValidationError[]): string {
  * Format validation result for console output.
  * Creates a summary with pass/fail status, error details, and warnings.
  *
- * @param {ValidationResult} result - Validation result to format
- * @returns {string} Formatted string suitable for console output
+ * @param result - Validation result to format
+ * @returns Formatted string suitable for console output
  *
  * @example
  * const result = { valid: true, routeCount: 50, errors: [], warnings: [] };
@@ -197,9 +198,9 @@ export function formatResultForConsole(result: ValidationResult): string {
  * Convert Zod errors to ValidationError format with suggestions.
  * Transforms Zod validation issues into structured ValidationError objects.
  *
- * @param {ZodError} zodError - Zod error object from failed validation
- * @param {string} [basePath=""] - Base path prefix for error locations
- * @returns {ValidationError[]} Array of formatted validation errors
+ * @param zodError - Zod error object from failed validation
+ * @param [basePath] - Base path prefix for error locations
+ * @returns Array of formatted validation errors
  *
  * @example
  * try {
@@ -221,12 +222,11 @@ export function formatZodErrors(zodError: ZodError, basePath = ""): ValidationEr
  * Format a single Zod issue.
  * Converts a Zod validation issue to a ValidationError with helpful suggestions.
  *
- * @param {core.$ZodIssue} issue - Zod validation issue
- * @param {string} basePath - Base path prefix for error location
- * @returns {ValidationError} Formatted validation error
+ * @param issue - Zod validation issue
+ * @param basePath - Base path prefix for error location
+ * @returns Formatted validation error
  *
  * @since 0.1.0
- * @private
  */
 function formatZodIssue(issue: core.$ZodIssue, basePath: string): ValidationError {
   const path = [...(basePath ? [basePath] : []), ...issue.path].join(".");
@@ -250,11 +250,10 @@ function formatZodIssue(issue: core.$ZodIssue, basePath: string): ValidationErro
  * Generate helpful suggestions based on error type.
  * Provides context-specific suggestions for common validation errors.
  *
- * @param {core.$ZodIssue} issue - Zod validation issue
- * @returns {string | undefined} Helpful suggestion or undefined if none available
+ * @param issue - Zod validation issue
+ * @returns Helpful suggestion or undefined if none available
  *
  * @since 0.1.0
- * @private
  */
 function getSuggestion(issue: core.$ZodIssue): string | undefined {
   switch (issue.code) {

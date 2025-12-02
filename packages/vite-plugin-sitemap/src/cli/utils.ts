@@ -1,5 +1,6 @@
 /**
  * CLI utility functions for config loading, logging, and error formatting.
+ *
  * @module
  */
 
@@ -12,7 +13,6 @@ import { createServer, loadConfigFromFile, type ViteDevServer } from "vite";
  * Re-export picocolors for use in CLI commands.
  * Provides terminal color and formatting utilities.
  *
- * @constant
  * @since 0.1.0
  */
 export const colors = picocolors;
@@ -42,7 +42,7 @@ export const logger = {
    * Log a dimmed message.
    * Used for secondary or less important information.
    *
-   * @param {string} message - Message to log
+   * @param message - Message to log
    * @since 0.1.0
    */
   dim(message: string): void {
@@ -53,7 +53,7 @@ export const logger = {
    * Log an error message with red "✗" prefix.
    * Outputs to stderr.
    *
-   * @param {string} message - Error message to log
+   * @param message - Error message to log
    * @since 0.1.0
    */
   error(message: string): void {
@@ -64,7 +64,7 @@ export const logger = {
    * Log an info message with cyan "➜" prefix.
    * Used for general progress information.
    *
-   * @param {string} message - Info message to log
+   * @param message - Info message to log
    * @since 0.1.0
    */
   info(message: string): void {
@@ -75,7 +75,7 @@ export const logger = {
    * Log a success message with green "✓" prefix.
    * Used for completion notifications.
    *
-   * @param {string} message - Success message to log
+   * @param message - Success message to log
    * @since 0.1.0
    */
   success(message: string): void {
@@ -86,7 +86,7 @@ export const logger = {
    * Log a warning message with yellow "⚠" prefix.
    * Used for non-fatal issues that should be addressed.
    *
-   * @param {string} message - Warning message to log
+   * @param message - Warning message to log
    * @since 0.1.0
    */
   warn(message: string): void {
@@ -98,8 +98,8 @@ export const logger = {
  * Find vite.config file in the project.
  * Searches for common Vite config file names in priority order.
  *
- * @param {string} root - Project root directory
- * @returns {string | null} Path to config file or null if not found
+ * @param root - Project root directory
+ * @returns Path to config file or null if not found
  *
  * @example
  * const configPath = findViteConfig(process.cwd());
@@ -126,8 +126,8 @@ export function findViteConfig(root: string): null | string {
  * Format a duration in milliseconds.
  * Converts milliseconds to a human-readable format.
  *
- * @param {number} ms - Duration in milliseconds
- * @returns {string} Formatted duration (e.g., '150ms' or '1.23s')
+ * @param ms - Duration in milliseconds
+ * @returns Formatted duration (e.g., '150ms' or '1.23s')
  *
  * @example
  * formatDuration(150); // '150ms'
@@ -144,8 +144,8 @@ export function formatDuration(ms: number): string {
  * Load plugin options from vite.config using Vite's config loader.
  * Finds and extracts the sitemap plugin configuration from vite.config.
  *
- * @param {string} root - Project root directory
- * @returns {Promise<PluginOptions | null>} Plugin options or null if not found
+ * @param root - Project root directory
+ * @returns Plugin options or null if not found
  *
  * @example
  * const options = await loadPluginOptions(process.cwd());
@@ -187,14 +187,11 @@ export async function loadPluginOptions(root: string): Promise<null | PluginOpti
  * Discover and load routes from sitemap file.
  * Handles discovery, loading, and resolution of routes with Vite server.
  *
- * @param {Object} options - Load options
- * @param {string} [options.root] - Project root directory
- * @param {string} [options.sitemapFile] - Custom sitemap file path
- * @param {boolean} [options.verbose] - Enable verbose logging
- * @returns {Promise<Object | null>} Object with routes, server, and options, or null on error
- * @returns {ResolvedRoutes[]} .routes - Resolved routes array
- * @returns {ViteDevServer} .server - Vite dev server instance (must be closed by caller)
- * @returns {PluginOptions | null} .pluginOptions - Plugin options from vite.config
+ * @param options - Load options
+ * @param [options.root] - Project root directory
+ * @param [options.sitemapFile] - Custom sitemap file path
+ * @param [options.verbose] - Enable verbose logging
+ * @returns Object with routes, server, and options, or null on error
  *
  * @example
  * const result = await loadRoutesFromSitemap({ root: process.cwd(), verbose: true });
@@ -269,7 +266,7 @@ export async function loadRoutesFromSitemap(options: {
  * Print a table of routes summary.
  * Displays a formatted summary of routes grouped by export name.
  *
- * @param {ResolvedRoutes[]} routes - Array of resolved route sets
+ * @param routes - Array of resolved route sets
  *
  * @example
  * const routes = [

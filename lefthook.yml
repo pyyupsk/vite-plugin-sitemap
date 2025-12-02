@@ -6,25 +6,41 @@ pre-commit:
   commands:
     changelog:
       run: |
-        if git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/"; then
-          if ! git diff --staged --name-only | grep -q "^CHANGELOG.md$"; then
-            echo "❌ Please update CHANGELOG.md"
-            echo "Note: CHANGELOG.md should be updated in the root directory, and only provides a changelog for the plugin."
-            echo "    The CHANGELOG.md in packages/vite-plugin-sitemap/ copies the changelog from the root directory during build."
-            exit 1
-          fi
+        SRC_CHANGED=$(git diff --cached --name-only | grep '^packages/vite-plugin-sitemap/src/')
+        CHANGELOG_CHANGED=$(git diff --cached --name-only | grep '^CHANGELOG.md')
+        if [ -n "$SRC_CHANGED" ] && [ -z "$CHANGELOG_CHANGED" ]; then
+          echo "❌ ERROR: Files in src/ were modified but CHANGELOG.md was not updated."
+          echo "➡️  Please add your changes under the [Unreleased] section."
+          exit 1
+        else
+          echo "✅ Changelog check passed"
         fi
     version-check:
       run: |
-        BRANCH=$(git rev-parse --abbrev-ref HEAD)
-        if [ "$BRANCH" = "main" ]; then
-          if git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/src/"; then
-            if ! git diff --staged --name-only | grep -q "^packages/vite-plugin-sitemap/package.json$"; then
-              echo "❌ Source files changed but version not bumped"
-              echo "   Please update the version in packages/vite-plugin-sitemap/package.json"
-              exit 1
-            fi
+        TAG=$(git describe --tags --exact-match 2>/dev/null)
+        if [ -n "$TAG" ]; then
+          echo "🏷️ Tag detected: $TAG"
+          echo "🔍 Checking for version bump in package.json..."
+
+          if ! git diff HEAD~1..HEAD --name-only | grep -q "^package.json$"; then
+            echo "❌ ERROR: package.json version was not updated for tag $TAG"
+            exit 1
           fi
+
+          PKG_VERSION=$(node -p "require('./package.json').version")
+
+          CLEAN_TAG=${TAG#v}
+
+          if [ "$PKG_VERSION" != "$CLEAN_TAG" ]; then
+            echo "❌ ERROR: Version mismatch!"
+            echo "Tag: $CLEAN_TAG"
+            echo "package.json: $PKG_VERSION"
+            exit 1
+          fi
+
+          echo "✅ Version matches tag: $TAG"
+        else
+          echo "ℹ️ No tag detected – normal push"
         fi
     lint:
       glob: "*.{js,ts,mjs}"

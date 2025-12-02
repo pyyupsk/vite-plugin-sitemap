@@ -1,13 +1,11 @@
 /**
- * @pyyupsk/vite-plugin-sitemap
- *
  * A Vite plugin for generating XML sitemaps from file-based conventions.
  *
  * @example
  * ```ts
  * // vite.config.ts
  * import { defineConfig } from 'vite';
- * import sitemap from '@pyyupsk/vite-plugin-sitemap';
+ * import sitemap from '\@pyyupsk/vite-plugin-sitemap';
  *
  * export default defineConfig({
  *   plugins: [
@@ -21,7 +19,7 @@
  * @example
  * ```ts
  * // src/sitemap.ts
- * import type { Route } from '@pyyupsk/vite-plugin-sitemap';
+ * import type { Route } from '\@pyyupsk/vite-plugin-sitemap';
  *
  * export default [
  *   { url: 'https://example.com/' },
@@ -35,7 +33,7 @@
  * ] satisfies Route[];
  * ```
  *
- * @packageDocumentation
+ * @module
  */
 
 // Generator exports for programmatic usage

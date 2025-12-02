@@ -1,6 +1,7 @@
 /**
  * Sitemap file loader module.
  * Loads and resolves exports from sitemap configuration files.
+ *
  * @module
  */
 
@@ -37,9 +38,9 @@ export interface ResolvedRoutes {
  * Get the sitemap filename for a named export.
  * Generates a standardized filename based on the export name and optional index.
  *
- * @param {string} name - Export name ('default' for main sitemap, or custom name)
- * @param {number} [index] - Optional index for multiple sitemaps with same name
- * @returns {string} Filename like 'sitemap.xml', 'sitemap-pages.xml', etc.
+ * @param name - Export name ('default' for main sitemap, or custom name)
+ * @param [index] - Optional index for multiple sitemaps with same name
+ * @returns Filename like 'sitemap.xml', 'sitemap-pages.xml', etc.
  *
  * @example
  * getSitemapFilename('default'); // 'sitemap.xml'
@@ -62,9 +63,9 @@ export function getSitemapFilename(name: string, index?: number): string {
  * Load a sitemap file using Vite's SSR module loader.
  * Uses Vite's ssrLoadModule for TypeScript support and proper module resolution.
  *
- * @param {string} filePath - Absolute path to the sitemap file
- * @param {ViteDevServer} server - Vite dev server instance (for ssrLoadModule)
- * @returns {Promise<LoadResult>} Load result with default and named exports
+ * @param filePath - Absolute path to the sitemap file
+ * @param server - Vite dev server instance (for ssrLoadModule)
+ * @returns Load result with default and named exports
  *
  * @example
  * const server = await createServer({ server: { middlewareMode: true } });
@@ -113,8 +114,8 @@ export async function loadSitemapFile(
  * Uses dynamic import directly. Best suited for compiled JavaScript files
  * or when running with a TypeScript runtime like tsx or ts-node.
  *
- * @param {string} filePath - Absolute path to the sitemap file
- * @returns {Promise<LoadResult>} Load result with default and named exports
+ * @param filePath - Absolute path to the sitemap file
+ * @returns Load result with default and named exports
  *
  * @example
  * const loadResult = await loadSitemapFileDirect('/path/to/sitemap.js');
@@ -155,8 +156,8 @@ export async function loadSitemapFileDirect(filePath: string): Promise<LoadResul
  * Merge multiple route arrays, deduplicating by URL.
  * First occurrence wins when duplicate URLs are encountered.
  *
- * @param {...Route[][]} routeArrays - Arrays of routes to merge
- * @returns {Route[]} Merged and deduplicated routes
+ * @param routeArrays - Arrays of routes to merge
+ * @returns Merged and deduplicated routes
  *
  * @example
  * const pages = [{ url: 'https://example.com' }, { url: 'https://example.com/about' }];
@@ -187,8 +188,8 @@ export function mergeRoutes(...routeArrays: Route[][]): Route[] {
  * Handles both synchronous arrays and async generator functions,
  * invoking functions and awaiting their results as needed.
  *
- * @param {LoadResult} loadResult - Result from loadSitemapFile or loadSitemapFileDirect
- * @returns {Promise<ResolvedRoutes[]>} Array of resolved routes with their export names
+ * @param loadResult - Result from loadSitemapFile or loadSitemapFileDirect
+ * @returns Array of resolved routes with their export names
  *
  * @example
  * const loadResult = await loadSitemapFile(path, server);
@@ -217,11 +218,10 @@ export async function resolveRoutes(loadResult: LoadResult): Promise<ResolvedRou
  * Type guard to check if a value is routes array or a function returning routes.
  * Validates that the value is either an array of route objects or a function.
  *
- * @param {unknown} value - Value to check
- * @returns {boolean} True if value is routes array or function returning routes
+ * @param value - Value to check
+ * @returns True if value is routes array or function returning routes
  *
  * @since 0.1.0
- * @private
  */
 function isRoutesOrFunction(value: unknown): value is (() => Promise<Route[]> | Route[]) | Route[] {
   // Check if it's an array
@@ -244,11 +244,10 @@ function isRoutesOrFunction(value: unknown): value is (() => Promise<Route[]> | 
  * If the value is a function, calls it and awaits the result.
  * If it's already an array, returns it directly.
  *
- * @param {(() => Promise<Route[]> | Route[]) | Route[]} value - Routes value to resolve
- * @returns {Promise<Route[]>} Resolved routes array
+ * @param value - Routes value to resolve
+ * @returns Resolved routes array
  *
  * @since 0.1.0
- * @private
  */
 async function resolveRoutesValue(
   value: (() => Promise<Route[]> | Route[]) | Route[],

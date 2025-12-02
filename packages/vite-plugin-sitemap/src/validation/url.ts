@@ -1,6 +1,7 @@
 /**
  * URL validation utilities for sitemap protocol compliance.
  * URLs must be absolute and use http(s) protocol per RFC 3986.
+ *
  * @module
  */
 
@@ -9,7 +10,6 @@ import picomatch from "picomatch";
 /**
  * Maximum URL length per sitemap protocol.
  *
- * @constant {number}
  * @see {@link https://www.sitemaps.org/protocol.html}
  * @since 0.1.0
  */
@@ -18,7 +18,6 @@ export const MAX_URL_LENGTH = 2048;
 /**
  * URL validation result.
  *
- * @interface UrlValidationResult
  * @since 0.1.0
  */
 export interface UrlValidationResult {
@@ -44,8 +43,8 @@ export interface UrlValidationResult {
  * Validate a URL for sitemap compliance.
  * Checks that URL is absolute, uses http(s) protocol, and meets length requirements.
  *
- * @param {string} url - URL to validate
- * @returns {boolean} True if valid for sitemap, false otherwise
+ * @param url - URL to validate
+ * @returns True if valid for sitemap, false otherwise
  *
  * @example
  * isValidUrl('https://example.com'); // true
@@ -89,9 +88,9 @@ export function isValidUrl(url: string): boolean {
  * Check if a URL matches any exclusion pattern.
  * Supports glob patterns (*, **, ?) and RegExp for flexible URL filtering.
  *
- * @param {string} url - URL to test against patterns
- * @param {Array<RegExp | string>} patterns - Array of glob patterns or RegExp
- * @returns {boolean} True if URL matches any pattern, false otherwise
+ * @param url - URL to test against patterns
+ * @param patterns - Array of glob patterns or RegExp
+ * @returns True if URL matches any pattern, false otherwise
  *
  * @example
  * matchesExcludePattern('https://example.com/admin', ['/admin']); // true
@@ -119,8 +118,8 @@ export function matchesExcludePattern(url: string, patterns: Array<RegExp | stri
  * Validate URL and return detailed result.
  * Provides comprehensive validation with helpful error messages and suggestions.
  *
- * @param {string} url - URL to validate
- * @returns {UrlValidationResult} Validation result with error details and normalized URL
+ * @param url - URL to validate
+ * @returns Validation result with error details and normalized URL
  *
  * @example
  * const result = validateUrl('https://example.com');
