@@ -10,6 +10,6 @@
   },
   "devDependencies": {
     "@pyyupsk/vite-plugin-sitemap": "workspace:*",
-    "vite": "^7.2.4"
+    "vite": "^7.2.6"
   }
 }

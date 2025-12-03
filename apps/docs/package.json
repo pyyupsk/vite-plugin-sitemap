@@ -11,6 +11,6 @@
   },
   "devDependencies": {
     "@pyyupsk/vite-plugin-sitemap": "workspace:*",
-    "vitepress": "^2.0.0-alpha.15"
+    "vitepress": "^1.6.4"
   }
 }

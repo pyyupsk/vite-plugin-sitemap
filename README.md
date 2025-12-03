@@ -10,7 +10,7 @@ A TypeScript-first Vite plugin for generating XML sitemaps from a file-based con
 - **Auto-splitting** - Automatically splits large sitemaps (50,000+ URLs)
 - **Google extensions** - Support for images, videos, news, and i18n (hreflang)
 - **CLI tools** - Validate, preview, and generate sitemaps without building
-- **Zero runtime** - No client bundle impact
+- **Zero bundle impact** - Build-time only, nothing shipped to browsers
 
 ## Installation
 
