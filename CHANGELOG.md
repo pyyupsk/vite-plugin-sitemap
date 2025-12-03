@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use new `@packages/eslint-config/library` config with JSDoc linting for source files
 
+### Fixed
+
+- Named exports in sitemap.ts now correctly generate separate files (e.g., `sitemap-blog.xml`, `sitemap-products.xml`) instead of all writing to `sitemap.xml`
+
 ## [0.2.1] - 2025-11-29
 
 ### Added

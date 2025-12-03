@@ -239,7 +239,11 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
               totalRoutes += result.routeCount ?? 0;
             } else {
               // Single sitemap file
-              const filename = resolvedOptions.filename ?? getSitemapFilename(name);
+              // Only use custom filename for default export; named exports always use their name
+              const filename =
+                name === "default"
+                  ? (resolvedOptions.filename ?? getSitemapFilename(name))
+                  : getSitemapFilename(name);
               const outputPath = join(outputDir, filename);
 
               await writeFile(outputPath, result.xml!, "utf-8");
@@ -398,7 +402,11 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
               }
             } else {
               // Single sitemap file
-              const filename = resolvedOptions.filename ?? getSitemapFilename(name);
+              // Only use custom filename for default export; named exports always use their name
+              const filename =
+                name === "default"
+                  ? (resolvedOptions.filename ?? getSitemapFilename(name))
+                  : getSitemapFilename(name);
               if (requestedFile === filename) {
                 res.setHeader("Content-Type", "application/xml");
                 res.end(result.xml);
