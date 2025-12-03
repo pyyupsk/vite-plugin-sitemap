@@ -32,6 +32,14 @@
         "vite": "^7.2.4",
       },
     },
+    "examples/custom-transform": {
+      "name": "@examples/custom-transform",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@pyyupsk/vite-plugin-sitemap": "workspace:*",
+        "vite": "^7.2.4",
+      },
+    },
     "examples/dynamic-routes": {
       "name": "@examples/dynamic-routes",
       "version": "0.0.0",
@@ -40,8 +48,40 @@
         "vite": "^7.2.4",
       },
     },
+    "examples/exclude-patterns": {
+      "name": "@examples/exclude-patterns",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@pyyupsk/vite-plugin-sitemap": "workspace:*",
+        "vite": "^7.2.4",
+      },
+    },
+    "examples/i18n": {
+      "name": "@examples/i18n",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@pyyupsk/vite-plugin-sitemap": "workspace:*",
+        "vite": "^7.2.4",
+      },
+    },
+    "examples/large-sitemap": {
+      "name": "@examples/large-sitemap",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@pyyupsk/vite-plugin-sitemap": "workspace:*",
+        "vite": "^7.2.4",
+      },
+    },
     "examples/multiple-sitemaps": {
       "name": "@examples/multiple-sitemaps",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@pyyupsk/vite-plugin-sitemap": "workspace:*",
+        "vite": "^7.2.4",
+      },
+    },
+    "examples/news": {
+      "name": "@examples/news",
       "version": "0.0.0",
       "devDependencies": {
         "@pyyupsk/vite-plugin-sitemap": "workspace:*",
@@ -247,9 +287,19 @@
 
     "@examples/basic": ["@examples/basic@workspace:examples/basic"],
 
+    "@examples/custom-transform": ["@examples/custom-transform@workspace:examples/custom-transform"],
+
     "@examples/dynamic-routes": ["@examples/dynamic-routes@workspace:examples/dynamic-routes"],
 
+    "@examples/exclude-patterns": ["@examples/exclude-patterns@workspace:examples/exclude-patterns"],
+
+    "@examples/i18n": ["@examples/i18n@workspace:examples/i18n"],
+
+    "@examples/large-sitemap": ["@examples/large-sitemap@workspace:examples/large-sitemap"],
+
     "@examples/multiple-sitemaps": ["@examples/multiple-sitemaps@workspace:examples/multiple-sitemaps"],
+
+    "@examples/news": ["@examples/news@workspace:examples/news"],
 
     "@examples/react": ["@examples/react@workspace:examples/react"],
 
