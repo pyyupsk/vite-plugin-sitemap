@@ -144,6 +144,7 @@
         "vite-sitemap": "dist/cli/index.mjs",
       },
       "dependencies": {
+        "better-all": "^0.0.3",
         "commander": "^14.0.2",
         "picocolors": "^1.1.1",
         "picomatch": "^4.0.3",
@@ -750,6 +751,8 @@
     "basic-ftp": ["basic-ftp@5.1.0", "", {}, "sha512-RkaJzeJKDbaDWTIPiJwubyljaEPwpVWkm9Rt5h9Nd6h7tEXTJ3VB4qxdZBioV7JO5yLUaOKwz7vDOzlncUsegw=="],
 
     "before-after-hook": ["before-after-hook@4.0.0", "", {}, "sha512-q6tR3RPqIB1pMiTRMFcZwuG5T8vwp+vUvEG0vuI6B+Rikh5BfPp2fQ82c925FOs+b0lcFQ8CFrL+KbilfZFhOQ=="],
+
+    "better-all": ["better-all@0.0.3", "", {}, "sha512-k2JpHj8DJvRMnoGgAhmjs784q15eTLu5uATS5YAg0HTL+JlnAger4Hzdr7+//mwnhASuDIY3dCF49Fs/Q5dgTQ=="],
 
     "binary-extensions": ["binary-extensions@2.3.0", "", {}, "sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw=="],
 

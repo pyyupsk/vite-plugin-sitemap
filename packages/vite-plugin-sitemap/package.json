@@ -55,6 +55,7 @@
     "vite": "^7"
   },
   "dependencies": {
+    "better-all": "^0.0.3",
     "commander": "^14.0.2",
     "picocolors": "^1.1.1",
     "picomatch": "^4.0.3",

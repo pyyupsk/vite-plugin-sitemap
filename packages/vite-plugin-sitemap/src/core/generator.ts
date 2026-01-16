@@ -5,6 +5,8 @@
  * @module
  */
 
+import { all } from "better-all";
+
 import type { PluginOptions, ResolvedPluginOptions } from "../types/config";
 import type { Route } from "../types/sitemap";
 import type { ValidationError, ValidationResult } from "../validation/errors";
@@ -210,14 +212,13 @@ export async function generateMultipleSitemaps(
   routeSets: Array<{ name: string; routes: Route[] }>,
   options: GenerationOptions = {},
 ): Promise<Map<string, GenerationResult>> {
-  const results = new Map<string, GenerationResult>();
+  const tasks = Object.fromEntries(
+    routeSets.map(({ name, routes }) => [name, async () => generateSitemap(routes, options)]),
+  ) as Record<string, () => Promise<GenerationResult>>;
 
-  for (const { name, routes } of routeSets) {
-    const result = await generateSitemap(routes, options);
-    results.set(name, result);
-  }
+  const results = await all(tasks);
 
-  return results;
+  return new Map(Object.entries(results));
 }
 
 /**
