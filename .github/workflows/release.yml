@@ -36,13 +36,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Run standard-version
-        run: bunx standard-version --release-as ${{ inputs.release_type }}
-
-      - name: Push changes and tags
-        run: git push --follow-tags origin main
-
-      - name: Generate GitHub release
-        run: bunx changelogithub
+      - name: Release
+        run: bunx release-it ${{ inputs.release_type }} --ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
