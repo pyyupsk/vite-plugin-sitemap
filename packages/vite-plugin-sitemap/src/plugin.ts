@@ -11,7 +11,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import pc from "picocolors";
 
-import type { PluginOptions } from "./types/config";
+import type { GenerationResult } from "./core/generator";
+import type { PluginOptions, ResolvedPluginOptions } from "./types/config";
+import type { Route } from "./types/sitemap";
 
 import { formatNotFoundError, inlineDiscoverSitemapFile } from "./core/discovery";
 import { generateSitemap } from "./core/generator";
@@ -21,6 +23,371 @@ import { getSitemapIndexFilename } from "./core/splitter";
 import { resolveOptions } from "./types/config";
 import { formatBytes } from "./utils/format";
 import { formatResultForConsole } from "./validation/errors";
+
+/**
+ * Context for sitemap generation during build.
+ */
+interface BuildContext {
+  logger: SitemapLogger;
+  outputDir: string;
+  resolvedOptions: ResolvedPluginOptions;
+}
+
+/**
+ * Response helpers for dev server.
+ */
+interface DevResponse {
+  end: (_data: string) => void;
+  setHeader: (_name: string, _value: string) => void;
+}
+
+/**
+ * Result of processing all route sets.
+ */
+interface ProcessRoutesResult {
+  anyWasSplit: boolean;
+  totalFiles: number;
+  totalRoutes: number;
+}
+
+/**
+ * Logger interface for sitemap generation.
+ */
+interface SitemapLogger {
+  error: (_msg: string) => void;
+  info: (_msg: string) => void;
+  warn: (_msg: string) => void;
+}
+
+/**
+ * Handle robots.txt generation.
+ *
+ * @param outputDir - Directory to write robots.txt
+ * @param resolvedOptions - Resolved plugin options
+ * @param anyWasSplit - Whether any sitemap was split
+ * @param logger - Logger instance
+ *
+ * @since 0.2.2
+ */
+async function handleRobotsTxt(
+  outputDir: string,
+  resolvedOptions: ResolvedPluginOptions,
+  anyWasSplit: boolean,
+  logger: SitemapLogger,
+): Promise<void> {
+  if (!resolvedOptions.generateRobotsTxt) return;
+
+  if (!resolvedOptions.hostname) {
+    logger.warn(`${pc.yellow("⚠")} Cannot generate robots.txt: hostname option is required`);
+    return;
+  }
+
+  const primarySitemapFilename = anyWasSplit ? "sitemap-index.xml" : resolvedOptions.filename;
+  const sitemapUrl = buildSitemapUrl(resolvedOptions.hostname, primarySitemapFilename);
+  const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
+
+  if (robotsResult.success) {
+    if (robotsResult.action === "created") {
+      logger.info(`${pc.cyan("robots.txt")} ${pc.dim("created with Sitemap directive")}`);
+    } else if (robotsResult.action === "updated") {
+      logger.info(`${pc.cyan("robots.txt")} ${pc.dim("updated with Sitemap directive")}`);
+    }
+  } else {
+    logger.warn(`${pc.yellow("⚠")} ${robotsResult.error}`);
+  }
+}
+
+/**
+ * Log warnings from generation result.
+ *
+ * @param warnings - Array of warning messages
+ * @param logger - Logger instance
+ *
+ * @since 0.2.2
+ */
+function logWarnings(warnings: string[], logger: SitemapLogger): void {
+  for (const warning of warnings) {
+    logger.warn(`${pc.yellow("⚠")} ${warning}`);
+  }
+}
+
+/**
+ * Process all route sets and write sitemaps.
+ *
+ * @param resolvedRoutes - Array of route sets with names
+ * @param ctx - Build context
+ * @returns Processing result with totals
+ *
+ * @since 0.2.2
+ */
+async function processRouteSets(
+  resolvedRoutes: Array<{ name: string; routes: Route[] }>,
+  ctx: BuildContext,
+): Promise<ProcessRoutesResult> {
+  const { logger, resolvedOptions } = ctx;
+  let totalRoutes = 0;
+  let totalFiles = 0;
+  let anyWasSplit = false;
+
+  for (const { name, routes } of resolvedRoutes) {
+    const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
+    const result = await generateSitemap(routes, {
+      baseFilename,
+      enableSplitting: true,
+      hostname: resolvedOptions.hostname,
+      pluginOptions: resolvedOptions,
+    });
+
+    if (!result.success) {
+      logger.error(
+        `${pc.red("✗")} Validation failed for ${pc.cyan(name)}:\n${formatResultForConsole(result.validation)}`,
+      );
+      continue;
+    }
+
+    if (result.splitResult?.wasSplit) {
+      anyWasSplit = true;
+      const written = await writeSplitSitemap(result, baseFilename, name, ctx);
+      if (written) {
+        totalFiles += written.files;
+        totalRoutes += written.routes;
+      }
+    } else {
+      const written = await writeSingleSitemap(result, name, ctx);
+      totalFiles += written.files;
+      totalRoutes += written.routes;
+    }
+
+    logWarnings(result.warnings, logger);
+  }
+
+  return { anyWasSplit, totalFiles, totalRoutes };
+}
+
+/**
+ * Send XML response in dev server.
+ *
+ * @param res - Response object
+ * @param xml - XML content to send
+ *
+ * @since 0.2.2
+ */
+function sendXmlResponse(res: DevResponse, xml: string): void {
+  res.setHeader("Content-Type", "application/xml");
+  res.end(xml);
+}
+
+/**
+ * Serve a sitemap request in dev mode.
+ *
+ * @param url - Request URL
+ * @param root - Project root directory
+ * @param resolvedOptions - Resolved plugin options
+ * @param viteServer - Vite dev server instance
+ * @param res - Response object
+ * @returns Whether the request was served
+ *
+ * @since 0.2.2
+ */
+async function serveSitemapRequest(
+  url: string,
+  root: string,
+  resolvedOptions: ResolvedPluginOptions,
+  viteServer: ViteDevServer,
+  res: DevResponse,
+): Promise<boolean> {
+  const { existsSync } = await import("node:fs");
+  const { resolve: pathResolve } = await import("node:path");
+
+  const discovery = await inlineDiscoverSitemapFile(
+    root,
+    resolvedOptions.sitemapFile,
+    existsSync,
+    pathResolve,
+  );
+
+  if (!discovery.found || !discovery.path) {
+    return false;
+  }
+
+  const loadResult = await loadSitemapFile(discovery.path, viteServer);
+  const resolvedRoutes = await resolveRoutes(loadResult);
+
+  if (resolvedRoutes.length === 0) {
+    return false;
+  }
+
+  const requestedFile = url.slice(1); // Remove leading /
+
+  for (const { name, routes } of resolvedRoutes) {
+    const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
+    const result = await generateSitemap(routes, {
+      baseFilename,
+      enableSplitting: true,
+      hostname: resolvedOptions.hostname,
+      pluginOptions: resolvedOptions,
+    });
+
+    if (!result.success) {
+      continue;
+    }
+
+    const servedSplit = tryServeSplitSitemap(result, baseFilename, requestedFile, res);
+    if (servedSplit) return true;
+
+    const servedSingle = tryServeSingleSitemap(result, name, requestedFile, resolvedOptions, res);
+    if (servedSingle) return true;
+  }
+
+  return false;
+}
+
+/**
+ * Try to serve a single sitemap result.
+ *
+ * @param result - Generation result
+ * @param name - Route set name
+ * @param requestedFile - Requested filename
+ * @param resolvedOptions - Resolved plugin options
+ * @param res - Response object
+ * @returns Whether the sitemap was served
+ *
+ * @since 0.2.2
+ */
+function tryServeSingleSitemap(
+  result: GenerationResult,
+  name: string,
+  requestedFile: string,
+  resolvedOptions: ResolvedPluginOptions,
+  res: DevResponse,
+): boolean {
+  const filename =
+    name === "default"
+      ? (resolvedOptions.filename ?? getSitemapFilename(name))
+      : getSitemapFilename(name);
+
+  if (requestedFile === filename && result.xml) {
+    sendXmlResponse(res, result.xml);
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Try to serve a split sitemap result.
+ *
+ * @param result - Generation result
+ * @param baseFilename - Base filename for sitemaps
+ * @param requestedFile - Requested filename
+ * @param res - Response object
+ * @returns Whether the sitemap was served
+ *
+ * @since 0.2.2
+ */
+function tryServeSplitSitemap(
+  result: GenerationResult,
+  baseFilename: string,
+  requestedFile: string,
+  res: DevResponse,
+): boolean {
+  if (!result.splitResult?.wasSplit) return false;
+
+  const indexFilename = getSitemapIndexFilename(baseFilename);
+  if (requestedFile === indexFilename && result.splitResult.indexXml) {
+    sendXmlResponse(res, result.splitResult.indexXml);
+    return true;
+  }
+
+  for (const chunk of result.splitResult.sitemaps) {
+    if (requestedFile === chunk.filename) {
+      sendXmlResponse(res, chunk.xml);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Write a single sitemap result to disk.
+ *
+ * @param result - Generation result
+ * @param name - Route set name
+ * @param ctx - Build context
+ * @returns File and route counts
+ *
+ * @since 0.2.2
+ */
+async function writeSingleSitemap(
+  result: GenerationResult,
+  name: string,
+  ctx: BuildContext,
+): Promise<{ files: number; routes: number }> {
+  const { logger, outputDir, resolvedOptions } = ctx;
+
+  const filename =
+    name === "default"
+      ? (resolvedOptions.filename ?? getSitemapFilename(name))
+      : getSitemapFilename(name);
+  const outputPath = join(outputDir, filename);
+
+  await writeFile(outputPath, result.xml!, "utf-8");
+
+  const fileInfo = `(${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`;
+  logger.info(`${pc.cyan(filename)} ${pc.dim(fileInfo)}`);
+
+  return { files: 1, routes: result.routeCount ?? 0 };
+}
+
+/**
+ * Write a split sitemap result to disk.
+ *
+ * @param result - Generation result
+ * @param baseFilename - Base filename for sitemaps
+ * @param name - Route set name
+ * @param ctx - Build context
+ * @returns File and route counts, or null on failure
+ *
+ * @since 0.2.2
+ */
+async function writeSplitSitemap(
+  result: GenerationResult,
+  baseFilename: string,
+  name: string,
+  ctx: BuildContext,
+): Promise<null | { files: number; routes: number }> {
+  const { logger, outputDir } = ctx;
+
+  if (!result.splitResult) return null;
+
+  let files = 0;
+
+  // Write all sitemap chunks
+  for (const chunk of result.splitResult.sitemaps) {
+    const outputPath = join(outputDir, chunk.filename);
+    await writeFile(outputPath, chunk.xml, "utf-8");
+    files++;
+
+    const chunkInfo = `(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`;
+    logger.info(`${pc.cyan(chunk.filename)} ${pc.dim(chunkInfo)}`);
+  }
+
+  // Write sitemap index
+  const indexFilename = getSitemapIndexFilename(baseFilename);
+  const indexPath = join(outputDir, indexFilename);
+  if (!result.splitResult.indexXml) {
+    logger.error(`${pc.red("✗")} Index XML was not generated for split sitemap '${name}'`);
+    return null;
+  }
+  await writeFile(indexPath, result.splitResult.indexXml, "utf-8");
+  files++;
+
+  const indexInfo = `(index for ${result.splitResult.sitemaps.length} sitemaps)`;
+  logger.info(`${pc.cyan(indexFilename)} ${pc.dim(indexInfo)}`);
+
+  return { files, routes: result.routeCount ?? 0 };
+}
 
 /**
  * Plugin name for identification.
@@ -138,11 +505,9 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
 
       try {
         // Step 1: Discover sitemap file
-        // Use dynamic import to avoid module caching issues in Vite build context
         const { existsSync } = await import("node:fs");
         const { resolve: pathResolve } = await import("node:path");
 
-        // Inline discovery to avoid module caching issues
         const discovery = await inlineDiscoverSitemapFile(
           config.root,
           resolvedOptions.sitemapFile,
@@ -158,7 +523,6 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
         logger.info(`${pc.dim("found")} ${pc.cyan(discovery.path)}`);
 
         // Step 2: Create a temporary dev server for ssrLoadModule
-        // This allows TypeScript file loading during build
         const { createServer } = await import("vite");
         const tempServer = await createServer({
           logLevel: "silent",
@@ -181,113 +545,16 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
           // Step 4: Generate sitemaps
           const outDir = resolvedOptions.outDir;
           const outputDir = isAbsolute(outDir) ? outDir : join(config.root, outDir);
-
-          // Ensure output directory exists
           await mkdir(outputDir, { recursive: true });
 
-          let totalRoutes = 0;
-          let totalFiles = 0;
-          let anyWasSplit = false;
-
-          for (const { name, routes } of resolvedRoutes) {
-            const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
-            const result = await generateSitemap(routes, {
-              baseFilename,
-              enableSplitting: true,
-              hostname: resolvedOptions.hostname,
-              pluginOptions: resolvedOptions,
-            });
-
-            if (!result.success) {
-              logger.error(
-                `${pc.red("✗")} Validation failed for ${pc.cyan(name)}:\n${formatResultForConsole(result.validation)}`,
-              );
-              continue;
-            }
-
-            // Handle split sitemaps
-            if (result.splitResult?.wasSplit) {
-              anyWasSplit = true;
-
-              // Write all sitemap chunks
-              for (const chunk of result.splitResult.sitemaps) {
-                const outputPath = join(outputDir, chunk.filename);
-                await writeFile(outputPath, chunk.xml, "utf-8");
-                totalFiles++;
-
-                const chunkInfo = `(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`;
-                logger.info(`${pc.cyan(chunk.filename)} ${pc.dim(chunkInfo)}`);
-              }
-
-              // Write sitemap index
-              const indexFilename = getSitemapIndexFilename(baseFilename);
-              const indexPath = join(outputDir, indexFilename);
-              if (!result.splitResult.indexXml) {
-                logger.error(
-                  `${pc.red("✗")} Index XML was not generated for split sitemap '${name}'`,
-                );
-                continue;
-              }
-              await writeFile(indexPath, result.splitResult.indexXml, "utf-8");
-              totalFiles++;
-
-              const indexInfo = `(index for ${result.splitResult.sitemaps.length} sitemaps)`;
-              logger.info(`${pc.cyan(indexFilename)} ${pc.dim(indexInfo)}`);
-
-              totalRoutes += result.routeCount ?? 0;
-            } else {
-              // Single sitemap file
-              // Only use custom filename for default export; named exports always use their name
-              const filename =
-                name === "default"
-                  ? (resolvedOptions.filename ?? getSitemapFilename(name))
-                  : getSitemapFilename(name);
-              const outputPath = join(outputDir, filename);
-
-              await writeFile(outputPath, result.xml!, "utf-8");
-
-              totalRoutes += result.routeCount ?? 0;
-              totalFiles++;
-
-              const fileInfo = `(${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`;
-              logger.info(`${pc.cyan(filename)} ${pc.dim(fileInfo)}`);
-            }
-
-            // Log warnings if any
-            if (result.warnings.length > 0) {
-              for (const warning of result.warnings) {
-                logger.warn(`${pc.yellow("⚠")} ${warning}`);
-              }
-            }
-          }
+          const ctx: BuildContext = { logger, outputDir, resolvedOptions };
+          const { anyWasSplit, totalFiles, totalRoutes } = await processRouteSets(
+            resolvedRoutes,
+            ctx,
+          );
 
           // Step 5: Generate robots.txt if enabled
-          if (resolvedOptions.generateRobotsTxt && resolvedOptions.hostname) {
-            // Determine the primary sitemap filename to reference
-            // Use sitemap-index.xml if any sitemap was split, otherwise use the configured filename
-            const primarySitemapFilename = anyWasSplit
-              ? "sitemap-index.xml"
-              : resolvedOptions.filename;
-
-            const sitemapUrl = buildSitemapUrl(resolvedOptions.hostname, primarySitemapFilename);
-
-            const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
-
-            if (robotsResult.success) {
-              if (robotsResult.action === "created") {
-                logger.info(`${pc.cyan("robots.txt")} ${pc.dim("created with Sitemap directive")}`);
-              } else if (robotsResult.action === "updated") {
-                logger.info(`${pc.cyan("robots.txt")} ${pc.dim("updated with Sitemap directive")}`);
-              }
-              // No log for 'unchanged' - sitemap directive already exists
-            } else {
-              logger.warn(`${pc.yellow("⚠")} ${robotsResult.error}`);
-            }
-          } else if (resolvedOptions.generateRobotsTxt && !resolvedOptions.hostname) {
-            logger.warn(
-              `${pc.yellow("⚠")} Cannot generate robots.txt: hostname option is required`,
-            );
-          }
+          await handleRobotsTxt(outputDir, resolvedOptions, anyWasSplit, logger);
 
           const elapsed = Date.now() - startTime;
           const elapsedFormatted = pc.reset(pc.bold(`${elapsed}ms`));
@@ -296,7 +563,6 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
             `${pc.green("✓")} ${pc.bold(String(totalFiles))} sitemap(s) with ${pc.bold(String(totalRoutes))} URLs ${pc.dim(timing)}`,
           );
         } finally {
-          // Clean up temporary server
           await tempServer.close();
         }
       } catch (error) {
@@ -342,80 +608,16 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
         }
 
         try {
-          // Discover sitemap file
-          const { existsSync } = await import("node:fs");
-          const { resolve: pathResolve } = await import("node:path");
-
-          const discovery = await inlineDiscoverSitemapFile(
+          const served = await serveSitemapRequest(
+            url,
             config.root,
-            resolvedOptions.sitemapFile,
-            existsSync,
-            pathResolve,
+            resolvedOptions,
+            viteServer,
+            res,
           );
-
-          if (!discovery.found || !discovery.path) {
-            return next();
+          if (!served) {
+            next();
           }
-
-          // Load and resolve routes
-          const loadResult = await loadSitemapFile(discovery.path, viteServer);
-          const resolvedRoutes = await resolveRoutes(loadResult);
-
-          if (resolvedRoutes.length === 0) {
-            return next();
-          }
-
-          // Determine which sitemap to serve based on URL
-          const requestedFile = url.slice(1); // Remove leading /
-
-          for (const { name, routes } of resolvedRoutes) {
-            const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
-            const result = await generateSitemap(routes, {
-              baseFilename,
-              enableSplitting: true,
-              hostname: resolvedOptions.hostname,
-              pluginOptions: resolvedOptions,
-            });
-
-            if (!result.success) {
-              continue;
-            }
-
-            // Check if this is a split sitemap request
-            if (result.splitResult?.wasSplit) {
-              // Check for sitemap index
-              const indexFilename = getSitemapIndexFilename(baseFilename);
-              if (requestedFile === indexFilename) {
-                res.setHeader("Content-Type", "application/xml");
-                res.end(result.splitResult.indexXml);
-                return;
-              }
-
-              // Check for individual sitemap chunks
-              for (const chunk of result.splitResult.sitemaps) {
-                if (requestedFile === chunk.filename) {
-                  res.setHeader("Content-Type", "application/xml");
-                  res.end(chunk.xml);
-                  return;
-                }
-              }
-            } else {
-              // Single sitemap file
-              // Only use custom filename for default export; named exports always use their name
-              const filename =
-                name === "default"
-                  ? (resolvedOptions.filename ?? getSitemapFilename(name))
-                  : getSitemapFilename(name);
-              if (requestedFile === filename) {
-                res.setHeader("Content-Type", "application/xml");
-                res.end(result.xml);
-                return;
-              }
-            }
-          }
-
-          // No matching sitemap found
-          next();
         } catch (error) {
           config.logger.error(
             `${pc.red("✗")} Failed to generate sitemap: ${error instanceof Error ? error.message : String(error)}`,

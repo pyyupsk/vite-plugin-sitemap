@@ -137,6 +137,7 @@ export interface ResolvedPluginOptions {
  *
  * @param {Route} route - Route to transform
  * @returns {Route | null | Promise<Route | null>} Transformed route, null to exclude, or promise
+ *
  * @since 0.1.0
  */
 export type RouteTransformer = (route: Route) => null | Promise<null | Route> | Route;
@@ -147,6 +148,7 @@ export type RouteTransformer = (route: Route) => null | Promise<null | Route> | 
  *
  * @param {Route[]} routes - Array of routes to serialize
  * @returns {string | Promise<string>} Complete XML string or promise
+ *
  * @since 0.1.0
  */
 export type XmlSerializer = (routes: Route[]) => Promise<string> | string;

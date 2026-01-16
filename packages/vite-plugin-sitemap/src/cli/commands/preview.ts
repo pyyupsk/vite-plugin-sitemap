@@ -7,9 +7,25 @@
 
 import type { Command } from "commander";
 
+import type { GenerationResult } from "../../core/generator";
+import type { Route } from "../../types/sitemap";
+
 import { generateSitemap } from "../../core/generator";
 import { formatResultForConsole } from "../../validation/errors";
 import { colors, formatBytes, formatDuration, loadRoutesFromSitemap, logger } from "../utils";
+
+/**
+ * Preview options from CLI.
+ */
+interface PreviewOptions {
+  full?: boolean;
+  hostname?: string;
+  limit: string;
+  name?: string;
+  root: string;
+  sitemap?: string;
+  verbose?: boolean;
+}
 
 /**
  * Register the preview command.
@@ -36,17 +52,16 @@ export function registerPreviewCommand(program: Command): void {
     .option("-l, --limit <number>", "Limit output to first N lines", "50")
     .option("-f, --full", "Show full XML output (no truncation)")
     .option("-v, --verbose", "Show detailed output")
-    .action(async (options) => {
+    .action(async (options: PreviewOptions) => {
       const startTime = Date.now();
 
       try {
         logger.info("Loading sitemap configuration...\n");
 
-        // Load routes
         const result = await loadRoutesFromSitemap({
           root: options.root,
-          sitemapFile: options.sitemap,
-          verbose: options.verbose,
+          ...(options.sitemap && { sitemapFile: options.sitemap }),
+          ...(options.verbose && { verbose: options.verbose }),
         });
 
         if (!result) {
@@ -54,68 +69,23 @@ export function registerPreviewCommand(program: Command): void {
         }
 
         const { pluginOptions, routes, server } = result;
-
-        // Use hostname from CLI option, or fall back to vite.config
         const hostname = options.hostname ?? pluginOptions?.hostname;
 
         try {
-          // Filter to specific named export if requested
           const filteredRoutes = options.name
             ? routes.filter((r) => r.name === options.name)
             : routes;
 
           if (filteredRoutes.length === 0) {
-            logger.error(
-              options.name ? `No export named '${options.name}' found.` : "No routes found.",
-            );
+            const msg = options.name
+              ? `No export named '${options.name}' found.`
+              : "No routes found.";
+            logger.error(msg);
             process.exit(1);
           }
 
           for (const { name, routes: routeList } of filteredRoutes) {
-            const routeInfo = `(${routeList.length} routes)`;
-            logger.info(`Preview: ${colors.cyan(name)} ${colors.dim(routeInfo)}\n`);
-
-            const genResult = await generateSitemap(routeList, {
-              enableSplitting: false, // Don't split for preview
-              hostname,
-            });
-
-            if (!genResult.success) {
-              logger.error(`Generation failed for '${name}':`);
-              console.log(formatResultForConsole(genResult.validation));
-              continue;
-            }
-
-            // Display XML output
-            const xml = genResult.xml ?? "";
-            const lines = xml.split("\n");
-            const limit = options.full ? lines.length : Number.parseInt(options.limit, 10);
-
-            console.log(colors.dim("─".repeat(60)));
-            console.log(lines.slice(0, limit).join("\n"));
-
-            if (!options.full && lines.length > limit) {
-              console.log(
-                colors.dim(`\n... ${lines.length - limit} more lines (use --full to see all)`),
-              );
-            }
-            console.log(colors.dim("─".repeat(60)));
-
-            // Show stats
-            console.log(
-              `\n${colors.bold("Size:")} ${colors.green(formatBytes(genResult.byteSize ?? 0))}`,
-            );
-            console.log(`${colors.bold("Routes:")} ${colors.green(String(genResult.routeCount))}`);
-
-            // Show warnings
-            if (genResult.warnings.length > 0) {
-              console.log("\nWarnings:");
-              for (const warning of genResult.warnings) {
-                logger.warn(warning);
-              }
-            }
-
-            console.log("");
+            await previewRouteSet(name, routeList, hostname, options);
           }
 
           const elapsed = formatDuration(Date.now() - startTime);
@@ -131,4 +101,80 @@ export function registerPreviewCommand(program: Command): void {
         process.exit(1);
       }
     });
+}
+
+/**
+ * Display stats for a generation result.
+ *
+ * @param genResult - Generation result containing stats
+ *
+ * @since 0.2.2
+ */
+function displayStats(genResult: GenerationResult): void {
+  console.log(`\n${colors.bold("Size:")} ${colors.green(formatBytes(genResult.byteSize ?? 0))}`);
+  console.log(`${colors.bold("Routes:")} ${colors.green(String(genResult.routeCount))}`);
+
+  if (genResult.warnings.length > 0) {
+    console.log("\nWarnings:");
+    for (const warning of genResult.warnings) {
+      logger.warn(warning);
+    }
+  }
+
+  console.log("");
+}
+
+/**
+ * Display XML output with optional truncation.
+ *
+ * @param xml - XML content to display
+ * @param options - Preview options
+ *
+ * @since 0.2.2
+ */
+function displayXmlOutput(xml: string, options: PreviewOptions): void {
+  const lines = xml.split("\n");
+  const limit = options.full ? lines.length : Number.parseInt(options.limit, 10);
+
+  console.log(colors.dim("─".repeat(60)));
+  console.log(lines.slice(0, limit).join("\n"));
+
+  if (!options.full && lines.length > limit) {
+    console.log(colors.dim(`\n... ${lines.length - limit} more lines (use --full to see all)`));
+  }
+  console.log(colors.dim("─".repeat(60)));
+}
+
+/**
+ * Preview a single route set.
+ *
+ * @param name - Route set name
+ * @param routeList - Array of routes
+ * @param hostname - Site hostname
+ * @param options - Preview options
+ *
+ * @since 0.2.2
+ */
+async function previewRouteSet(
+  name: string,
+  routeList: Route[],
+  hostname: string | undefined,
+  options: PreviewOptions,
+): Promise<void> {
+  const routeInfo = `(${routeList.length} routes)`;
+  logger.info(`Preview: ${colors.cyan(name)} ${colors.dim(routeInfo)}\n`);
+
+  const genResult = await generateSitemap(routeList, {
+    enableSplitting: false,
+    hostname,
+  });
+
+  if (!genResult.success) {
+    logger.error(`Generation failed for '${name}':`);
+    console.log(formatResultForConsole(genResult.validation));
+    return;
+  }
+
+  displayXmlOutput(genResult.xml ?? "", options);
+  displayStats(genResult);
 }

@@ -10,7 +10,9 @@ import type { Command } from "commander";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
+import type { GenerationResult } from "../../core/generator";
 import type { PluginOptions, ResolvedPluginOptions } from "../../types/config";
+import type { Route } from "../../types/sitemap";
 
 import { generateSitemap } from "../../core/generator";
 import { getSitemapFilename } from "../../core/loader";
@@ -19,6 +21,16 @@ import { getSitemapIndexFilename } from "../../core/splitter";
 import { resolveOptions } from "../../types/config";
 import { formatResultForConsole } from "../../validation/errors";
 import { colors, formatBytes, formatDuration, loadRoutesFromSitemap, logger } from "../utils";
+
+/**
+ * Context for CLI sitemap generation.
+ */
+interface CliContext {
+  generatedFiles: string[];
+  outputDir: string;
+  resolvedOpts: ResolvedPluginOptions;
+  verbose: boolean;
+}
 
 /**
  * Options for the generate command.
@@ -138,110 +150,25 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
     // Ensure output directory exists
     await mkdir(outputDir, { recursive: true });
 
-    let totalRoutes = 0;
-    let totalFiles = 0;
-    let anyWasSplit = false;
     const generatedFiles: string[] = [];
+    const ctx: CliContext = {
+      generatedFiles,
+      outputDir,
+      resolvedOpts,
+      verbose: options.verbose ?? false,
+    };
 
-    for (const { name, routes } of resolvedRoutes) {
-      const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
-
-      const genResult = await generateSitemap(routes, {
-        baseFilename,
-        enableSplitting: true,
-        hostname: resolvedOpts.hostname,
-        pluginOptions: resolvedOpts,
-      });
-
-      if (!genResult.success) {
-        logger.error(
-          `Validation failed for '${name}':\n${formatResultForConsole(genResult.validation)}`,
-        );
-        continue;
-      }
-
-      // Handle split sitemaps
-      if (genResult.splitResult?.wasSplit) {
-        anyWasSplit = true;
-
-        // Write all sitemap chunks
-        for (const chunk of genResult.splitResult.sitemaps) {
-          const outputPath = join(outputDir, chunk.filename);
-          await writeFile(outputPath, chunk.xml, "utf-8");
-          totalFiles++;
-          generatedFiles.push(chunk.filename);
-
-          if (options.verbose) {
-            const chunkInfo = `(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`;
-            logger.info(`${colors.cyan(chunk.filename)} ${colors.dim(chunkInfo)}`);
-          }
-        }
-
-        // Write sitemap index
-        const indexFilename = getSitemapIndexFilename(baseFilename);
-        const indexPath = join(outputDir, indexFilename);
-        if (!genResult.splitResult.indexXml) {
-          logger.error(`Index XML was not generated for split sitemap '${name}'`);
-          continue;
-        }
-        await writeFile(indexPath, genResult.splitResult.indexXml, "utf-8");
-        totalFiles++;
-        generatedFiles.push(indexFilename);
-
-        if (options.verbose) {
-          const indexInfo = `(index for ${genResult.splitResult.sitemaps.length} sitemaps)`;
-          logger.info(`${colors.cyan(indexFilename)} ${colors.dim(indexInfo)}`);
-        }
-
-        totalRoutes += genResult.routeCount ?? 0;
-      } else {
-        // Single sitemap file
-        const filename = getSitemapFilename(name);
-        const outputPath = join(outputDir, filename);
-
-        await writeFile(outputPath, genResult.xml!, "utf-8");
-
-        totalRoutes += genResult.routeCount ?? 0;
-        totalFiles++;
-        generatedFiles.push(filename);
-
-        if (options.verbose) {
-          const fileInfo = `(${genResult.routeCount} URLs, ${formatBytes(genResult.byteSize ?? 0)})`;
-          logger.info(`${colors.cyan(filename)} ${colors.dim(fileInfo)}`);
-        }
-      }
-
-      // Log warnings if any
-      if (genResult.warnings.length > 0) {
-        for (const warning of genResult.warnings) {
-          logger.warn(warning);
-        }
-      }
-    }
+    const { anyWasSplit, totalFiles, totalRoutes } = await processRouteSetsCli(resolvedRoutes, ctx);
 
     // Generate robots.txt if enabled
     const shouldGenerateRobots = options.robotsTxt ?? configOptions?.generateRobotsTxt;
-    if (shouldGenerateRobots && hostname) {
-      // Use sitemap-index.xml if any sitemap was split, otherwise use sitemap.xml
-      const primarySitemapFilename = anyWasSplit ? "sitemap-index.xml" : "sitemap.xml";
-
-      const sitemapUrl = buildSitemapUrl(hostname, primarySitemapFilename);
-
-      const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
-
-      if (robotsResult.success) {
-        if (robotsResult.action === "created") {
-          logger.success("Created robots.txt with Sitemap directive");
-          generatedFiles.push("robots.txt");
-        } else if (robotsResult.action === "updated") {
-          logger.success("Updated robots.txt with Sitemap directive");
-        }
-      } else {
-        logger.warn(robotsResult.error ?? "Failed to update robots.txt");
-      }
-    } else if (shouldGenerateRobots && !hostname) {
-      logger.warn("Cannot generate robots.txt: hostname is required");
-    }
+    await handleRobotsTxtCli(
+      outputDir,
+      hostname,
+      shouldGenerateRobots,
+      anyWasSplit,
+      generatedFiles,
+    );
 
     const elapsed = Date.now() - startTime;
 
@@ -283,4 +210,185 @@ function getGlobalOptions(cmd: Command): {
     config: opts.config,
     verbose: opts.verbose,
   };
+}
+
+/**
+ * Handle robots.txt generation for CLI.
+ *
+ * @param outputDir - Output directory path
+ * @param hostname - Site hostname
+ * @param shouldGenerate - Whether to generate robots.txt
+ * @param anyWasSplit - Whether any sitemap was split
+ * @param generatedFiles - Array to track generated files
+ *
+ * @since 0.2.2
+ */
+async function handleRobotsTxtCli(
+  outputDir: string,
+  hostname: string | undefined,
+  shouldGenerate: boolean | undefined,
+  anyWasSplit: boolean,
+  generatedFiles: string[],
+): Promise<void> {
+  if (!shouldGenerate) return;
+
+  if (!hostname) {
+    logger.warn("Cannot generate robots.txt: hostname is required");
+    return;
+  }
+
+  const primarySitemapFilename = anyWasSplit ? "sitemap-index.xml" : "sitemap.xml";
+  const sitemapUrl = buildSitemapUrl(hostname, primarySitemapFilename);
+  const robotsResult = await updateRobotsTxt(outputDir, sitemapUrl);
+
+  if (robotsResult.success) {
+    if (robotsResult.action === "created") {
+      logger.success("Created robots.txt with Sitemap directive");
+      generatedFiles.push("robots.txt");
+    } else if (robotsResult.action === "updated") {
+      logger.success("Updated robots.txt with Sitemap directive");
+    }
+  } else {
+    logger.warn(robotsResult.error ?? "Failed to update robots.txt");
+  }
+}
+
+/**
+ * Process all route sets for CLI generation.
+ *
+ * @param resolvedRoutes - Array of route sets with names
+ * @param ctx - CLI context
+ * @returns Processing result with totals
+ *
+ * @since 0.2.2
+ */
+async function processRouteSetsCli(
+  resolvedRoutes: Array<{ name: string; routes: Route[] }>,
+  ctx: CliContext,
+): Promise<{ anyWasSplit: boolean; totalFiles: number; totalRoutes: number }> {
+  const { resolvedOpts } = ctx;
+  let totalRoutes = 0;
+  let totalFiles = 0;
+  let anyWasSplit = false;
+
+  for (const { name, routes } of resolvedRoutes) {
+    const baseFilename = name === "default" ? "sitemap" : `sitemap-${name}`;
+
+    const genResult = await generateSitemap(routes, {
+      baseFilename,
+      enableSplitting: true,
+      hostname: resolvedOpts.hostname,
+      pluginOptions: resolvedOpts,
+    });
+
+    if (!genResult.success) {
+      logger.error(
+        `Validation failed for '${name}':\n${formatResultForConsole(genResult.validation)}`,
+      );
+      continue;
+    }
+
+    if (genResult.splitResult?.wasSplit) {
+      anyWasSplit = true;
+      const written = await writeSplitSitemapCli(genResult, baseFilename, name, ctx);
+      if (written) {
+        totalFiles += written.files;
+        totalRoutes += written.routes;
+      }
+    } else {
+      const written = await writeSingleSitemapCli(genResult, name, ctx);
+      totalFiles += written.files;
+      totalRoutes += written.routes;
+    }
+
+    for (const warning of genResult.warnings) {
+      logger.warn(warning);
+    }
+  }
+
+  return { anyWasSplit, totalFiles, totalRoutes };
+}
+
+/**
+ * Write a single sitemap result for CLI.
+ *
+ * @param result - Generation result
+ * @param name - Route set name
+ * @param ctx - CLI context
+ * @returns File and route counts
+ *
+ * @since 0.2.2
+ */
+async function writeSingleSitemapCli(
+  result: GenerationResult,
+  name: string,
+  ctx: CliContext,
+): Promise<{ files: number; routes: number }> {
+  const { generatedFiles, outputDir, verbose } = ctx;
+
+  const filename = getSitemapFilename(name);
+  const outputPath = join(outputDir, filename);
+
+  await writeFile(outputPath, result.xml!, "utf-8");
+  generatedFiles.push(filename);
+
+  if (verbose) {
+    const fileInfo = `(${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`;
+    logger.info(`${colors.cyan(filename)} ${colors.dim(fileInfo)}`);
+  }
+
+  return { files: 1, routes: result.routeCount ?? 0 };
+}
+
+/**
+ * Write a split sitemap result for CLI.
+ *
+ * @param result - Generation result
+ * @param baseFilename - Base filename for sitemaps
+ * @param name - Route set name
+ * @param ctx - CLI context
+ * @returns File and route counts, or null on failure
+ *
+ * @since 0.2.2
+ */
+async function writeSplitSitemapCli(
+  result: GenerationResult,
+  baseFilename: string,
+  name: string,
+  ctx: CliContext,
+): Promise<null | { files: number; routes: number }> {
+  const { generatedFiles, outputDir, verbose } = ctx;
+
+  if (!result.splitResult) return null;
+
+  let files = 0;
+
+  for (const chunk of result.splitResult.sitemaps) {
+    const outputPath = join(outputDir, chunk.filename);
+    await writeFile(outputPath, chunk.xml, "utf-8");
+    files++;
+    generatedFiles.push(chunk.filename);
+
+    if (verbose) {
+      const chunkInfo = `(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`;
+      logger.info(`${colors.cyan(chunk.filename)} ${colors.dim(chunkInfo)}`);
+    }
+  }
+
+  const indexFilename = getSitemapIndexFilename(baseFilename);
+  const indexPath = join(outputDir, indexFilename);
+  if (!result.splitResult.indexXml) {
+    logger.error(`Index XML was not generated for split sitemap '${name}'`);
+    return null;
+  }
+  await writeFile(indexPath, result.splitResult.indexXml, "utf-8");
+  files++;
+  generatedFiles.push(indexFilename);
+
+  if (verbose) {
+    const indexInfo = `(index for ${result.splitResult.sitemaps.length} sitemaps)`;
+    logger.info(`${colors.cyan(indexFilename)} ${colors.dim(indexInfo)}`);
+  }
+
+  return { files, routes: result.routeCount ?? 0 };
 }

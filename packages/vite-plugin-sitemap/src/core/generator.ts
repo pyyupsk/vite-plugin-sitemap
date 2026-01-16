@@ -264,46 +264,23 @@ export async function generateSitemap(
 
   // Step 2: Apply transform function if provided
   if (pluginOptions.transform) {
-    const transformedRoutes = await Promise.all(
-      processedRoutes.map(async (route) => {
-        const transformed = await pluginOptions.transform!(route);
-        // Return null/undefined to remove routes, or the transformed route
-        return transformed;
-      }),
-    );
-    // Filter out null/undefined results (routes can be removed by transform)
-    // Use the original route if transform returns undefined (not null)
-    processedRoutes = transformedRoutes
-      .map((transformed, i) => (transformed === undefined ? processedRoutes[i]! : transformed))
-      .filter((route): route is Route => route !== null);
+    processedRoutes = await applyTransformations(processedRoutes, pluginOptions.transform);
   }
 
   // Step 3: Apply defaults
   processedRoutes = applyDefaults(processedRoutes, pluginOptions);
 
   // Step 4: Prepend hostname to relative URLs if provided
-  if (options.hostname || pluginOptions.hostname) {
-    const hostname = options.hostname ?? pluginOptions.hostname!;
-    processedRoutes = processedRoutes.map((route) => prependHostname(route, hostname));
+  const hostname = options.hostname ?? pluginOptions.hostname;
+  if (hostname) {
+    processedRoutes = applyHostnameToRoutes(processedRoutes, hostname);
   }
 
   // Step 5: Validate routes
   if (!options.skipValidation) {
-    const validationResult = validateRoutes(processedRoutes);
-
-    // Check for future dates (warning, not error)
-    for (const route of processedRoutes) {
-      if (route.lastmod && isFutureDate(route.lastmod)) {
-        warnings.push(`Future lastmod date for ${route.url}: ${route.lastmod}`);
-      }
-    }
-
-    if (!validationResult.valid) {
-      return {
-        success: false,
-        validation: validationResult,
-        warnings,
-      };
+    const validationResult = performValidation(processedRoutes, warnings);
+    if (validationResult && !validationResult.valid) {
+      return { success: false, validation: validationResult, warnings };
     }
   }
 
@@ -315,10 +292,9 @@ export async function generateSitemap(
   }
 
   // Step 7: Check if splitting is needed and enabled
-  const enableSplitting = options.enableSplitting !== false; // Default to true
+  const enableSplitting = options.enableSplitting !== false;
 
   if (enableSplitting) {
-    const hostname = options.hostname ?? pluginOptions.hostname;
     const splitResult = splitRoutes(deduplicatedRoutes, {
       baseFilename: options.baseFilename ?? "sitemap",
       ...(hostname && { hostname }),
@@ -328,47 +304,17 @@ export async function generateSitemap(
       warnings.push(
         `Sitemap split into ${splitResult.sitemaps.length} files due to size/URL limits`,
       );
-
-      return {
-        byteSize: splitResult.sitemaps.reduce((sum, s) => sum + s.byteSize, 0),
-        routeCount: deduplicatedRoutes.length,
-        splitResult,
-        success: true,
-        validation: createSuccessResult(deduplicatedRoutes.length, warnings),
-        warnings,
-        xml: splitResult.sitemaps[0]!.xml,
-      };
     }
 
-    // Not split - return the single sitemap from split result
-    return {
-      byteSize: splitResult.sitemaps[0]!.byteSize,
-      routeCount: deduplicatedRoutes.length,
-      success: true,
-      validation: createSuccessResult(deduplicatedRoutes.length, warnings),
-      warnings,
-      xml: splitResult.sitemaps[0]!.xml,
-    };
+    return buildSplitResult(splitResult, deduplicatedRoutes.length, warnings);
   }
 
   // Step 8: Apply custom serializer or use default XML builder (splitting disabled)
-  let xml: string;
-  if (pluginOptions.serialize) {
-    xml = await pluginOptions.serialize(deduplicatedRoutes);
-  } else {
-    xml = buildSitemapXml(deduplicatedRoutes);
-  }
+  const xml = pluginOptions.serialize
+    ? await pluginOptions.serialize(deduplicatedRoutes)
+    : buildSitemapXml(deduplicatedRoutes);
 
-  const byteSize = calculateByteSize(xml);
-
-  return {
-    byteSize,
-    routeCount: deduplicatedRoutes.length,
-    success: true,
-    validation: createSuccessResult(deduplicatedRoutes.length, warnings),
-    warnings,
-    xml,
-  };
+  return buildSingleResult(xml, deduplicatedRoutes.length, warnings);
 }
 
 /**
@@ -446,4 +392,105 @@ export function validateRoutes(routes: Route[]): ValidationResult {
   }
 
   return createSuccessResult(routes.length);
+}
+
+/**
+ * Apply hostname to routes with relative URLs.
+ *
+ * @param routes - Routes to process
+ * @param hostname - Hostname to prepend
+ * @returns Routes with absolute URLs
+ *
+ * @since 0.2.2
+ */
+function applyHostnameToRoutes(routes: Route[], hostname: string): Route[] {
+  return routes.map((route) => prependHostname(route, hostname));
+}
+
+/**
+ * Apply route transformations.
+ *
+ * @param routes - Routes to transform
+ * @param transform - Transform function
+ * @returns Transformed routes
+ *
+ * @since 0.2.2
+ */
+async function applyTransformations(
+  routes: Route[],
+  transform: NonNullable<PluginOptions["transform"]>,
+): Promise<Route[]> {
+  const transformedRoutes = await Promise.all(routes.map(async (route) => transform(route)));
+  return transformedRoutes
+    .map((transformed, i) => (transformed === undefined ? routes[i]! : transformed))
+    .filter((route): route is Route => route !== null);
+}
+
+/**
+ * Build result for single sitemap.
+ *
+ * @param xml - Generated XML
+ * @param routeCount - Total route count
+ * @param warnings - Collected warnings
+ * @returns Generation result
+ *
+ * @since 0.2.2
+ */
+function buildSingleResult(xml: string, routeCount: number, warnings: string[]): GenerationResult {
+  return {
+    byteSize: calculateByteSize(xml),
+    routeCount,
+    success: true,
+    validation: createSuccessResult(routeCount, warnings),
+    warnings,
+    xml,
+  };
+}
+
+/**
+ * Build result for split sitemaps.
+ *
+ * @param splitResult - Split result from splitter
+ * @param routeCount - Total route count
+ * @param warnings - Collected warnings
+ * @returns Generation result
+ *
+ * @since 0.2.2
+ */
+function buildSplitResult(
+  splitResult: SplitResult,
+  routeCount: number,
+  warnings: string[],
+): GenerationResult {
+  const totalByteSize = splitResult.sitemaps.reduce((sum, s) => sum + s.byteSize, 0);
+  return {
+    byteSize: totalByteSize,
+    routeCount,
+    splitResult,
+    success: true,
+    validation: createSuccessResult(routeCount, warnings),
+    warnings,
+    xml: splitResult.sitemaps[0]!.xml,
+  };
+}
+
+/**
+ * Validate routes and collect future date warnings.
+ *
+ * @param routes - Routes to validate
+ * @param warnings - Warnings array to populate
+ * @returns Validation result or null if validation should be skipped
+ *
+ * @since 0.2.2
+ */
+function performValidation(routes: Route[], warnings: string[]): null | ValidationResult {
+  const validationResult = validateRoutes(routes);
+
+  for (const route of routes) {
+    if (route.lastmod && isFutureDate(route.lastmod)) {
+      warnings.push(`Future lastmod date for ${route.url}: ${route.lastmod}`);
+    }
+  }
+
+  return validationResult;
 }
