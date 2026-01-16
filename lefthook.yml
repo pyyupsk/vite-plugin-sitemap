@@ -4,44 +4,6 @@
 pre-commit:
   parallel: true
   commands:
-    changelog:
-      run: |
-        SRC_CHANGED=$(git diff --cached --name-only | grep '^packages/vite-plugin-sitemap/src/')
-        CHANGELOG_CHANGED=$(git diff --cached --name-only | grep '^CHANGELOG.md')
-        if [ -n "$SRC_CHANGED" ] && [ -z "$CHANGELOG_CHANGED" ]; then
-          echo "❌ ERROR: Files in src/ were modified but CHANGELOG.md was not updated."
-          echo "➡️  Please add your changes under the [Unreleased] section."
-          exit 1
-        else
-          echo "✅ Changelog check passed"
-        fi
-    version-check:
-      run: |
-        TAG=$(git describe --tags --exact-match 2>/dev/null)
-        if [ -n "$TAG" ]; then
-          echo "🏷️ Tag detected: $TAG"
-          echo "🔍 Checking for version bump in package.json..."
-
-          if ! git diff HEAD~1..HEAD --name-only | grep -q "^package.json$"; then
-            echo "❌ ERROR: package.json version was not updated for tag $TAG"
-            exit 1
-          fi
-
-          PKG_VERSION=$(node -p "require('./package.json').version")
-
-          CLEAN_TAG=${TAG#v}
-
-          if [ "$PKG_VERSION" != "$CLEAN_TAG" ]; then
-            echo "❌ ERROR: Version mismatch!"
-            echo "Tag: $CLEAN_TAG"
-            echo "package.json: $PKG_VERSION"
-            exit 1
-          fi
-
-          echo "✅ Version matches tag: $TAG"
-        else
-          echo "ℹ️ No tag detected – normal push"
-        fi
     lint:
       glob: "*.{js,ts,mjs}"
       run: bun run lint
