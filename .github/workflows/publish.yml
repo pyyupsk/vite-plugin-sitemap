@@ -66,7 +66,7 @@ jobs:
 
       - name: Generate changelog
         run: |
-          bunx conventional-changelog -p conventionalcommits -i CHANGELOG.md -s
+          npx -y -p conventional-changelog-cli -p conventional-changelog-conventionalcommits conventional-changelog -p conventionalcommits -i CHANGELOG.md -s
           bunx prettier --write CHANGELOG.md
           cp CHANGELOG.md packages/vite-plugin-sitemap/CHANGELOG.md
 
