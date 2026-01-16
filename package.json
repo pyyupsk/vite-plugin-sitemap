@@ -1,5 +1,6 @@
 {
   "name": "vite-plugin-sitemap",
+  "version": "0.2.2",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -20,10 +21,13 @@
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
+    "conventional-changelog-cli": "^5.0.0",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
     "lefthook": "^2.0.5",
     "prettier": "^3.7.4",
     "prettier-plugin-pkg": "^0.21.2",
     "prettier-plugin-tailwindcss": "^0.7.2",
+    "standard-version": "^9.5.0",
     "turbo": "^2.6.1",
     "typescript": "5.9.3"
   }
