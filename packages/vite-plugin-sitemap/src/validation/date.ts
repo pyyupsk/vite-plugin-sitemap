@@ -17,15 +17,26 @@
  */
 
 /**
- * Regex pattern for W3C Datetime format.
- * Supports: YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDThh:mm:ss.sssZ, YYYY-MM-DDThh:mm:ss.sss±hh:mm
- * Also supports new Date().toISOString() output (e.g., 2024-01-15T10:30:00.000Z)
+ * Simple regex patterns for W3C Datetime format components.
+ * Split into multiple patterns to reduce complexity.
  *
  * @see {@link https://www.w3.org/TR/NOTE-datetime}
- * @since 0.1.0
+ * @since 0.2.2
  */
-export const W3C_DATETIME_REGEX =
-  /^\d{4}(?:-\d{2})?(?:-\d{2})?(?:T\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+const DATE_PATTERNS = {
+  /** YYYY-MM-DD */
+  fullDate: /^\d{4}-\d{2}-\d{2}$/,
+  /** YYYY */
+  year: /^\d{4}$/,
+  /** YYYY-MM */
+  yearMonth: /^\d{4}-\d{2}$/,
+} as const;
+
+/** Timezone pattern: Z or ±hh:mm */
+const TZ_PATTERN = /^(Z|[+-]\d{2}:\d{2})$/;
+
+/** Time pattern: hh:mm or hh:mm:ss or hh:mm:ss.sss */
+const TIME_PATTERN = /^\d{2}:\d{2}(:\d{2})?(\.\d+)?$/;
 
 /**
  * Date validation result.
@@ -111,7 +122,7 @@ export function isValidW3CDatetime(date: string): boolean {
     return false;
   }
 
-  if (!W3C_DATETIME_REGEX.test(date)) {
+  if (!matchesW3CFormat(date)) {
     return false;
   }
 
@@ -168,7 +179,7 @@ export function validateW3CDatetime(date: string): DateValidationResult {
     };
   }
 
-  if (!W3C_DATETIME_REGEX.test(date)) {
+  if (!matchesW3CFormat(date)) {
     return {
       error: "Date does not match W3C Datetime format",
       examples: [
@@ -234,4 +245,39 @@ export function validateW3CDatetime(date: string): DateValidationResult {
       valid: false,
     };
   }
+}
+
+/**
+ * Check if a string matches W3C Datetime format.
+ * Validates date-only formats or datetime with timezone.
+ *
+ * @param date - Date string to check
+ * @returns True if format is valid
+ *
+ * @since 0.2.2
+ */
+function matchesW3CFormat(date: string): boolean {
+  // Check date-only formats
+  if (DATE_PATTERNS.year.test(date)) return true;
+  if (DATE_PATTERNS.yearMonth.test(date)) return true;
+  if (DATE_PATTERNS.fullDate.test(date)) return true;
+
+  // Check datetime format (must have T separator)
+  if (!date.includes("T")) return false;
+
+  const [datePart, timePart] = date.split("T");
+  if (!datePart || !timePart) return false;
+
+  // Date part must be full date for datetime
+  if (!DATE_PATTERNS.fullDate.test(datePart)) return false;
+
+  // Extract timezone if present
+  const tzMatch = TZ_PATTERN.exec(timePart.slice(-6)) ?? TZ_PATTERN.exec(timePart.slice(-1));
+  const tzPart = tzMatch?.[0];
+  const timeOnly = tzPart ? timePart.slice(0, -tzPart.length) : timePart;
+
+  // Validate time part
+  if (!TIME_PATTERN.test(timeOnly)) return false;
+
+  return true;
 }

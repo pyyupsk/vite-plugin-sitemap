@@ -10,7 +10,6 @@ import {
   isFutureDate,
   isValidW3CDatetime,
   validateW3CDatetime,
-  W3C_DATETIME_REGEX,
 } from "../../../src/validation/date";
 
 describe("isValidW3CDatetime", () => {
@@ -188,15 +187,11 @@ describe("isFutureDate", () => {
   });
 });
 
-describe("W3C_DATETIME_REGEX", () => {
-  it("should be a RegExp", () => {
-    expect(W3C_DATETIME_REGEX).toBeInstanceOf(RegExp);
-  });
-
+describe("W3C datetime format matching", () => {
   it("should match valid date strings", () => {
-    expect(W3C_DATETIME_REGEX.test("2024")).toBe(true);
-    expect(W3C_DATETIME_REGEX.test("2024-01")).toBe(true);
-    expect(W3C_DATETIME_REGEX.test("2024-01-15")).toBe(true);
-    expect(W3C_DATETIME_REGEX.test("2024-01-15T10:30:00Z")).toBe(true);
+    expect(isValidW3CDatetime("2024")).toBe(true);
+    expect(isValidW3CDatetime("2024-01")).toBe(true);
+    expect(isValidW3CDatetime("2024-01-15")).toBe(true);
+    expect(isValidW3CDatetime("2024-01-15T10:30:00Z")).toBe(true);
   });
 });
