@@ -172,9 +172,8 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
           generatedFiles.push(chunk.filename);
 
           if (options.verbose) {
-            logger.info(
-              `${colors.cyan(chunk.filename)} ${colors.dim(`(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`)}`,
-            );
+            const chunkInfo = `(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`;
+            logger.info(`${colors.cyan(chunk.filename)} ${colors.dim(chunkInfo)}`);
           }
         }
 
@@ -190,9 +189,8 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
         generatedFiles.push(indexFilename);
 
         if (options.verbose) {
-          logger.info(
-            `${colors.cyan(indexFilename)} ${colors.dim(`(index for ${genResult.splitResult.sitemaps.length} sitemaps)`)}`,
-          );
+          const indexInfo = `(index for ${genResult.splitResult.sitemaps.length} sitemaps)`;
+          logger.info(`${colors.cyan(indexFilename)} ${colors.dim(indexInfo)}`);
         }
 
         totalRoutes += genResult.routeCount ?? 0;
@@ -208,9 +206,8 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
         generatedFiles.push(filename);
 
         if (options.verbose) {
-          logger.info(
-            `${colors.cyan(filename)} ${colors.dim(`(${genResult.routeCount} URLs, ${formatBytes(genResult.byteSize ?? 0)})`)}`,
-          );
+          const fileInfo = `(${genResult.routeCount} URLs, ${formatBytes(genResult.byteSize ?? 0)})`;
+          logger.info(`${colors.cyan(filename)} ${colors.dim(fileInfo)}`);
         }
       }
 
@@ -250,8 +247,10 @@ async function executeGenerate(options: GenerateOptions): Promise<void> {
 
     // Print summary
     console.log("\n" + colors.dim("─".repeat(50)));
+    const elapsedFormatted = colors.reset(colors.bold(formatDuration(elapsed)));
+    const timing = `in ${elapsedFormatted}`;
     logger.success(
-      `${colors.bold("built")} ${colors.green(colors.bold(String(totalFiles)))} sitemap(s) with ${colors.green(colors.bold(String(totalRoutes)))} URLs ${colors.dim(`in ${colors.reset(colors.bold(formatDuration(elapsed)))}`)}`,
+      `${colors.bold("built")} ${colors.green(colors.bold(String(totalFiles)))} sitemap(s) with ${colors.green(colors.bold(String(totalRoutes)))} URLs ${colors.dim(timing)}`,
     );
 
     console.log(`\n${colors.bold("Generated files:")}`);

@@ -72,9 +72,8 @@ export function registerPreviewCommand(program: Command): void {
           }
 
           for (const { name, routes: routeList } of filteredRoutes) {
-            logger.info(
-              `Preview: ${colors.cyan(name)} ${colors.dim(`(${routeList.length} routes)`)}\n`,
-            );
+            const routeInfo = `(${routeList.length} routes)`;
+            logger.info(`Preview: ${colors.cyan(name)} ${colors.dim(routeInfo)}\n`);
 
             const genResult = await generateSitemap(routeList, {
               enableSplitting: false, // Don't split for preview
@@ -120,9 +119,9 @@ export function registerPreviewCommand(program: Command): void {
           }
 
           const elapsed = formatDuration(Date.now() - startTime);
-          logger.success(
-            `Preview complete ${colors.dim(`in ${colors.reset(colors.bold(elapsed))}`)}`,
-          );
+          const elapsedFormatted = colors.reset(colors.bold(elapsed));
+          const timing = `in ${elapsedFormatted}`;
+          logger.success(`Preview complete ${colors.dim(timing)}`);
         } finally {
           await server.close();
         }

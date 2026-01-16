@@ -187,7 +187,7 @@ Create a sitemap file to define your routes:
   ] satisfies Route[];
 
 Searched paths:
-${paths.map((p) => `  - ${p}`).join("\n")}`;
+${paths.map((p) => "  - " + p).join("\n")}`;
 }
 
 /**

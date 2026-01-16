@@ -69,9 +69,8 @@ export function registerValidateCommand(program: Command): void {
 
           for (const { name, routes: routeList } of routes) {
             if (options.verbose) {
-              logger.info(
-                `Validating ${colors.cyan(name)} ${colors.dim(`(${routeList.length} routes)`)}...`,
-              );
+              const routeInfo = `(${routeList.length} routes)`;
+              logger.info(`Validating ${colors.cyan(name)} ${colors.dim(routeInfo)}...`);
             }
 
             // Prepend hostname to relative URLs if available
@@ -85,9 +84,8 @@ export function registerValidateCommand(program: Command): void {
               logger.error(`Validation failed for ${colors.cyan(name)}:`);
               console.log(formatResultForConsole(validationResult));
             } else if (options.verbose) {
-              logger.success(
-                `${colors.cyan(name)} validation passed ${colors.dim(`(${routeList.length} routes)`)}`,
-              );
+              const routeInfo = `(${routeList.length} routes)`;
+              logger.success(`${colors.cyan(name)} validation passed ${colors.dim(routeInfo)}`);
             }
           }
 
@@ -98,11 +96,14 @@ export function registerValidateCommand(program: Command): void {
           const elapsed = formatDuration(Date.now() - startTime);
 
           if (hasErrors) {
-            logger.error(`Validation failed ${colors.dim(`in ${elapsed}`)}`);
+            const timing = `in ${elapsed}`;
+            logger.error(`Validation failed ${colors.dim(timing)}`);
             process.exit(1);
           } else {
+            const elapsedFormatted = colors.reset(colors.bold(elapsed));
+            const timing = `in ${elapsedFormatted}`;
             logger.success(
-              `Validation passed! ${colors.green(colors.bold(String(totalRoutes)))} routes validated ${colors.dim(`in ${colors.reset(colors.bold(elapsed))}`)}`,
+              `Validation passed! ${colors.green(colors.bold(String(totalRoutes)))} routes validated ${colors.dim(timing)}`,
             );
           }
         } finally {

@@ -215,9 +215,8 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
                 await writeFile(outputPath, chunk.xml, "utf-8");
                 totalFiles++;
 
-                logger.info(
-                  `${pc.cyan(chunk.filename)} ${pc.dim(`(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`)}`,
-                );
+                const chunkInfo = `(${chunk.routes.length} URLs, ${formatBytes(chunk.byteSize)})`;
+                logger.info(`${pc.cyan(chunk.filename)} ${pc.dim(chunkInfo)}`);
               }
 
               // Write sitemap index
@@ -232,9 +231,8 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
               await writeFile(indexPath, result.splitResult.indexXml, "utf-8");
               totalFiles++;
 
-              logger.info(
-                `${pc.cyan(indexFilename)} ${pc.dim(`(index for ${result.splitResult.sitemaps.length} sitemaps)`)}`,
-              );
+              const indexInfo = `(index for ${result.splitResult.sitemaps.length} sitemaps)`;
+              logger.info(`${pc.cyan(indexFilename)} ${pc.dim(indexInfo)}`);
 
               totalRoutes += result.routeCount ?? 0;
             } else {
@@ -251,9 +249,8 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
               totalRoutes += result.routeCount ?? 0;
               totalFiles++;
 
-              logger.info(
-                `${pc.cyan(filename)} ${pc.dim(`(${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`)}`,
-              );
+              const fileInfo = `(${result.routeCount} URLs, ${formatBytes(result.byteSize ?? 0)})`;
+              logger.info(`${pc.cyan(filename)} ${pc.dim(fileInfo)}`);
             }
 
             // Log warnings if any
@@ -293,8 +290,10 @@ export function sitemapPlugin(userOptions: PluginOptions = {}): SitemapPlugin {
           }
 
           const elapsed = Date.now() - startTime;
+          const elapsedFormatted = pc.reset(pc.bold(`${elapsed}ms`));
+          const timing = `in ${elapsedFormatted}`;
           logger.info(
-            `${pc.green("✓")} ${pc.bold(String(totalFiles))} sitemap(s) with ${pc.bold(String(totalRoutes))} URLs ${pc.dim(`in ${pc.reset(pc.bold(`${elapsed}ms`))}`)}`,
+            `${pc.green("✓")} ${pc.bold(String(totalFiles))} sitemap(s) with ${pc.bold(String(totalRoutes))} URLs ${pc.dim(timing)}`,
           );
         } finally {
           // Clean up temporary server

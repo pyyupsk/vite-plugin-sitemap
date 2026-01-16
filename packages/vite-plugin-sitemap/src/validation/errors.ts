@@ -179,7 +179,8 @@ export function formatResultForConsole(result: ValidationResult): string {
   if (result.valid) {
     let output = `✓ Validation passed (${result.routeCount} routes)`;
     if (result.warnings.length > 0) {
-      output += `\n\nWarnings:\n${result.warnings.map((w) => `  ⚠ ${w}`).join("\n")}`;
+      const warningLines = result.warnings.map((w) => "  ⚠ " + w).join("\n");
+      output += `\n\nWarnings:\n${warningLines}`;
     }
     return output;
   }
@@ -188,7 +189,8 @@ export function formatResultForConsole(result: ValidationResult): string {
   output += formatErrorsForConsole(result.errors);
 
   if (result.warnings.length > 0) {
-    output += `\n\nWarnings:\n${result.warnings.map((w) => `  ⚠ ${w}`).join("\n")}`;
+    const warningLines = result.warnings.map((w) => "  ⚠ " + w).join("\n");
+    output += `\n\nWarnings:\n${warningLines}`;
   }
 
   return output;
