@@ -84,7 +84,7 @@ describe("Vite build integration", () => {
 
     it("should complete build without sitemap when no sitemap file exists", async () => {
       // Should not throw - just warn
-      await expect(project.build()).resolves.not.toThrow();
+      await expect(project.build()).resolves.toBeUndefined();
 
       // No sitemap.xml should be generated
       const sitemapPath = join(project.outDir, "sitemap.xml");
