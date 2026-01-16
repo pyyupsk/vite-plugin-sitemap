@@ -10,12 +10,12 @@
     "publish": false
   },
   "github": {
-    "release": true,
-    "releaseName": "v${version}"
+    "release": false
   },
   "hooks": {
     "before:bump": "bun run build",
-    "after:bump": "bunx prettier --write CHANGELOG.md && cp CHANGELOG.md packages/vite-plugin-sitemap/CHANGELOG.md && npm pkg set version=${version} --prefix packages/vite-plugin-sitemap"
+    "after:bump": "bunx prettier --write CHANGELOG.md && cp CHANGELOG.md packages/vite-plugin-sitemap/CHANGELOG.md && npm pkg set version=${version} --prefix packages/vite-plugin-sitemap",
+    "after:release": "bunx changelogithub"
   },
   "plugins": {
     "@release-it/conventional-changelog": {
