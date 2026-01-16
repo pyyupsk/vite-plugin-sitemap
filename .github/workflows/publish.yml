@@ -66,7 +66,11 @@ jobs:
 
       - name: Generate changelog
         run: |
+          # Remove header before generating (conventional-changelog prepends content)
+          sed -i '1,/^## \[/{ /^## \[/!d }' CHANGELOG.md
           npx -y -p conventional-changelog-cli -p conventional-changelog-conventionalcommits conventional-changelog -p conventionalcommits -i CHANGELOG.md -s
+          # Add header back at the top
+          sed -i '1i # Changelog\n\nAll notable changes to this project will be documented in this file.\n\nSee [Conventional Commits](https://conventionalcommits.org) for commit guidelines.\n' CHANGELOG.md
           bunx prettier --write CHANGELOG.md
           cp CHANGELOG.md packages/vite-plugin-sitemap/CHANGELOG.md
 
