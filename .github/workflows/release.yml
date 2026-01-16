@@ -41,3 +41,8 @@ jobs:
 
       - name: Push changes and tags
         run: git push --follow-tags origin main
+
+      - name: Generate GitHub release
+        run: bunx changelogithub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
