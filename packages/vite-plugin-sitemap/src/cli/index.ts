@@ -48,30 +48,13 @@ function createProgram(): Command {
   return program;
 }
 
-/**
- * Main CLI entry point.
- * Initializes the CLI program and handles top-level errors.
- *
- * @returns Resolves when CLI execution completes
- * @throws {Error} Exits process with code 1 on error
- *
- * @example
- * // Called automatically when script is executed
- * main();
- *
- * @since 0.1.0
- */
-async function main(): Promise<void> {
-  const program = createProgram();
-
-  try {
-    await program.parseAsync(process.argv);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(`${colors.red("✗")} ${message}`);
-    process.exit(1);
-  }
-}
-
 // Run CLI
-main();
+const program = createProgram();
+
+try {
+  await program.parseAsync(process.argv);
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`${colors.red("✗")} ${message}`);
+  process.exit(1);
+}
