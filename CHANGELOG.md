@@ -1,3 +1,22 @@
+## [0.2.3](https://github.com/pyyupsk/vite-plugin-sitemap/compare/v0.2.2...v0.2.3) (2026-01-16)
+
+### Features
+
+- add release workflow with standard-version ([73a9869](https://github.com/pyyupsk/vite-plugin-sitemap/commit/73a9869109febf067e385821acdc62a5ed617f52))
+- **release:** add changelogithub for GitHub release notes ([033b593](https://github.com/pyyupsk/vite-plugin-sitemap/commit/033b5934cb36c7f8c50ee0cd32d2734c563ad1d0))
+- **release:** migrate from standard-version to release-it ([63c2cff](https://github.com/pyyupsk/vite-plugin-sitemap/commit/63c2cffa623a9817a023846beea107c1c9541f0b))
+- **release:** use changelogithub for GitHub release notes ([1ab5a74](https://github.com/pyyupsk/vite-plugin-sitemap/commit/1ab5a74527e793e6167703292df3a2d15201bbc4))
+
+### Bug Fixes
+
+- **ci:** install conventionalcommits preset for changelog generation ([c30f5cc](https://github.com/pyyupsk/vite-plugin-sitemap/commit/c30f5cc8bacd04035489943e0c0763d6e0fcab06))
+- **ci:** use jq for version bump to avoid npm workspace protocol error ([b164db2](https://github.com/pyyupsk/vite-plugin-sitemap/commit/b164db2a35e6c72f6bc2aef5e27397b39146d73e))
+- **deps:** pin conventional-changelog-conventionalcommits to v8 ([3511e73](https://github.com/pyyupsk/vite-plugin-sitemap/commit/3511e7325531a8641d8eb69c8460c645448aa3f7))
+- **docs:** use bunx for vite-sitemap CLI in postbuild script ([634003b](https://github.com/pyyupsk/vite-plugin-sitemap/commit/634003bd64e9053aa64af30561410d05627301cd))
+- **docs:** use direct path to CLI for CI compatibility ([eb93029](https://github.com/pyyupsk/vite-plugin-sitemap/commit/eb93029140420355e6cd2e9bbc43248a40af08e2))
+- **docs:** use local bin path for vite-sitemap CLI ([83852a8](https://github.com/pyyupsk/vite-plugin-sitemap/commit/83852a8428686be73c90a319ad2e11a92124d439))
+- **test:** use correct assertion for promise resolution check ([f88f1d1](https://github.com/pyyupsk/vite-plugin-sitemap/commit/f88f1d104fb1b4cbe708dd41b871e7118fdafe36))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
