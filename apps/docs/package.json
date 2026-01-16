@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vitepress build docs",
     "dev": "vitepress dev docs",
-    "postbuild": "./node_modules/.bin/vite-sitemap generate -o docs/.vitepress/dist -h https://pyyupsk.github.io/vite-plugin-sitemap --robots-txt",
+    "postbuild": "node ../../packages/vite-plugin-sitemap/dist/cli/index.mjs generate -o docs/.vitepress/dist -h https://pyyupsk.github.io/vite-plugin-sitemap --robots-txt",
     "prebuild": "cp ../../llms.txt ../../llms-full.txt docs/public/",
     "preview": "vitepress preview docs"
   },
